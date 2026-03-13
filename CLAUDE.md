@@ -37,3 +37,49 @@ Zones: green < 0.30, yellow < 0.60, orange < 0.80, red >= 0.80
 ## Testing
 
 Run before every commit: `python -m pytest tests/ -v`
+
+## Sentinel Integration
+
+This repo is part of the Sentinel ecosystem. Use `sentinel_query.py` for all cross-repo
+coordination. The tool lives at `~/projects/Sentinel/scripts/sentinel_query.py`.
+
+### Session Lifecycle
+
+At the start of every Claude Code session in this repo:
+```bash
+python3 ~/projects/Sentinel/scripts/sentinel_query.py session-start tidewatch "<brief task description>"
+```
+
+At the end of every session:
+```bash
+python3 ~/projects/Sentinel/scripts/sentinel_query.py session-complete "<summary>"
+```
+
+### Check Obligations
+
+Before starting work, check what's owed:
+```bash
+python3 ~/projects/Sentinel/scripts/sentinel_query.py obligations --repo tidewatch
+```
+
+### Cross-Repo Awareness
+
+See what other Claude sessions are doing right now:
+```bash
+python3 ~/projects/Sentinel/scripts/sentinel_query.py sessions
+```
+
+### Memory
+
+Read/write persistent memories that survive across sessions:
+```bash
+python3 ~/projects/Sentinel/scripts/sentinel_query.py memory-read "<name>"
+python3 ~/projects/Sentinel/scripts/sentinel_query.py memory-save "<name>" "<type>" "<description>" "<content>"
+python3 ~/projects/Sentinel/scripts/sentinel_query.py memory --search "<search term>"
+```
+
+### Important
+
+- **Do NOT use session_log.py** — it is deprecated. sentinel_query.py is the replacement.
+- **Do NOT write to flat .md/.json memory files** — all memory goes to MSSQL via sentinel_query.py.
+- **Do NOT skip session-start/session-complete** — obligation tracking and cross-repo awareness depend on it.
