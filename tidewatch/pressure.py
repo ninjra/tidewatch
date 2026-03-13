@@ -10,6 +10,9 @@ No async. Every score is reproducible and auditable.
 Equation (Section 3.1):
   P = min(1.0, P_time * M * A * D)
 
+  min(1.0, ...) is the equation's defined saturation bound — pressure
+  cannot exceed 1.0 by definition. This is NOT an editorial clamp.
+
   P_time(t) = 1 - exp(-3 / max(t, 0.01))   for t > 0
   P_time(t) = 1.0                            for t <= 0 (overdue)
   M = 1.5 if material, 1.0 if routine
@@ -76,7 +79,7 @@ def calculate_pressure(
       3. Materiality: material items get 1.5x weight
       4. Dependencies: each adds 10% amplification
       5. Completion: progress dampens pressure (max 60%)
-      6. Final pressure clamped to [0.0, 1.0]
+      6. Final pressure saturates at 1.0 (equation-defined bound, not editorial)
 
     Outputs:
       PressureResult with full factor decomposition
@@ -102,9 +105,21 @@ def calculate_pressure(
 
     days_rem = _days_remaining(obligation.due_date, now)
 
-    # Clamp inputs
-    completion_pct = max(0.0, min(1.0, obligation.completion_pct))
-    dependency_count = max(0, obligation.dependency_count)
+    # REMEDIATION: replaced editorial clamp max(0.0, min(1.0, ...)) with input validation.
+    # Was: completion_pct = max(0.0, min(1.0, obligation.completion_pct))
+    if not (0.0 <= obligation.completion_pct <= 1.0):
+        raise ValueError(
+            f"completion_pct must be in [0,1], got {obligation.completion_pct}"
+        )
+    completion_pct = obligation.completion_pct
+
+    # REMEDIATION: replaced editorial clamp max(0, ...) with input validation.
+    # Was: dependency_count = max(0, obligation.dependency_count)
+    if obligation.dependency_count < 0:
+        raise ValueError(
+            f"dependency_count must be >= 0, got {obligation.dependency_count}"
+        )
+    dependency_count = obligation.dependency_count
 
     # 1. Time pressure
     if days_rem <= 0:
@@ -123,7 +138,9 @@ def calculate_pressure(
 
     # Final pressure
     pressure = time_p * mat_mult * dep_amp * comp_damp
-    pressure = min(1.0, max(0.0, pressure))
+    # REMEDIATION: removed editorial floor max(0.0,...) — product of non-negative factors.
+    # Was: min(1.0, max(0.0, pressure))
+    pressure = min(1.0, pressure)
 
     return PressureResult(
         obligation_id=obligation.id,
