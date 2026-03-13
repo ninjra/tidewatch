@@ -11,10 +11,18 @@ Usage:
       result = planner.complete_plan(req, llm_output)
 """
 
+import logging
 from datetime import datetime, timezone
 
-from tidewatch.constants import PLANNER_MIN_ZONES, PLANNER_TOP_N
+from tidewatch.constants import (
+    DEFAULT_DELIVERY_URGENCY,
+    DELIVERY_URGENCY_MAP,
+    PLANNER_MIN_ZONES,
+    PLANNER_TOP_N,
+)
 from tidewatch.types import Obligation, PlanRequest, PlanResult, PressureResult
+
+logger = logging.getLogger(__name__)
 
 
 _DEFAULT_SYSTEM_PROMPT = (
@@ -28,14 +36,6 @@ _DEFAULT_SYSTEM_PROMPT = (
     "Be concise. No preamble."
 )
 
-_DELIVERY_URGENCY_MAP: dict[str, str] = {
-    "green": "background",
-    "yellow": "background",
-    "orange": "toast",
-    "red": "interrupt",
-}
-
-
 class SpeculativePlanner:
     """Generates plan requests for high-pressure obligations.
 
@@ -43,6 +43,8 @@ class SpeculativePlanner:
       min_zones: set of zone names that trigger planning
       top_n: max obligations to plan per cycle
       system_prompt: override default system prompt
+      delivery_urgency_map: zone-to-urgency mapping (default from constants)
+      default_delivery_urgency: fallback for unknown zones (default from constants)
 
     Notes:
       This class has no side effects. It produces PlanRequest objects
@@ -56,10 +58,20 @@ class SpeculativePlanner:
         min_zones: frozenset[str] | set[str] | None = None,
         top_n: int | None = None,
         system_prompt: str | None = None,
+        delivery_urgency_map: dict[str, str] | None = None,
+        default_delivery_urgency: str | None = None,
     ) -> None:
         self.min_zones = frozenset(min_zones) if min_zones else PLANNER_MIN_ZONES
         self.top_n = top_n if top_n is not None else PLANNER_TOP_N
         self.system_prompt = system_prompt or _DEFAULT_SYSTEM_PROMPT
+        self.delivery_urgency_map = (
+            delivery_urgency_map if delivery_urgency_map is not None
+            else DELIVERY_URGENCY_MAP
+        )
+        self.default_delivery_urgency = (
+            default_delivery_urgency if default_delivery_urgency is not None
+            else DEFAULT_DELIVERY_URGENCY
+        )
 
     def _build_prompt(self, obligation: Obligation, result: PressureResult) -> str:
         """Build the LLM prompt for a single obligation."""
@@ -121,7 +133,14 @@ class SpeculativePlanner:
                 continue
 
             prompt = self._build_prompt(obligation, result)
-            urgency = _DELIVERY_URGENCY_MAP.get(result.zone, "background")
+            if result.zone in self.delivery_urgency_map:
+                urgency = self.delivery_urgency_map[result.zone]
+            else:
+                logger.warning(
+                    "Unknown zone %r for obligation %s — using default urgency %r",
+                    result.zone, result.obligation_id, self.default_delivery_urgency,
+                )
+                urgency = self.default_delivery_urgency
 
             requests.append(PlanRequest(
                 obligation=obligation,

@@ -29,3 +29,12 @@ PLANNER_MIN_ZONES: frozenset[str] = frozenset({"yellow", "orange", "red"})
 PLANNER_TOP_N = 3           # Max obligations to plan per cycle
 PLANNER_MAX_STEPS = 3       # Steps per plan
 PLANNER_MAX_TOKENS = 500    # Token budget per plan prompt
+
+# --- Delivery urgency mapping (zone -> urgency level) ---
+DELIVERY_URGENCY_MAP: dict[str, str] = {
+    "green": "background",
+    "yellow": "background",
+    "orange": "toast",
+    "red": "interrupt",
+}
+DEFAULT_DELIVERY_URGENCY = "background"  # Fallback for unknown zones
