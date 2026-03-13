@@ -38,5 +38,9 @@ include = ["tidewatch*"]
 testpaths = ["tests"]
 
 [tool.ruff]
-line-length = 88
-target-version = "py311"
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+ignore = ["E501"]

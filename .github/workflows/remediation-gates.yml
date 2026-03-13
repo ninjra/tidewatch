@@ -1,0 +1,89 @@
+name: Remediation Gates
+on:
+  push:
+    branches: [main, master, remediation/**]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install ruff
+      - run: ruff check . --config pyproject.toml
+
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -e ".[dev]"
+      - run: pytest --tb=short -q
+
+  regression-grep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Block re-introduced editorial clamps and magic numbers
+        run: |
+          FAIL=0
+          echo "=== Checking for editorial clamps ==="
+          if grep -rn --include='*.py' -P 'min\(1(?:\.0)?,\s*(?!len|abs|int)' tidewatch/ 2>/dev/null | grep -iv 'REMEDIATION:'; then
+            echo "FAIL: Editorial clamp min(1.0, ...) found outside REMEDIATION comment"
+            FAIL=1
+          fi
+          if grep -rn --include='*.py' -P 'max\(0(?:\.0)?,\s*(?!len|abs|int)' tidewatch/ 2>/dev/null | grep -iv 'REMEDIATION:'; then
+            echo "FAIL: Editorial floor max(0, ...) found outside REMEDIATION comment"
+            FAIL=1
+          fi
+          echo "=== Checking for hardcoded magic numbers in scoring ==="
+          if grep -rn --include='*.py' -P '(?:confidence|score|weight)\s*=\s*(?:0\.01|1e-6|0\.001)\b' tidewatch/ 2>/dev/null; then
+            echo "FAIL: Hardcoded magic number in scoring expression"
+            FAIL=1
+          fi
+          echo "=== Tidewatch-specific: delivery urgency hardcodes ==="
+          if grep -rn --include='*.py' '_DELIVERY_URGENCY_MAP' tidewatch/ | grep -v 'constants\|import\|REMEDIATION'; then
+            echo "FAIL: Delivery urgency map should be in constants"
+            FAIL=1
+          fi
+          if [ "$FAIL" -eq 1 ]; then
+            echo "Regression detected."
+            exit 1
+          fi
+          echo "All regression checks passed."
+
+  config-schema:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate config files
+        run: |
+          FAIL=0
+          for f in config/*.toml; do
+            [ -f "$f" ] || continue
+            echo "Validating TOML: $f"
+            python3 -c "import tomllib; tomllib.load(open('$f','rb'))" || { echo "FAIL: Invalid TOML: $f"; FAIL=1; }
+          done
+          for f in config/*.yaml config/*.yml; do
+            [ -f "$f" ] || continue
+            echo "Validating YAML: $f"
+            python3 -c "import yaml; yaml.safe_load(open('$f'))" || { echo "FAIL: Invalid YAML: $f"; FAIL=1; }
+          done
+          for f in config/*.py; do
+            [ -f "$f" ] || continue
+            [ "$(basename $f)" = "__init__.py" ] && continue
+            echo "Validating Python config: $f"
+            python3 -c "import ast; ast.parse(open('$f').read())" || { echo "FAIL: Syntax error in: $f"; FAIL=1; }
+          done
+          if [ "$FAIL" -eq 1 ]; then exit 1; fi
+          echo "All config schemas valid."
