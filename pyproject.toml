@@ -7,7 +7,7 @@ name = "tidewatch"
 version = "0.1.0"
 description = "Continuous obligation pressure with proactive idle-time planning"
 readme = "README.md"
-license = "AGPL-3.0-or-later OR LicenseRef-Commercial"
+license = "Apache-2.0 OR LicenseRef-Commercial"
 requires-python = ">=3.11"
 authors = [
     {name = "Justin Ram", email = "justin.ram@gmail.com"},
