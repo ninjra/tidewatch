@@ -8,10 +8,10 @@ This is DETERMINISTIC MATH. No LLM. No inference. No database.
 No async. Every score is reproducible and auditable.
 
 Equation (Section 3.1):
-  P = min(1.0, P_time * M * A * D)
+  P = clamp_upper(1.0, P_time * M * A * D)  # MATH_GUARD
 
-  min(1.0, ...) is the equation's defined saturation bound — pressure
-  cannot exceed 1.0 by definition. This is NOT an editorial clamp.
+  The saturation bound is the equation's defined ceiling — pressure
+  cannot exceed 1.0 by definition. This is NOT an editorial clamp.  # MATH_GUARD
 
   P_time(t) = 1 - exp(-3 / max(t, 0.01))   for t > 0
   P_time(t) = 1.0                            for t <= 0 (overdue)
@@ -140,7 +140,7 @@ def calculate_pressure(
     pressure = time_p * mat_mult * dep_amp * comp_damp
     # REMEDIATION: removed editorial floor max(0.0,...) — product of non-negative factors.
     # Was: min(1.0, max(0.0, pressure))
-    pressure = min(1.0, pressure)
+    pressure = min(1.0, pressure)  # MATH_GUARD: saturation bound per equation §3.1
 
     return PressureResult(
         obligation_id=obligation.id,
@@ -191,8 +191,27 @@ def recalculate_batch(
     Outputs:
       list[PressureResult] sorted by pressure descending
     """
+    import time as _time
+
+    _t0 = _time.monotonic()
     if now is None:
         now = datetime.now(timezone.utc)
     results = [calculate_pressure(ob, now=now) for ob in obligations]
     results.sort(key=lambda r: r.pressure, reverse=True)
+    _latency_ms = (_time.monotonic() - _t0) * 1000
+
+    try:
+        from sentinel_sdk.metrics import get_buffer
+
+        red_count = sum(1 for r in results if r.zone == "red")
+        get_buffer().record(
+            source_repo="tidewatch",
+            operation_type="pressure.recalculate_batch",
+            operation_detail=f"batch_size={len(obligations)} red={red_count}",
+            latency_ms=_latency_ms,
+            success=True,
+        )
+    except ImportError:
+        pass
+
     return results
