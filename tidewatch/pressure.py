@@ -39,7 +39,13 @@ from tidewatch.constants import (
     ZONE_RED,
     ZONE_YELLOW,
 )
-from tidewatch.types import Obligation, PressureResult
+from tidewatch.types import (
+    CognitiveContext,
+    Obligation,
+    PressureResult,
+    TaskDemand,
+    estimate_task_demand,
+)
 
 
 def _days_remaining(due_date: datetime, now: datetime) -> float:
@@ -215,3 +221,51 @@ def recalculate_batch(
         pass
 
     return results
+
+
+def bandwidth_adjusted_sort(
+    results: list[PressureResult],
+    obligations: list[Obligation],
+    cognitive: CognitiveContext,
+) -> list[PressureResult]:
+    """Re-sort pressure results by bandwidth-task fit.
+
+    Does NOT change pressure scores — only changes the sort order.
+    When bandwidth is low, tasks with low cognitive demand sort higher.
+    When bandwidth is full, pure pressure ordering is preserved.
+
+    Inputs:
+      results: pressure results (from recalculate_batch)
+      obligations: corresponding obligations (for demand estimation)
+      cognitive: current operator cognitive state
+
+    Logic:
+      fit_score = pressure * (1 - mismatch * (1 - bandwidth))
+      mismatch = avg(complexity, novelty, decision_weight)
+
+      At bandwidth=1.0: fit_score = pressure (no change)
+      At bandwidth=0.0: fit_score = pressure * (1 - mismatch)
+        → high-demand tasks get penalized in sort order
+        → low-demand tasks rise to the top
+
+    Outputs:
+      list[PressureResult] re-sorted by fit_score descending
+    """
+    bandwidth = cognitive.effective_bandwidth()
+
+    # At full bandwidth, return original order (pure pressure)
+    if bandwidth >= 0.99:
+        return results
+
+    ob_map = {ob.id: ob for ob in obligations}
+
+    def fit_score(result: PressureResult) -> float:
+        ob = ob_map.get(result.obligation_id)
+        if ob is None:
+            return result.pressure
+        demand = estimate_task_demand(ob)
+        mismatch = (demand.complexity + demand.novelty + demand.decision_weight) / 3.0
+        return result.pressure * (1.0 - mismatch * (1.0 - bandwidth))
+
+    sorted_results = sorted(results, key=fit_score, reverse=True)
+    return sorted_results

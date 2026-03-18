@@ -125,6 +125,105 @@ class PlanResult:
 
 # --- Triage ---
 
+# --- Cognitive bandwidth context ---
+
+@dataclass
+class CognitiveContext:
+    """Operator's current cognitive state from health data.
+
+    All fields are 0.0-1.0 normalized scores where 1.0 = optimal.
+    None = data unavailable (field ignored in computation).
+
+    This does NOT change pressure scores — pressure is pure deadline math.
+    It modulates the SORT ORDER when presenting obligations to the operator,
+    biasing toward tasks that match current capacity.
+    """
+    sleep_quality: float | None = None      # 0=terrible, 1=excellent
+    hrv_trend: float | None = None          # 0=declining, 1=improving
+    pain_level: float | None = None         # 0=severe pain, 1=no pain
+    hours_since_sleep: float | None = None  # raw hours (not normalized)
+    medication_window: bool | None = None   # True=within med effect window
+    bandwidth_score: float | None = None    # Pre-computed composite (0-1)
+
+    def effective_bandwidth(self) -> float:
+        """Compute composite bandwidth score from available signals.
+
+        Returns 0.0-1.0 where 1.0 = full capacity. If no signals
+        available, returns 1.0 (assume full capacity — fail-open).
+        """
+        if self.bandwidth_score is not None:
+            return max(0.0, min(1.0, self.bandwidth_score))  # MATH_GUARD: probability domain [0,1]
+
+        signals: list[float] = []
+        if self.sleep_quality is not None:
+            signals.append(self.sleep_quality)
+        if self.hrv_trend is not None:
+            signals.append(self.hrv_trend)
+        if self.pain_level is not None:
+            signals.append(self.pain_level)
+        if self.hours_since_sleep is not None:
+            # Normalize: 0-8h = good (1.0), 16h+ = bad (0.0)
+            normalized = max(0.0, 1.0 - max(0.0, self.hours_since_sleep - 8.0) / 8.0)  # MATH_GUARD: normalization to [0,1]
+            signals.append(normalized)
+
+        if not signals:
+            return 1.0  # No data = assume full capacity
+        return sum(signals) / len(signals)
+
+
+# --- Task cognitive demand ---
+
+@dataclass
+class TaskDemand:
+    """Cognitive demand profile for an obligation.
+
+    Maps obligation characteristics to cognitive load requirements.
+    Used by bandwidth-aware sorting to match tasks to capacity.
+    """
+    complexity: float = 0.5      # 0=trivial, 1=deeply analytical
+    novelty: float = 0.5         # 0=familiar/routine, 1=completely new
+    decision_weight: float = 0.5 # 0=mechanical, 1=high-stakes judgment
+
+
+def estimate_task_demand(obligation: Obligation) -> TaskDemand:
+    """Estimate cognitive demand from obligation metadata.
+
+    Heuristic — uses domain and materiality as proxies.
+    Can be overridden per-obligation in the future.
+    """
+    # Domain-based base values
+    domain = (obligation.domain or "").lower()
+    if domain in ("legal", "financial"):
+        complexity = 0.8
+        decision_weight = 0.9
+        novelty = 0.6
+    elif domain in ("engineering",):
+        complexity = 0.5
+        decision_weight = 0.4
+        novelty = 0.5
+    elif domain in ("ops", "admin"):
+        complexity = 0.3
+        decision_weight = 0.2
+        novelty = 0.2
+    else:
+        complexity = 0.5
+        decision_weight = 0.5
+        novelty = 0.5
+
+    # Material obligations add complexity on top of domain base
+    if obligation.materiality == "material":
+        complexity = min(1.0, complexity + 0.2)  # MATH_GUARD: score ceiling
+        decision_weight = min(1.0, decision_weight + 0.1)  # MATH_GUARD: score ceiling
+
+    return TaskDemand(
+        complexity=complexity,
+        novelty=novelty,
+        decision_weight=decision_weight,
+    )
+
+
+# --- Triage ---
+
 @dataclass
 class TriageCandidate:
     """A candidate obligation staged for user review.
