@@ -259,13 +259,34 @@ def bandwidth_adjusted_sort(
 
     ob_map = {ob.id: ob for ob in obligations}
 
-    def fit_score(result: PressureResult) -> float:
+    def _is_hard_floor(ob: Obligation) -> bool:
+        """Binding deadline: explicit flag OR domain heuristic."""
+        if ob.hard_floor:
+            return True
+        # Auto-detect: legal/financial with due_date within 24h
+        if ob.domain and ob.domain.lower() in ("legal", "financial"):
+            if ob.due_date is not None:
+                from datetime import timezone
+                now = datetime.now(timezone.utc)
+                days = _days_remaining(ob.due_date, now)
+                if days <= 1.0:
+                    return True
+        return False
+
+    def fit_score(result: PressureResult) -> tuple[int, float]:
+        """Returns (tier, score). Tier 2 = hard floor (sorts first with reverse=True)."""
         ob = ob_map.get(result.obligation_id)
         if ob is None:
-            return result.pressure
+            return (1, result.pressure)
+        if _is_hard_floor(ob):
+            return (2, result.pressure)  # Hard floor: sorts above all bandwidth-adjusted items
         demand = estimate_task_demand(ob)
         mismatch = (demand.complexity + demand.novelty + demand.decision_weight) / 3.0
-        return result.pressure * (1.0 - mismatch * (1.0 - bandwidth))
+        return (1, result.pressure * (1.0 - mismatch * (1.0 - bandwidth)))
 
-    sorted_results = sorted(results, key=fit_score, reverse=True)
+    sorted_results = sorted(
+        results,
+        key=lambda r: fit_score(r),
+        reverse=True,
+    )
     return sorted_results

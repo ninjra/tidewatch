@@ -74,6 +74,7 @@ class Obligation:
     domain: str | None = None
     description: str | None = None
     status: str = "active"
+    hard_floor: bool = False  # Binding deadline — ignores bandwidth sort
 
 
 # --- Pressure result ---

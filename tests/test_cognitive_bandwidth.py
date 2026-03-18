@@ -82,6 +82,53 @@ class TestTaskDemand:
         assert estimate_task_demand(material).complexity > estimate_task_demand(routine).complexity
 
 
+class TestHardFloor:
+    def test_explicit_hard_floor_sorts_first(self):
+        obs = [
+            _make_obligation(1, "Legal filing", days_until_due=0.5, domain="legal",
+                             materiality="material", hard_floor=True),
+            _make_obligation(2, "Update config", days_until_due=0.5, domain="ops"),
+        ]
+        results = recalculate_batch(obs)
+        ctx = CognitiveContext(bandwidth_score=0.0)  # Zero bandwidth
+        adjusted = bandwidth_adjusted_sort(results, obs, ctx)
+        # Hard floor must sort first even at zero bandwidth
+        assert adjusted[0].obligation_id == 1
+
+    def test_auto_hard_floor_legal_within_24h(self):
+        obs = [
+            _make_obligation(1, "Court deadline", days_until_due=0.5, domain="legal"),
+            _make_obligation(2, "Send email", days_until_due=0.5, domain="ops"),
+        ]
+        results = recalculate_batch(obs)
+        ctx = CognitiveContext(bandwidth_score=0.0)
+        adjusted = bandwidth_adjusted_sort(results, obs, ctx)
+        # Legal + within 24h = auto hard floor
+        assert adjusted[0].obligation_id == 1
+
+    def test_no_auto_hard_floor_legal_far_deadline(self):
+        obs = [
+            _make_obligation(1, "Legal research", days_until_due=10, domain="legal",
+                             materiality="material"),
+            _make_obligation(2, "Update config", days_until_due=10, domain="ops"),
+        ]
+        results = recalculate_batch(obs)
+        ctx = CognitiveContext(bandwidth_score=0.1)
+        adjusted = bandwidth_adjusted_sort(results, obs, ctx)
+        # Legal but far deadline — no hard floor, ops sorts higher at low bandwidth
+        assert adjusted[0].obligation_id == 2
+
+    def test_hard_floor_financial(self):
+        obs = [
+            _make_obligation(1, "Tax payment", days_until_due=0.3, domain="financial"),
+            _make_obligation(2, "Clean desk", days_until_due=0.3, domain="ops"),
+        ]
+        results = recalculate_batch(obs)
+        ctx = CognitiveContext(bandwidth_score=0.0)
+        adjusted = bandwidth_adjusted_sort(results, obs, ctx)
+        assert adjusted[0].obligation_id == 1
+
+
 class TestBandwidthAdjustedSort:
     def test_full_bandwidth_preserves_order(self):
         obs = [
