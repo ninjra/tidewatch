@@ -1,0 +1,690 @@
+% SPDX-License-Identifier: Apache-2.0 OR Commercial
+% Copyright (c) 2026 Infoil LLC
+%
+% Tidewatch: Continuous Obligation Pressure with Cognitive Bandwidth Adaptation
+% Target: AAAI 2027 Workshop / Short Paper Track (4--6 pages)
+%
+% Compile: latexmk -pdf tidewatch.tex
+
+\documentclass[11pt]{article}
+
+% --- Geometry ---
+\usepackage[margin=1in]{geometry}
+
+% --- Math ---
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% --- Tables ---
+\usepackage{booktabs}
+\usepackage{multirow}
+
+% --- Graphics ---
+\usepackage{graphicx}
+
+% --- Code listings ---
+\usepackage{listings}
+\lstset{
+  language=Python,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\bfseries,
+  commentstyle=\itshape,
+  numbers=left,
+  numberstyle=\tiny,
+  numbersep=5pt,
+  frame=single,
+  breaklines=true,
+  columns=fullflexible,
+}
+
+% --- Hyperlinks ---
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% --- Bibliography ---
+\usepackage{natbib}
+\bibliographystyle{plainnat}
+
+% --- Misc ---
+\usepackage{xspace}
+\usepackage{enumitem}
+
+% --- Title ---
+\title{Tidewatch: Continuous Obligation Pressure\\with Cognitive Bandwidth Adaptation}
+\author{Shri Narayan Justin Ram\\Infoil LLC\\
+\texttt{justin@infoil.io}}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+% ======================================================================
+% ABSTRACT
+% ======================================================================
+\begin{abstract}
+Conventional obligation trackers model deadlines as binary events:
+an item is either overdue or not.
+This discrete framing discards critical information about the
+\emph{rate} at which urgency accumulates and offers no mechanism
+for adapting task presentation to the operator's current cognitive
+capacity.
+We introduce \textbf{Tidewatch}, a deterministic pressure engine that
+assigns every tracked obligation a continuous score in $[0, 1]$ via
+an exponential-decay time model modulated by materiality, dependency
+fanout, and completion progress.
+Tidewatch further incorporates a \emph{cognitive bandwidth} dimension:
+physiological signals (sleep quality, pain level, HRV trend) re-rank
+the obligation queue so that low-demand tasks surface when operator
+capacity is reduced.
+The model is pure deterministic math with zero runtime dependencies,
+fully decomposable for auditability, and validated against 11
+pre-computed known-value scenarios covering the full pressure curve.
+\end{abstract}
+
+% ======================================================================
+% 1  INTRODUCTION
+% ======================================================================
+\section{Introduction}
+\label{sec:intro}
+
+Most project management tools and autonomous agent planners treat
+deadlines as step functions: an obligation transitions from
+``upcoming'' to ``overdue'' at a single moment, producing either a
+binary flag or at best a coarse urgency tier (high / medium / low).
+This creates two problems.
+
+\textbf{Problem 1: Loss of gradient information.}
+A task due in 14 days and a task due in 2 days both register as
+``not overdue,'' yet the appropriate allocation of attention differs
+by an order of magnitude.
+Without a continuous signal, priority sorting degenerates to
+tie-breaking by title or insertion order.
+
+\textbf{Problem 2: Operator state blindness.}
+Even systems that produce a continuous urgency signal present the same
+ranked list regardless of the operator's current cognitive capacity.
+A legally complex, high-stakes obligation may technically be the
+highest-pressure item, yet be precisely the wrong task for an operator
+experiencing high pain levels or sleep deprivation~\citep{kahneman1973attention,hart1988development}.
+
+Tidewatch addresses both problems with two orthogonal mechanisms:
+\begin{enumerate}[nosep]
+  \item A \emph{pressure equation} (Section~\ref{sec:pressure}) that
+        maps each obligation to a continuous score $P \in [0, 1]$ using
+        exponential decay, materiality weighting, dependency amplification,
+        and completion dampening.
+  \item A \emph{cognitive bandwidth modulator}
+        (Section~\ref{sec:bandwidth}) that re-ranks the pressure-sorted
+        queue based on the operator's physiological state, promoting
+        low-demand tasks when bandwidth is constrained.
+\end{enumerate}
+
+Tidewatch is deliberately \emph{not} a scheduler.
+It does not assign start times, allocate resources, or generate
+Gantt charts.
+It produces a single, auditable scalar per obligation and a bandwidth-aware
+sort order, leaving execution decisions to the operator or the
+autonomous agent consuming the signal.
+
+% ======================================================================
+% 2  RELATED WORK
+% ======================================================================
+\section{Related Work}
+\label{sec:related}
+
+\textbf{Real-time scheduling.}
+Earliest Deadline First (EDF)~\citep{liu1973scheduling} and
+rate-monotonic scheduling are optimal for periodic task sets on
+uniprocessors.
+Both assume fixed task durations and no notion of partial completion
+or variable operator capacity.
+
+\textbf{Project management.}
+Critical Path Method (CPM)~\citep{kelley1959critical} identifies
+the longest dependency chain to determine project duration.
+CPM models task dependencies but not urgency gradients---every task
+on the critical path has equal implicit priority.
+
+\textbf{LLM-based agent planners.}
+AutoGPT~\citep{autogpt2023} and BabyAGI~\citep{babyagi2023} use
+large language models to decompose goals into subtasks and execute
+them autonomously.
+ReAct~\citep{yao2023react} and Reflexion~\citep{shinn2023reflexion}
+improve agent decision-making through reasoning traces and verbal
+self-reflection.
+\citet{wang2024survey} survey the broader landscape of LLM-based
+autonomous agents.
+None of these systems incorporate a continuous pressure signal or
+adapt task ordering to physiological operator state.
+
+\textbf{Cognitive load and workload.}
+NASA-TLX~\citep{hart1988development} measures perceived workload
+across six dimensions.
+Wickens' Multiple Resource Theory~\citep{wickens2008multiple} models
+interference between concurrent tasks.
+These frameworks measure load post-hoc or at design time; Tidewatch
+uses similar dimensions \emph{online} to modulate task presentation
+in real time.
+
+\textbf{Generative agent simulations.}
+\citet{park2023generative} simulate agent behavior with memory and
+planning, and \citet{khot2023decomposed} decompose complex tasks
+modularly.
+Both operate in simulated or single-session contexts without
+persistent, multi-repo obligation tracking.
+
+% ======================================================================
+% 3  THE TIDEWATCH MODEL
+% ======================================================================
+\section{The Tidewatch Model}
+\label{sec:model}
+
+% ------------------------------------------------------------------
+% 3.1  Pressure Equation
+% ------------------------------------------------------------------
+\subsection{Pressure Equation}
+\label{sec:pressure}
+
+Each obligation carries a deadline, a materiality class, a count of
+downstream dependents, and a completion percentage.
+Given the current time, Tidewatch computes a pressure score:
+
+\begin{equation}
+\label{eq:pressure}
+P = \min\!\bigl(1.0,\; P_{\text{time}} \times M \times A \times D\bigr)
+\end{equation}
+
+\noindent
+where each factor has a hydraulic analog:
+
+\paragraph{Time pressure $P_{\text{time}}$} models the exponential
+approach to criticality as a deadline nears.
+For $t$ days remaining:
+
+\begin{equation}
+\label{eq:time}
+P_{\text{time}}(t) =
+\begin{cases}
+  1 - \exp\!\left(\dfrac{-k}{\max(t, \epsilon)}\right) & \text{if } t > 0 \\[6pt]
+  1.0 & \text{if } t \leq 0 \;\text{(overdue)}
+\end{cases}
+\end{equation}
+
+\noindent
+where $k = 3.0$ is the \emph{rate constant} (hydraulic analog: pipe
+elasticity) and $\epsilon = 0.01$ prevents division by zero.
+The curve satisfies three design requirements: (1) monotonically
+increasing as $t \to 0$, (2) asymptotically approaching 1.0,
+and (3) producing intuitive intermediate values (e.g.,
+$P_{\text{time}}(7) \approx 0.35$, $P_{\text{time}}(1) \approx 0.95$).
+
+\paragraph{Materiality multiplier $M$} widens the pressure pipe for
+obligations marked as material:
+
+\begin{equation}
+M =
+\begin{cases}
+  1.5 & \text{if materiality} = \texttt{material} \;\text{(wide pipe)} \\
+  1.0 & \text{if materiality} = \texttt{routine} \;\text{(standard pipe)}
+\end{cases}
+\end{equation}
+
+\paragraph{Dependency amplifier $A$} increases pressure
+proportionally to the number of downstream obligations that are
+blocked until this one completes (hydraulic analog: junction
+multiplier):
+
+\begin{equation}
+A = 1.0 + (n_{\text{deps}} \times 0.1)
+\end{equation}
+
+\noindent
+where $n_{\text{deps}}$ is the count of dependent obligations.
+An obligation blocking 5 others receives a $1.5\times$ amplification.
+
+\paragraph{Completion dampener $D$} acts as a relief valve,
+reducing pressure proportionally to progress:
+
+\begin{equation}
+D = 1.0 - (c \times 0.6)
+\end{equation}
+
+\noindent
+where $c \in [0, 1]$ is the completion fraction.
+At full completion, pressure is dampened to 40\% of its undampened
+value rather than zero, reflecting the residual urgency of verification
+and delivery even for ``finished'' work.
+
+\paragraph{Saturation bound.}
+The $\min(1.0, \cdot)$ in Equation~\ref{eq:pressure} is not an
+editorial clamp but the equation's defined ceiling: pressure is a
+probability-like quantity bounded by $[0, 1]$.
+The lower bound is guaranteed by the non-negativity of all four factors.
+
+Table~\ref{tab:constants} summarizes all tunable constants.
+
+\begin{table}[t]
+\centering
+\caption{Tidewatch constants with hydraulic analogs.}
+\label{tab:constants}
+\begin{tabular}{@{}llrl@{}}
+\toprule
+\textbf{Constant} & \textbf{Symbol} & \textbf{Value} & \textbf{Hydraulic Analog} \\
+\midrule
+Rate constant        & $k$                      & 3.0  & Pipe elasticity \\
+Overdue pressure     & $P_{\text{overdue}}$     & 1.0  & Pipe at maximum \\
+Material weight      & $M_{\text{mat}}$         & 1.5  & Wide pipe \\
+Routine weight       & $M_{\text{rtn}}$         & 1.0  & Standard pipe \\
+Dependency amp.      & $\alpha_{\text{dep}}$    & 0.1  & Junction multiplier \\
+Completion damp.     & $\beta_{\text{comp}}$    & 0.6  & Relief valve \\
+\midrule
+Zone: yellow         & $\theta_Y$               & 0.30 & Caution threshold \\
+Zone: orange         & $\theta_O$               & 0.60 & Warning threshold \\
+Zone: red            & $\theta_R$               & 0.80 & Critical threshold \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ------------------------------------------------------------------
+% 3.2  Zone Classification
+% ------------------------------------------------------------------
+\subsection{Zone Classification}
+\label{sec:zones}
+
+The continuous pressure score is classified into four operational
+zones for notification routing and display:
+
+\begin{equation}
+\text{zone}(P) =
+\begin{cases}
+  \textsc{green}  & \text{if } P < 0.30 \\
+  \textsc{yellow} & \text{if } 0.30 \leq P < 0.60 \\
+  \textsc{orange} & \text{if } 0.60 \leq P < 0.80 \\
+  \textsc{red}    & \text{if } P \geq 0.80
+\end{cases}
+\end{equation}
+
+Zones map to delivery urgency: \textsc{green} and \textsc{yellow}
+$\to$ \texttt{background}, \textsc{orange} $\to$ \texttt{toast},
+\textsc{red} $\to$ \texttt{interrupt}.
+This ensures that only genuinely critical obligations break the
+operator's focus.
+
+% ------------------------------------------------------------------
+% 3.3  Cognitive Bandwidth Modulation
+% ------------------------------------------------------------------
+\subsection{Cognitive Bandwidth Modulation}
+\label{sec:bandwidth}
+
+Pressure scores are objective---they reflect deadline reality
+independent of who is reading them.
+\emph{Bandwidth modulation} is subjective: it re-ranks the
+pressure-sorted queue based on the operator's current cognitive state
+without altering any pressure score.
+
+\paragraph{CognitiveContext.}
+The operator's state is captured as a \texttt{CognitiveContext}
+with five optional signal channels, each normalized to $[0, 1]$
+where 1.0 = optimal:
+
+\begin{itemize}[nosep]
+  \item \texttt{sleep\_quality}: self-reported or device-measured
+  \item \texttt{hrv\_trend}: heart rate variability trend direction
+  \item \texttt{pain\_level}: inverted (0 = severe, 1 = none)
+  \item \texttt{hours\_since\_sleep}: normalized via
+        $\max(0, 1 - \max(0, h - 8) / 8)$
+  \item \texttt{medication\_window}: boolean (within effect window)
+\end{itemize}
+
+The effective bandwidth $b$ is the arithmetic mean of available
+signals, defaulting to 1.0 (full capacity) when no signals are present.
+A pre-computed \texttt{bandwidth\_score} field overrides the
+signal average if provided.
+
+\paragraph{TaskDemand.}
+Each obligation is mapped to a cognitive demand profile
+\texttt{TaskDemand} with three dimensions:
+
+\begin{itemize}[nosep]
+  \item \texttt{complexity}: $[0,1]$, trivial $\to$ deeply analytical
+  \item \texttt{novelty}: $[0,1]$, familiar $\to$ completely new
+  \item \texttt{decision\_weight}: $[0,1]$, mechanical $\to$ high-stakes judgment
+\end{itemize}
+
+Demand estimation uses domain and materiality as heuristic proxies:
+legal/financial obligations score high on complexity (0.8) and
+decision weight (0.9), while ops/admin tasks score low (0.3, 0.2).
+Material obligations add +0.2 complexity and +0.1 decision weight
+atop the domain baseline.
+
+\paragraph{Fit-score re-ranking.}
+The bandwidth-adjusted sort computes a \emph{fit score} for each
+obligation:
+
+\begin{equation}
+\label{eq:fit}
+f = P \times \bigl(1 - \bar{d} \times (1 - b)\bigr)
+\end{equation}
+
+\noindent
+where $P$ is the raw pressure, $b$ is effective bandwidth, and
+$\bar{d}$ is the mean of the three demand dimensions:
+
+\begin{equation}
+\bar{d} = \frac{\text{complexity} + \text{novelty} + \text{decision\_weight}}{3}
+\end{equation}
+
+This formulation has two critical properties:
+\begin{enumerate}[nosep]
+  \item At $b = 1.0$: $f = P$ (pure pressure ordering, no reranking).
+  \item At $b = 0.0$: $f = P \times (1 - \bar{d})$, maximally
+        penalizing high-demand tasks and promoting easy ones.
+\end{enumerate}
+
+The result is a smooth continuum between ``do the most urgent thing''
+(full capacity) and ``do the easiest urgent thing'' (reduced capacity).
+Pressure scores remain unchanged; only sort order is affected.
+
+\paragraph{Hard-floor override.}
+A critical edge case arises when a binding deadline (e.g., court filing,
+tax payment) coincides with severely reduced bandwidth.
+Bandwidth-adjusted sorting would suppress these high-demand tasks
+precisely when they are most urgent---the \emph{Critical-Low Paradox}.
+
+Tidewatch resolves this with a \emph{hard floor}: obligations flagged
+as binding (explicitly or auto-detected for legal/financial domains
+within 24 hours of deadline) bypass bandwidth adjustment entirely
+and sort by pure pressure.
+The sort key becomes a two-tier tuple: $(t, f)$ where $t = 2$ for
+hard-floor items and $t = 1$ for all others, ensuring binding deadlines
+always surface first regardless of operator state.
+
+% ------------------------------------------------------------------
+% 3.4  Speculative Planning
+% ------------------------------------------------------------------
+\subsection{Speculative Planning}
+\label{sec:planner}
+
+The \texttt{SpeculativePlanner} uses idle compute cycles to
+pre-generate action plans for high-pressure obligations.
+It operates in two phases:
+
+\begin{enumerate}[nosep]
+  \item \textbf{Request generation.}
+        Filter pressure results to obligations in the yellow, orange,
+        or red zones.
+        Sort by pressure descending and take the top $N = 3$.
+        For each, produce a \texttt{PlanRequest} containing the
+        obligation metadata, pressure decomposition, a structured
+        prompt template, and the zone-derived delivery urgency.
+  \item \textbf{Plan completion.}
+        The caller sends the prompt to its LLM and returns the
+        response.
+        The planner wraps it in a \texttt{PlanResult} with full
+        provenance (obligation ID, zone, pressure, timestamp).
+\end{enumerate}
+
+This architecture separates \emph{what to plan} (deterministic,
+pressure-driven) from \emph{how to plan} (LLM-dependent, caller-owned).
+Tidewatch never invokes an LLM directly.
+
+% ------------------------------------------------------------------
+% 3.5  Triage Queue
+% ------------------------------------------------------------------
+\subsection{Triage Queue}
+\label{sec:triage}
+
+External scanners (email, calendar, Slack) produce candidate
+obligations as \texttt{TriageCandidate} objects.
+The \texttt{TriageQueue} stages them for operator review:
+
+\begin{itemize}[nosep]
+  \item \textbf{Stage:} deduplicates by (title, source, due\_date)
+        tuple and assigns a UUID.
+  \item \textbf{List:} returns pending candidates ordered by
+        staging timestamp.
+  \item \textbf{Accept:} converts a candidate to a full
+        \texttt{Obligation} and removes it from the queue.
+  \item \textbf{Reject:} discards a candidate without creating
+        an obligation.
+\end{itemize}
+
+The queue is in-memory and stateless---the caller handles
+persistence.
+This keeps Tidewatch free of database dependencies while allowing
+any storage backend to be plugged in above it.
+
+% ======================================================================
+% 4  IMPLEMENTATION
+% ======================================================================
+\section{Implementation}
+\label{sec:implementation}
+
+Tidewatch is implemented in Python 3.11+ with \textbf{zero runtime
+dependencies}---only \texttt{math}, \texttt{datetime}, \texttt{dataclasses},
+and \texttt{uuid} from the standard library.
+The core library comprises 861 lines across five modules:
+
+\begin{itemize}[nosep]
+  \item \texttt{pressure.py}: pressure equation and batch recalculation
+  \item \texttt{constants.py}: all tunable parameters
+  \item \texttt{types.py}: dataclasses for obligations, results,
+        cognitive context, task demand, and triage candidates
+  \item \texttt{planner.py}: speculative plan request generation
+  \item \texttt{triage.py}: candidate staging and deduplication
+\end{itemize}
+
+All public functions carry full type annotations and follow a
+strict \emph{inputs / logic / outputs / notes} docstring structure.
+The pressure engine is explicitly marked as \textbf{deterministic
+math}: no LLM inference, no database access, no asynchronous I/O.
+Every pressure score is reproducible and auditable given the same
+inputs.
+
+Input validation uses fail-fast \texttt{ValueError} exceptions
+rather than silent clamping.
+Completion percentage must lie in $[0, 1]$ and dependency count must
+be non-negative; violations are caught at the function boundary, not
+masked by editorial floor/ceiling operations.
+
+Tidewatch integrates with external systems via an optional telemetry
+hook: batch recalculation records latency and red-zone counts to a
+shared metrics buffer when available, degrading gracefully (silent
+no-op) when it is not.
+
+% ======================================================================
+% 5  EVALUATION
+% ======================================================================
+\section{Evaluation}
+\label{sec:eval}
+
+% ------------------------------------------------------------------
+% 5.1  Known-Value Tests
+% ------------------------------------------------------------------
+\subsection{Known-Value Tests}
+\label{sec:golden}
+
+We validate the pressure equation against 11 pre-computed scenarios
+with expected values calculated directly from the closed-form
+equation.
+Table~\ref{tab:golden} shows representative cases.
+All 11 tests pass to $10^{-10}$ absolute tolerance, confirming that
+the implementation is a faithful transcription of the mathematics.
+
+\begin{table}[t]
+\centering
+\caption{Known-value test cases. All pressures match pre-computed
+values to $|{\Delta}| < 10^{-10}$.}
+\label{tab:golden}
+\begin{tabular}{@{}rrllrrl@{}}
+\toprule
+\textbf{Days} & \textbf{Deps} & \textbf{Mat.} & \textbf{Comp.} &
+\textbf{$P$ (expected)} & \textbf{$P$ (actual)} & \textbf{Zone} \\
+\midrule
+60 & 0 & routine  & 0\%   & 0.0488 & 0.0488 & green  \\
+30 & 0 & routine  & 50\%  & 0.0666 & 0.0666 & green  \\
+14 & 0 & routine  & 0\%   & 0.1929 & 0.1929 & green  \\
+ 7 & 0 & routine  & 0\%   & 0.3486 & 0.3486 & yellow \\
+ 5 & 2 & routine  & 30\%  & 0.4440 & 0.4440 & yellow \\
+ 3 & 0 & routine  & 0\%   & 0.6321 & 0.6321 & orange \\
+ 2 & 0 & routine  & 0\%   & 0.7769 & 0.7769 & orange \\
+ 1 & 0 & routine  & 0\%   & 0.9502 & 0.9502 & red    \\
+ 1 & 3 & material & 0\%   & 1.0000 & 1.0000 & red    \\
+ 0 & 0 & routine  & 0\%   & 1.0000 & 1.0000 & red    \\
+$-$5 & 0 & material & 0\% & 1.0000 & 1.0000 & red    \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Additionally, each test verifies the \emph{factor decomposition
+invariant}: $P = \min(1.0,\; P_{\text{time}} \times M \times A
+\times D)$ holds to $10^{-15}$ tolerance, ensuring that no hidden
+rounding or clamping occurs between factor computation and final
+aggregation.
+
+% ------------------------------------------------------------------
+% 5.2  Cognitive Bandwidth Tests
+% ------------------------------------------------------------------
+\subsection{Cognitive Bandwidth Tests}
+\label{sec:bw_tests}
+
+We evaluate the bandwidth modulation with controlled experiments.
+Table~\ref{tab:bandwidth} shows the key result: at low bandwidth,
+a high-demand task (legal brief, material, domain=legal) that would
+normally rank first is displaced by a low-demand task (config update,
+routine, domain=ops).
+
+\begin{table}[t]
+\centering
+\caption{Bandwidth-adjusted sort order for two obligations at
+$t = 2$ days. At full bandwidth, pure pressure ordering applies.
+At $b = 0.1$, the low-demand task is promoted.}
+\label{tab:bandwidth}
+\begin{tabular}{@{}llccc@{}}
+\toprule
+\textbf{Task} & \textbf{Domain} & \textbf{$P$} & \textbf{Rank ($b=1.0$)} & \textbf{Rank ($b=0.1$)} \\
+\midrule
+Legal brief   & legal (material) & 1.000 & 1 & 2 \\
+Config update & ops (routine)    & 0.777 & 2 & 1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Additional bandwidth tests verify:
+\begin{itemize}[nosep]
+  \item \textbf{No-signal default}: absent physiological data yields
+        $b = 1.0$ (fail-open).
+  \item \textbf{Hours-since-sleep normalization}: 8\,h $\to$ 1.0,
+        12\,h $\to$ 0.5, 16\,h $\to$ 0.0.
+  \item \textbf{Multi-signal averaging}: sleep quality 0.8 + pain
+        level 0.4 $\to$ $b = 0.6$.
+  \item \textbf{Medium bandwidth partial reorder}: at $b = 0.5$
+        with three tasks, the ops task moves ahead of the financial
+        task while the engineering task stays in the middle.
+\end{itemize}
+
+% ------------------------------------------------------------------
+% 5.3  Deployment
+% ------------------------------------------------------------------
+\subsection{Deployment}
+\label{sec:deployment}
+
+Tidewatch has been in production use since early 2026:
+
+\begin{itemize}[nosep]
+  \item \textbf{Performance:} 314 tests execute in under 0.2s,
+        confirming sub-millisecond per-obligation pressure calculation.
+  \item \textbf{Determinism:} 21 end-to-end golden pipeline gates
+        cover the full pipeline from triage through pressure
+        calculation to speculative planning. All produce identical
+        results across runs.
+  \item \textbf{Validation:} 11 known-value test scenarios verified
+        to $10^{-10}$ absolute tolerance against hand-computed
+        expected values.
+\end{itemize}
+
+% ======================================================================
+% 6  DISCUSSION
+% ======================================================================
+\section{Discussion}
+\label{sec:discussion}
+
+\paragraph{The governance tax.}
+Tidewatch operates within a governed agent ecosystem where every
+autonomous action must be approved, logged, and auditable.
+This creates a tension between throughput and safety: the fastest
+agent is the one with no guardrails.
+Tidewatch's contribution is making the \emph{prioritization}
+deterministic and transparent---the operator (or governing council)
+can audit exactly why obligation $A$ ranked above obligation $B$
+by inspecting the four-factor decomposition.
+The pressure score is reproducible: same inputs, same output, no
+stochastic variation.
+
+\paragraph{Limitations.}
+Several limitations warrant acknowledgment:
+
+\begin{enumerate}[nosep]
+  \item \textbf{Single-operator calibration.}
+        The constants ($k = 3.0$, $M = 1.5$, $\beta = 0.6$) were
+        tuned for a single operator's workflow.
+        Multi-user deployment would require per-operator calibration
+        or learned constants.
+  \item \textbf{No team support.}
+        Tidewatch models a single operator's pressure field.
+        Team-level aggregation (shared obligations, delegation,
+        load balancing) is out of scope.
+  \item \textbf{Heuristic demand estimation.}
+        Task demand is estimated from domain and materiality metadata.
+        Richer features (historical completion time, operator
+        self-report, code complexity metrics) would improve accuracy.
+  \item \textbf{No feedback loop.}
+        Current constants are fixed.
+        A closed-loop system would observe actual completion patterns
+        and adjust $k$, $M$, and $\beta$ over time.
+\end{enumerate}
+
+\paragraph{Future work.}
+Three directions are planned:
+
+\begin{enumerate}[nosep]
+  \item \textbf{Physiological integration.}
+        Ingesting real biometric data from Apple Health via the
+        planned Vitae integration module, replacing self-reported
+        signals with continuous sensor streams.
+  \item \textbf{Learned constants.}
+        Using Sentinel's Forge optimizer~\citep{autogpt2023} to
+        tune pressure constants via outcome-driven reward signals
+        (obligation completion time vs.\ predicted pressure rank).
+  \item \textbf{Multi-agent pressure.}
+        Extending the model to team contexts where obligations have
+        multiple potential assignees and pressure propagates through
+        a delegation graph.
+\end{enumerate}
+
+% ======================================================================
+% 7  CONCLUSION
+% ======================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+Tidewatch replaces the binary overdue flag with a continuous,
+decomposable pressure score.
+Its four-factor multiplicative model ($P_{\text{time}} \times M
+\times A \times D$) produces intuitive urgency gradients that
+autonomous agents and human operators alike can act on.
+The cognitive bandwidth dimension ensures that the \emph{right}
+task surfaces at the \emph{right} time---not just the most urgent
+one, but the most urgent one the operator can actually execute.
+
+At 861 lines with zero dependencies and 314 deterministic tests,
+Tidewatch demonstrates that useful prioritization infrastructure
+does not require complexity.
+It requires the right equation.
+
+% ======================================================================
+% REFERENCES
+% ======================================================================
+\bibliography{references}
+
+\end{document}
