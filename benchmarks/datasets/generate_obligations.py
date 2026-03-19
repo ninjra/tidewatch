@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0 OR Commercial
 """Generate Synthetic Obligation Benchmark (SOB).
 
 1,000 obligations across 5 domains with realistic deadline distributions,

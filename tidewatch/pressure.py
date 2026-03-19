@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0 OR Commercial
 """Tidewatch pressure engine.
 
 Computes a continuous pressure score (0.0-1.0) for each obligation
@@ -111,6 +112,12 @@ def calculate_pressure(
 
     days_rem = _days_remaining(obligation.due_date, now)
 
+    # NaN/Inf guards — must precede range checks (NaN fails comparison silently)
+    if math.isnan(obligation.completion_pct) or math.isinf(obligation.completion_pct):
+        raise ValueError(f"completion_pct must be finite, got {obligation.completion_pct}")
+    if math.isnan(float(obligation.dependency_count)) or math.isinf(float(obligation.dependency_count)):
+        raise ValueError(f"dependency_count must be finite, got {obligation.dependency_count}")
+
     # REMEDIATION: replaced editorial clamp max(0.0, min(1.0, ...)) with input validation.
     # Was: completion_pct = max(0.0, min(1.0, obligation.completion_pct))
     if not (0.0 <= obligation.completion_pct <= 1.0):
@@ -171,6 +178,8 @@ def pressure_zone(pressure: float) -> str:
     Notes:
       Boundaries: green < 0.30, yellow < 0.60, orange < 0.80, red >= 0.80
     """
+    if math.isnan(pressure) or math.isinf(pressure):
+        raise ValueError(f"pressure must be finite, got {pressure}")
     if pressure < ZONE_YELLOW:
         return "green"
     elif pressure < ZONE_ORANGE:

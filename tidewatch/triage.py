@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0 OR Commercial
 """Triage queue -- stage candidate obligations for user review.
 
 In-memory queue. Caller handles persistence.

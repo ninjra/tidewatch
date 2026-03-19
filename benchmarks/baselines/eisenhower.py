@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0 OR Commercial
 """Eisenhower matrix baseline: 4-bucket static classification.
 
 Urgent/Important matrix:

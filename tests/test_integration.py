@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0 OR Commercial
 """Integration tests — full pipeline from obligations through planning.
 
 3 tests covering the end-to-end flow.

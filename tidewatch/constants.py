@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0 OR Commercial
 """Tunable constants for Tidewatch pressure engine.
 
 Each constant has a hydraulic analog documented in its comment.

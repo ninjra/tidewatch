@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0 OR Commercial
 """Binary deadline baseline: urgency = 1 if overdue, 0 otherwise."""
 
 

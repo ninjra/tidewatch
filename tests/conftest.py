@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0 OR Commercial
 """Shared fixtures for Tidewatch tests."""
 
 from datetime import datetime, timedelta, timezone

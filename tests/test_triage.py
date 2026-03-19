@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0 OR Commercial
 """Tests for tidewatch.triage — candidate staging and acceptance.
 
 5 tests covering stage/list, accept, reject, dedup, and empty queue.

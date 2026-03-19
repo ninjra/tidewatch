@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0 OR Commercial
 """Tests for tidewatch.pressure — the core pressure engine.
 
 18 tests covering the pressure equation, zones, batch recalculation,
@@ -208,3 +209,24 @@ class TestBatch:
         assert result.dependency_amp == 1.3
         assert abs(result.completion_damp - 0.76) < 0.001
         assert result.zone in ("green", "yellow", "orange", "red")
+
+
+class TestNanInfGuards:
+    """NaN/Inf validation on float inputs."""
+
+    def test_nan_completion_pct_raises(self):
+        """NaN completion_pct raises ValueError."""
+        ob, now = _make_obligation(days_out=7, completion_pct=float("nan"))
+        with pytest.raises(ValueError, match="finite"):
+            calculate_pressure(ob, now=now)
+
+    def test_inf_completion_pct_raises(self):
+        """Inf completion_pct raises ValueError."""
+        ob, now = _make_obligation(days_out=7, completion_pct=float("inf"))
+        with pytest.raises(ValueError, match="finite"):
+            calculate_pressure(ob, now=now)
+
+    def test_nan_pressure_zone_raises(self):
+        """NaN pressure raises ValueError in pressure_zone."""
+        with pytest.raises(ValueError, match="finite"):
+            pressure_zone(float("nan"))

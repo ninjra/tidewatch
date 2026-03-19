@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0 OR Commercial
 """Benchmark metrics for comparing urgency models.
 
 Metrics:

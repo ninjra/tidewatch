@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0 OR Commercial
 """Linear urgency baseline: urgency = max(0, 1 - days_remaining / horizon)."""
 
 DEFAULT_HORIZON = 90

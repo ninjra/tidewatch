@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0 OR Commercial
 """Tidewatch: Continuous obligation pressure with proactive planning."""
 
 from tidewatch.pressure import (

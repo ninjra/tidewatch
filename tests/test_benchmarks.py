@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0 OR Commercial
 """Tests for tidewatch benchmark suite.
 
 Covers baselines, metrics, SOB generator, and round-trip pipeline.

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0 OR Commercial
 """Speculative planner -- idle-time plan generation for high-pressure obligations.
 
 Returns prompt templates. The caller provides the LLM.

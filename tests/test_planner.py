@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0 OR Commercial
 """Tests for tidewatch.planner — speculative plan generation.
 
 8 tests covering zone filtering, top-N limits, prompt content,

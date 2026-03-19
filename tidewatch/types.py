@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0 OR Commercial
 """Core types for Tidewatch.
 
 All types are plain dataclasses using only stdlib.
