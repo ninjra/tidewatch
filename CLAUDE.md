@@ -43,6 +43,11 @@ Run before every commit: `python -m pytest tests/ -v`
 This repo is part of the Sentinel ecosystem. Use `sentinel_query.py` for all cross-repo
 coordination. The tool lives at `~/projects/Sentinel/scripts/sentinel_query.py`.
 
+**Note:** Sentinel integration is a development workflow dependency, NOT a runtime
+dependency. The tidewatch library (`tidewatch/`) has zero external dependencies and
+functions fully without Sentinel. The sentinel_sdk telemetry integration is an optional
+extra (`pip install -e ".[telemetry]"`) that degrades gracefully if unavailable.
+
 ### Session Lifecycle
 
 At the start of every Claude Code session in this repo:

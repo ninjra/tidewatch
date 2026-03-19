@@ -10,7 +10,7 @@ dampens. The system plans before you ask.
 ## Install
 
 ```bash
-pip install tidewatch
+pip install -e ".[dev]"
 ```
 
 ## Quick Start
@@ -62,4 +62,4 @@ for req in plan_requests:
 
 ## License
 
-MIT
+Apache-2.0 OR Commercial

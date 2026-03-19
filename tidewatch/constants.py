@@ -5,6 +5,15 @@ Each constant has a hydraulic analog documented in its comment.
 """
 
 # --- Pressure curve ---
+# RATE_CONSTANT derivation (§3.1):
+# P_time(t) = 1 - exp(-k/t) where k = RATE_CONSTANT
+# At t=1 day:  P_time = 1 - exp(-3/1)  = 0.950  (95% pressure)
+# At t=3 days: P_time = 1 - exp(-3/3)  = 0.632  (63% pressure)
+# At t=7 days: P_time = 1 - exp(-3/7)  = 0.349  (35% pressure — yellow zone entry)
+# At t=14 days: P_time = 1 - exp(-3/14) = 0.193 (19% pressure — green)
+# k=3 chosen so that 7-day deadlines enter yellow zone (0.30) under base conditions.
+# Sensitivity: k=2 shifts yellow entry to ~5 days; k=4 shifts it to ~10 days.
+# See paper §4.2 for sensitivity analysis across k=[1,5].
 RATE_CONSTANT = 3.0        # Exponential steepness (pipe elasticity)
 OVERDUE_PRESSURE = 1.0     # Pressure when overdue (pipe at max)
 
@@ -24,6 +33,14 @@ COMPLETION_LOGISTIC_K = 8.0   # Steepness of logistic curve
 COMPLETION_LOGISTIC_MID = 0.5 # Midpoint of logistic curve (50% completion)
 
 # --- Zone thresholds ---
+# Rationale: zones map to operator action urgency.
+# GREEN  (P < 0.30): no action needed, routine monitoring
+# YELLOW (P < 0.60): awareness — obligation approaching, plan if idle
+# ORANGE (P < 0.80): active attention — should be in progress
+# RED    (P >= 0.80): critical — immediate action required
+# These match the RATE_CONSTANT calibration: a 7-day deadline with no
+# completion enters yellow, a 3-day deadline enters orange, and a 1-day
+# deadline with dependencies is red.
 ZONE_YELLOW = 0.30
 ZONE_ORANGE = 0.60
 ZONE_RED = 0.80

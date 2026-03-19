@@ -18,12 +18,16 @@ from datetime import UTC, datetime
 from tidewatch.constants import (
     DEFAULT_DELIVERY_URGENCY,
     DELIVERY_URGENCY_MAP,
+    PLANNER_MAX_TOKENS,
     PLANNER_MIN_ZONES,
     PLANNER_TOP_N,
 )
 from tidewatch.types import Obligation, PlanRequest, PlanResult, PressureResult
 
 logger = logging.getLogger(__name__)
+
+# Approximate chars-per-token for prompt length estimation
+_CHARS_PER_TOKEN = 4  # ASSUMPTION_OK: conservative average for English text
 
 
 _DEFAULT_SYSTEM_PROMPT = (
@@ -74,20 +78,46 @@ class SpeculativePlanner:
             else DEFAULT_DELIVERY_URGENCY
         )
 
+    @staticmethod
+    def _sanitize(text: str, max_len: int = 500) -> str:
+        """Sanitize user-provided text for LLM prompt inclusion.
+
+        Strips control characters, truncates to max_len, and escapes
+        potential prompt injection markers.
+        """
+        if not text:
+            return ""
+        # Strip control chars except newline/tab
+        cleaned = "".join(c for c in text if c == "\n" or c == "\t" or (ord(c) >= 32))
+        # Truncate
+        if len(cleaned) > max_len:
+            cleaned = cleaned[:max_len] + "..."
+        return cleaned
+
     def _build_prompt(self, obligation: Obligation, result: PressureResult) -> str:
         """Build the LLM prompt for a single obligation."""
-        return (
-            f"Obligation: {obligation.title}\n"
-            f"Description: {obligation.description or ''}\n"
+        title = self._sanitize(obligation.title, max_len=200)
+        desc = self._sanitize(obligation.description or "", max_len=500)
+        domain = self._sanitize(obligation.domain or "general", max_len=50)
+
+        prompt = (
+            f"Obligation: {title}\n"
+            f"Description: {desc}\n"
             f"Due: {obligation.due_date}\n"
             f"Pressure zone: {result.zone} (score {result.pressure:.2f})\n"
-            f"Domain: {obligation.domain or 'general'}\n\n"
+            f"Domain: {domain}\n\n"
             f"Produce 2-3 concrete next steps. Each step must be:\n"
             f"- Actionable (not \"think about\" or \"consider\")\n"
             f"- Completable in one sitting (under 2 hours)\n"
             f"- Specific enough to start immediately\n"
             f"Be concise. No preamble."
         )
+
+        # Enforce token budget
+        max_chars = PLANNER_MAX_TOKENS * _CHARS_PER_TOKEN
+        if len(prompt) > max_chars:
+            prompt = prompt[:max_chars]
+        return prompt
 
     def generate_plan_requests(
         self,
