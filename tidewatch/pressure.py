@@ -39,11 +39,19 @@ from tidewatch.constants import (
     COMPLETION_LOGISTIC_MID,
     DEPENDENCY_AMPLIFICATION,
     FIT_SCORE_MISMATCH_COMPONENTS,
+    FORGE_PRESSURE_PAUSE_THRESHOLD,
+    GRAVITY_TIEBREAK_WEIGHT,
     HARD_FLOOR_DAYS_THRESHOLD,
     HARD_FLOOR_DOMAINS,
     MATERIALITY_WEIGHTS,
     OVERDUE_PRESSURE,
     RATE_CONSTANT,
+    TIMING_CRITICAL_DAYS,
+    TIMING_CRITICAL_MULTIPLIER,
+    TIMING_STALE_DAYS,
+    TIMING_STALE_MULTIPLIER,
+    VIOLATION_AMPLIFICATION,
+    VIOLATION_MAX_AMPLIFICATION,
     ZONE_ORANGE,
     ZONE_RED,
     ZONE_YELLOW,
@@ -160,10 +168,22 @@ def calculate_pressure(
         # Linear: D = 1 - pct * max_damp (original §3.1)
         comp_damp = 1.0 - (completion_pct * COMPLETION_DAMPENING)
 
+    # 5. Timing amplifier (#195) — stuck obligations get pressure boost
+    if obligation.days_in_status >= TIMING_CRITICAL_DAYS:
+        timing_amp = TIMING_CRITICAL_MULTIPLIER
+    elif obligation.days_in_status >= TIMING_STALE_DAYS:
+        timing_amp = TIMING_STALE_MULTIPLIER
+    else:
+        timing_amp = 1.0
+
+    # 6. Violation amplifier (#99) — obligations with violations get pressure boost
+    violation_amp = 1.0 + min(
+        obligation.violation_count * VIOLATION_AMPLIFICATION,
+        VIOLATION_MAX_AMPLIFICATION,
+    )  # MATH_GUARD: capped amplification
+
     # Final pressure
-    pressure = time_p * mat_mult * dep_amp * comp_damp
-    # REMEDIATION: removed editorial floor max(0.0,...) — product of non-negative factors.
-    # Was: min(1.0, max(0.0, pressure))
+    pressure = time_p * mat_mult * dep_amp * comp_damp * timing_amp * violation_amp
     pressure = min(1.0, pressure)  # MATH_GUARD: saturation bound per equation §3.1
 
     return PressureResult(
@@ -243,6 +263,24 @@ def recalculate_batch(
     return results
 
 
+def export_pressure_summary(results: list[PressureResult]) -> dict:
+    """Export system pressure summary for forge governance consumption (#140).
+
+    Returns dict with system_pressure (max), red_count, and at-risk obligation IDs.
+    Forge uses system_pressure >= FORGE_PRESSURE_PAUSE_THRESHOLD to pause evolution.
+    """
+    if not results:
+        return {"system_pressure": 0.0, "red_count": 0, "obligations_at_risk": []}
+    system_pressure = max(r.pressure for r in results)
+    red = [r for r in results if r.zone == "red"]
+    return {
+        "system_pressure": system_pressure,
+        "red_count": len(red),
+        "obligations_at_risk": [r.obligation_id for r in red],
+        "should_pause_evolution": system_pressure >= FORGE_PRESSURE_PAUSE_THRESHOLD,
+    }
+
+
 def bandwidth_adjusted_sort(
     results: list[PressureResult],
     obligations: list[Obligation],
@@ -299,7 +337,9 @@ def bandwidth_adjusted_sort(
             return (2, result.pressure)  # Hard floor: sorts above all bandwidth-adjusted items
         demand = estimate_task_demand(ob)
         mismatch = (demand.complexity + demand.novelty + demand.decision_weight) / FIT_SCORE_MISMATCH_COMPONENTS
-        return (1, result.pressure * (1.0 - mismatch * (1.0 - bandwidth)))
+        base = result.pressure * (1.0 - mismatch * (1.0 - bandwidth))
+        gravity_bonus = (ob.gravity_score or 0.0) * GRAVITY_TIEBREAK_WEIGHT  # (#635)
+        return (1, base + gravity_bonus)
 
     sorted_results = sorted(
         results,

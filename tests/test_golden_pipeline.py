@@ -56,6 +56,7 @@ _EXPECTED_EXPORTS = [
     "pressure_zone",
     "recalculate_batch",
     "bandwidth_adjusted_sort",
+    "export_pressure_summary",
     "SpeculativePlanner",
     "TriageQueue",
     "CognitiveContext",
@@ -233,6 +234,14 @@ _EXPECTED_CONSTANTS = [
     ("MATERIAL_DECISION_BOOST", 0.1),
     ("HARD_FLOOR_DAYS_THRESHOLD", 1.0),
     ("FIT_SCORE_MISMATCH_COMPONENTS", 3),
+    ("TIMING_STALE_DAYS", 7),
+    ("TIMING_CRITICAL_DAYS", 14),
+    ("TIMING_STALE_MULTIPLIER", 1.1),
+    ("TIMING_CRITICAL_MULTIPLIER", 1.2),
+    ("VIOLATION_AMPLIFICATION", 0.05),
+    ("VIOLATION_MAX_AMPLIFICATION", 0.5),
+    ("GRAVITY_TIEBREAK_WEIGHT", 0.1),
+    ("FORGE_PRESSURE_PAUSE_THRESHOLD", 0.80),
 ]
 
 

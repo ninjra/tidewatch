@@ -75,6 +75,9 @@ class Obligation:
     description: str | None = None
     status: str = "active"
     hard_floor: bool = False  # Binding deadline — ignores bandwidth sort
+    days_in_status: float = 0.0  # Days in current status (#195 timing amplification)
+    violation_count: int = 0     # Rule violations associated with this obligation (#99)
+    gravity_score: float | None = None  # Gravitational attraction score from gravitas (#635)
 
 
 # --- Pressure result ---
@@ -145,6 +148,9 @@ class CognitiveContext:
     hours_since_sleep: float | None = None  # raw hours (not normalized)
     medication_window: bool | None = None   # True=within med effect window
     bandwidth_score: float | None = None    # Pre-computed composite (0-1)
+    violation_rate: float | None = None     # 0=no violations, 1=critical (#279)
+    constraint_pressure: float | None = None  # 0=all clear, 1=all breached (#279)
+    session_load: float | None = None       # 0=idle, 1=saturated (#279)
 
     def effective_bandwidth(self) -> float:
         """Compute composite bandwidth score from available signals.
@@ -167,6 +173,12 @@ class CognitiveContext:
         if self.hours_since_sleep is not None:
             normalized = max(0.0, 1.0 - max(0.0, self.hours_since_sleep - BANDWIDTH_HOURS_GOOD) / BANDWIDTH_NORMALIZATION_RANGE)  # MATH_GUARD: normalization to [0,1]
             signals.append(normalized)
+        if self.violation_rate is not None:
+            signals.append(1.0 - self.violation_rate)  # High violations = low bandwidth
+        if self.constraint_pressure is not None:
+            signals.append(1.0 - self.constraint_pressure)
+        if self.session_load is not None:
+            signals.append(1.0 - self.session_load)
 
         if not signals:
             return 1.0  # ASSUMPTION_OK: No data = assume full capacity (fail-open by design)

@@ -69,3 +69,19 @@ DEFAULT_DELIVERY_URGENCY = "background"  # Fallback for unknown zones
 
 # --- Fit score ---
 FIT_SCORE_MISMATCH_COMPONENTS = 3  # Number of demand components averaged for mismatch
+
+# --- Timing amplification (#195) ---
+TIMING_STALE_DAYS = 7           # Days in-progress before first amplification tier
+TIMING_CRITICAL_DAYS = 14       # Days in-progress before second amplification tier
+TIMING_STALE_MULTIPLIER = 1.1   # 10% amplification for stale obligations
+TIMING_CRITICAL_MULTIPLIER = 1.2  # 20% amplification for critically stuck obligations
+
+# --- Violation amplification (#99) ---
+VIOLATION_AMPLIFICATION = 0.05  # Per-violation pressure amplifier (additive to dep_amp)
+VIOLATION_MAX_AMPLIFICATION = 0.5  # Cap on total violation amplification
+
+# --- Gravity tiebreak (#635) ---
+GRAVITY_TIEBREAK_WEIGHT = 0.1   # Weight of gravity score in bandwidth-adjusted sort
+
+# --- Forge pressure export (#140) ---
+FORGE_PRESSURE_PAUSE_THRESHOLD = 0.80  # System pressure above which forge pauses evolution
