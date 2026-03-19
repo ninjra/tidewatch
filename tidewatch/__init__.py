@@ -1,16 +1,24 @@
 # SPDX-License-Identifier: Apache-2.0 OR Commercial
 """Tidewatch: Continuous obligation pressure with proactive planning."""
 
-from tidewatch.pressure import (
-    calculate_pressure, pressure_zone, recalculate_batch,
-    bandwidth_adjusted_sort,
-)
 from tidewatch.planner import SpeculativePlanner
+from tidewatch.pressure import (
+    bandwidth_adjusted_sort,
+    calculate_pressure,
+    pressure_zone,
+    recalculate_batch,
+)
 from tidewatch.triage import TriageQueue
 from tidewatch.types import (
-    CognitiveContext, TaskDemand, estimate_task_demand,
-    Obligation, PressureResult, PlanRequest, PlanResult,
-    Zone, TriageCandidate,
+    CognitiveContext,
+    Obligation,
+    PlanRequest,
+    PlanResult,
+    PressureResult,
+    TaskDemand,
+    TriageCandidate,
+    Zone,
+    estimate_task_demand,
 )
 
 __version__ = "0.2.0"

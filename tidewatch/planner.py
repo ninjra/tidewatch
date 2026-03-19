@@ -13,7 +13,7 @@ Usage:
 """
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from tidewatch.constants import (
     DEFAULT_DELIVERY_URGENCY,
@@ -171,5 +171,5 @@ class SpeculativePlanner:
             plan_text=plan_text,
             zone=plan_request.pressure_result.zone,
             pressure=plan_request.pressure_result.pressure,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )

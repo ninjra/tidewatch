@@ -25,6 +25,30 @@ ZONE_YELLOW = 0.30
 ZONE_ORANGE = 0.60
 ZONE_RED = 0.80
 
+# --- Cognitive bandwidth ---
+BANDWIDTH_FULL_THRESHOLD = 0.99  # Above this, skip bandwidth adjustment
+BANDWIDTH_HOURS_GOOD = 8.0      # Hours since sleep: 0-8h = good (1.0)
+BANDWIDTH_HOURS_BAD = 16.0      # Hours since sleep: 16h+ = bad (0.0)
+BANDWIDTH_NORMALIZATION_RANGE = 8.0  # BANDWIDTH_HOURS_BAD - BANDWIDTH_HOURS_GOOD
+
+# --- Task demand estimation (domain -> cognitive profile) ---
+TASK_DEMAND_PROFILES: dict[str, dict[str, float]] = {
+    "legal":      {"complexity": 0.8, "decision_weight": 0.9, "novelty": 0.6},
+    "financial":  {"complexity": 0.8, "decision_weight": 0.9, "novelty": 0.6},
+    "engineering": {"complexity": 0.5, "decision_weight": 0.4, "novelty": 0.5},
+    "ops":        {"complexity": 0.3, "decision_weight": 0.2, "novelty": 0.2},
+    "admin":      {"complexity": 0.3, "decision_weight": 0.2, "novelty": 0.2},
+}
+TASK_DEMAND_DEFAULT: dict[str, float] = {
+    "complexity": 0.5, "decision_weight": 0.5, "novelty": 0.5,
+}
+MATERIAL_COMPLEXITY_BOOST = 0.2    # Added to complexity for material items
+MATERIAL_DECISION_BOOST = 0.1      # Added to decision_weight for material items
+
+# --- Hard floor auto-detection ---
+HARD_FLOOR_DOMAINS: frozenset[str] = frozenset({"legal", "financial"})
+HARD_FLOOR_DAYS_THRESHOLD = 1.0    # Auto-detect hard floor within this many days
+
 # --- Speculative planner ---
 PLANNER_MIN_ZONES: frozenset[str] = frozenset({"yellow", "orange", "red"})
 PLANNER_TOP_N = 3           # Max obligations to plan per cycle
@@ -39,3 +63,6 @@ DELIVERY_URGENCY_MAP: dict[str, str] = {
     "red": "interrupt",
 }
 DEFAULT_DELIVERY_URGENCY = "background"  # Fallback for unknown zones
+
+# --- Fit score ---
+FIT_SCORE_MISMATCH_COMPONENTS = 3  # Number of demand components averaged for mismatch

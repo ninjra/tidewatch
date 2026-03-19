@@ -4,13 +4,11 @@
 3 tests covering the end-to-end flow.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from tidewatch import (
     Obligation,
     SpeculativePlanner,
-    TriageCandidate,
-    TriageQueue,
     calculate_pressure,
     pressure_zone,
     recalculate_batch,
@@ -18,7 +16,7 @@ from tidewatch import (
 
 
 def _now():
-    return datetime(2026, 6, 1, 12, 0, 0, tzinfo=timezone.utc)
+    return datetime(2026, 6, 1, 12, 0, 0, tzinfo=UTC)
 
 
 class TestFullPipeline:

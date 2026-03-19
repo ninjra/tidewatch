@@ -4,7 +4,7 @@
 5 tests covering stage/list, accept, reject, dedup, and empty queue.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from tidewatch.triage import TriageQueue
 from tidewatch.types import Obligation, TriageCandidate
@@ -18,7 +18,7 @@ class TestTriageQueue:
         candidate = TriageCandidate(
             title="File Q1 taxes",
             source="email",
-            due_date=datetime(2026, 4, 15, tzinfo=timezone.utc),
+            due_date=datetime(2026, 4, 15, tzinfo=UTC),
         )
         cid = queue.stage(candidate)
         assert cid is not None
@@ -34,7 +34,7 @@ class TestTriageQueue:
         candidate = TriageCandidate(
             title="Renew LLC",
             source="calendar",
-            due_date=datetime(2026, 7, 1, tzinfo=timezone.utc),
+            due_date=datetime(2026, 7, 1, tzinfo=UTC),
             domain="legal",
             context="Annual LLC renewal with state",
         )
@@ -43,7 +43,7 @@ class TestTriageQueue:
 
         assert isinstance(obligation, Obligation)
         assert obligation.title == "Renew LLC"
-        assert obligation.due_date == datetime(2026, 7, 1, tzinfo=timezone.utc)
+        assert obligation.due_date == datetime(2026, 7, 1, tzinfo=UTC)
         assert obligation.domain == "legal"
         assert obligation.description == "Annual LLC renewal with state"
         assert obligation.status == "active"
@@ -64,7 +64,7 @@ class TestTriageQueue:
     def test_dedup_by_title_source_date(self):
         """Duplicate candidates (same title, source, due_date) should be rejected."""
         queue = TriageQueue()
-        due = datetime(2026, 5, 1, tzinfo=timezone.utc)
+        due = datetime(2026, 5, 1, tzinfo=UTC)
         c1 = TriageCandidate(title="File taxes", source="email", due_date=due)
         c2 = TriageCandidate(title="File taxes", source="email", due_date=due)
         c3 = TriageCandidate(title="File taxes", source="calendar", due_date=due)

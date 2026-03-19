@@ -4,9 +4,7 @@
 Covers baselines, metrics, SOB generator, and round-trip pipeline.
 """
 
-from datetime import datetime, timedelta, timezone
-
-from tidewatch import Obligation, recalculate_batch
+from datetime import UTC, datetime
 
 from benchmarks.baselines import binary_deadline, eisenhower, linear_urgency
 from benchmarks.datasets.generate_obligations import generate
@@ -17,7 +15,6 @@ from benchmarks.metrics import (
     zone_transition_timeliness,
 )
 from benchmarks.run import run_baseline, run_tidewatch
-
 
 # ---- Baselines ----
 
@@ -136,7 +133,7 @@ class TestSOBGenerator:
         a = generate(n=10, seed=99)
         b = generate(n=10, seed=99)
         # due_date includes datetime.now() so compare all fields except it
-        for x, y in zip(a, b):
+        for x, y in zip(a, b, strict=True):
             assert x["id"] == y["id"]
             assert x["title"] == y["title"]
             assert x["materiality"] == y["materiality"]
@@ -191,7 +188,7 @@ class TestRoundTrip:
     def test_run_tidewatch_returns_scores(self) -> None:
         """Tidewatch scores the SOB dataset without errors."""
         data = generate(n=50, seed=42)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         scores = run_tidewatch(data, now)
         assert len(scores) == 50
         assert all(0.0 <= s <= 1.0 for s in scores)
@@ -207,7 +204,7 @@ class TestRoundTrip:
     def test_full_pipeline_generate_score_evaluate(self) -> None:
         """Generate -> score -> compute metrics pipeline."""
         data = generate(n=100, seed=42)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Score with tidewatch
         tw_scores = run_tidewatch(data, now)
@@ -220,7 +217,7 @@ class TestRoundTrip:
         alerted_high = []
         completed_early = []
 
-        for d, score in zip(data, tw_scores):
+        for d, score in zip(data, tw_scores, strict=True):
             days_out = d["days_out"]
             # Simulate: alert when score > 0.3 (yellow+)
             if score > 0.3:

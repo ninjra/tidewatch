@@ -1,15 +1,13 @@
 # SPDX-License-Identifier: Apache-2.0 OR Commercial
 """Tests for cognitive bandwidth dimension (obligation #254)."""
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
 from tidewatch import (
     CognitiveContext,
     Obligation,
-    TaskDemand,
     bandwidth_adjusted_sort,
-    calculate_pressure,
     estimate_task_demand,
     recalculate_batch,
 )
@@ -17,7 +15,7 @@ from tidewatch import (
 
 def _make_obligation(id, title, days_until_due=5, domain="engineering",
                      materiality="routine", **kw):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     return Obligation(
         id=id, title=title,
         due_date=now + timedelta(days=days_until_due),

@@ -28,11 +28,15 @@ Zones:
 """
 
 import math
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from tidewatch.constants import (
+    BANDWIDTH_FULL_THRESHOLD,
     COMPLETION_DAMPENING,
     DEPENDENCY_AMPLIFICATION,
+    FIT_SCORE_MISMATCH_COMPONENTS,
+    HARD_FLOOR_DAYS_THRESHOLD,
+    HARD_FLOOR_DOMAINS,
     MATERIALITY_WEIGHTS,
     OVERDUE_PRESSURE,
     RATE_CONSTANT,
@@ -44,7 +48,6 @@ from tidewatch.types import (
     CognitiveContext,
     Obligation,
     PressureResult,
-    TaskDemand,
     estimate_task_demand,
 )
 
@@ -61,9 +64,9 @@ def _days_remaining(due_date: datetime, now: datetime) -> float:
     """
     # Ensure both are tz-aware for subtraction
     if due_date.tzinfo is None:
-        due_date = due_date.replace(tzinfo=timezone.utc)
+        due_date = due_date.replace(tzinfo=UTC)
     if now.tzinfo is None:
-        now = now.replace(tzinfo=timezone.utc)
+        now = now.replace(tzinfo=UTC)
     delta = (due_date - now).total_seconds()
     return delta / 86400.0
 
@@ -96,7 +99,7 @@ def calculate_pressure(
       Implements Section 3.1 of the Tidewatch paper.
     """
     if now is None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
     # No deadline = no pressure
     if obligation.due_date is None:
@@ -135,10 +138,7 @@ def calculate_pressure(
     dependency_count = obligation.dependency_count
 
     # 1. Time pressure
-    if days_rem <= 0:
-        time_p = OVERDUE_PRESSURE
-    else:
-        time_p = 1.0 - math.exp(-RATE_CONSTANT / max(days_rem, 0.01))
+    time_p = OVERDUE_PRESSURE if days_rem <= 0 else 1.0 - math.exp(-RATE_CONSTANT / max(days_rem, 0.01))
 
     # 2. Materiality multiplier
     mat_mult = MATERIALITY_WEIGHTS.get(obligation.materiality, 1.0)
@@ -210,7 +210,7 @@ def recalculate_batch(
 
     _t0 = _time.monotonic()
     if now is None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
     results = [calculate_pressure(ob, now=now) for ob in obligations]
     results.sort(key=lambda r: r.pressure, reverse=True)
     _latency_ms = (_time.monotonic() - _t0) * 1000
@@ -263,7 +263,7 @@ def bandwidth_adjusted_sort(
     bandwidth = cognitive.effective_bandwidth()
 
     # At full bandwidth, return original order (pure pressure)
-    if bandwidth >= 0.99:
+    if bandwidth >= BANDWIDTH_FULL_THRESHOLD:
         return results
 
     ob_map = {ob.id: ob for ob in obligations}
@@ -272,14 +272,11 @@ def bandwidth_adjusted_sort(
         """Binding deadline: explicit flag OR domain heuristic."""
         if ob.hard_floor:
             return True
-        # Auto-detect: legal/financial with due_date within 24h
-        if ob.domain and ob.domain.lower() in ("legal", "financial"):
-            if ob.due_date is not None:
-                from datetime import timezone
-                now = datetime.now(timezone.utc)
-                days = _days_remaining(ob.due_date, now)
-                if days <= 1.0:
-                    return True
+        if ob.domain and ob.domain.lower() in HARD_FLOOR_DOMAINS and ob.due_date is not None:
+            now = datetime.now(UTC)
+            days = _days_remaining(ob.due_date, now)
+            if days <= HARD_FLOOR_DAYS_THRESHOLD:
+                return True
         return False
 
     def fit_score(result: PressureResult) -> tuple[int, float]:
@@ -290,7 +287,7 @@ def bandwidth_adjusted_sort(
         if _is_hard_floor(ob):
             return (2, result.pressure)  # Hard floor: sorts above all bandwidth-adjusted items
         demand = estimate_task_demand(ob)
-        mismatch = (demand.complexity + demand.novelty + demand.decision_weight) / 3.0
+        mismatch = (demand.complexity + demand.novelty + demand.decision_weight) / FIT_SCORE_MISMATCH_COMPONENTS
         return (1, result.pressure * (1.0 - mismatch * (1.0 - bandwidth)))
 
     sorted_results = sorted(

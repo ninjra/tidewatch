@@ -6,7 +6,7 @@ and result decomposition.
 """
 
 import math
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -22,7 +22,7 @@ def _make_obligation(
     **kwargs,
 ) -> tuple[Obligation, datetime]:
     """Helper: create an obligation N days from now."""
-    now = datetime(2026, 6, 1, 12, 0, 0, tzinfo=timezone.utc)
+    now = datetime(2026, 6, 1, 12, 0, 0, tzinfo=UTC)
     due = now + timedelta(days=days_out) if days_out is not None else None
     ob = Obligation(
         id=kwargs.get("id", 1),
@@ -182,7 +182,7 @@ class TestBatch:
 
     def test_batch_recalculate_sorted(self):
         """Results should be sorted by pressure descending."""
-        now = datetime(2026, 6, 1, 12, 0, 0, tzinfo=timezone.utc)
+        now = datetime(2026, 6, 1, 12, 0, 0, tzinfo=UTC)
         obligations = [
             Obligation(id=1, title="Far out", due_date=now + timedelta(days=30)),
             Obligation(id=2, title="Close", due_date=now + timedelta(days=1)),

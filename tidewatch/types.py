@@ -10,7 +10,6 @@ import enum
 from dataclasses import dataclass, field
 from datetime import datetime
 
-
 # --- Zone enum ---
 
 class Zone(enum.Enum):
@@ -153,6 +152,8 @@ class CognitiveContext:
         Returns 0.0-1.0 where 1.0 = full capacity. If no signals
         available, returns 1.0 (assume full capacity — fail-open).
         """
+        from tidewatch.constants import BANDWIDTH_HOURS_GOOD, BANDWIDTH_NORMALIZATION_RANGE
+
         if self.bandwidth_score is not None:
             return max(0.0, min(1.0, self.bandwidth_score))  # MATH_GUARD: probability domain [0,1]
 
@@ -164,8 +165,7 @@ class CognitiveContext:
         if self.pain_level is not None:
             signals.append(self.pain_level)
         if self.hours_since_sleep is not None:
-            # Normalize: 0-8h = good (1.0), 16h+ = bad (0.0)
-            normalized = max(0.0, 1.0 - max(0.0, self.hours_since_sleep - 8.0) / 8.0)  # MATH_GUARD: normalization to [0,1]
+            normalized = max(0.0, 1.0 - max(0.0, self.hours_since_sleep - BANDWIDTH_HOURS_GOOD) / BANDWIDTH_NORMALIZATION_RANGE)  # MATH_GUARD: normalization to [0,1]
             signals.append(normalized)
 
         if not signals:
@@ -193,29 +193,22 @@ def estimate_task_demand(obligation: Obligation) -> TaskDemand:
     Heuristic — uses domain and materiality as proxies.
     Can be overridden per-obligation in the future.
     """
-    # Domain-based base values
-    domain = (obligation.domain or "").lower()
-    if domain in ("legal", "financial"):
-        complexity = 0.8
-        decision_weight = 0.9
-        novelty = 0.6
-    elif domain in ("engineering",):
-        complexity = 0.5
-        decision_weight = 0.4
-        novelty = 0.5
-    elif domain in ("ops", "admin"):
-        complexity = 0.3
-        decision_weight = 0.2
-        novelty = 0.2
-    else:
-        complexity = 0.5
-        decision_weight = 0.5
-        novelty = 0.5
+    from tidewatch.constants import (
+        MATERIAL_COMPLEXITY_BOOST,
+        MATERIAL_DECISION_BOOST,
+        TASK_DEMAND_DEFAULT,
+        TASK_DEMAND_PROFILES,
+    )
 
-    # Material obligations add complexity on top of domain base
+    domain = (obligation.domain or "").lower()
+    profile = TASK_DEMAND_PROFILES.get(domain, TASK_DEMAND_DEFAULT)
+    complexity = profile["complexity"]
+    decision_weight = profile["decision_weight"]
+    novelty = profile["novelty"]
+
     if obligation.materiality == "material":
-        complexity = min(1.0, complexity + 0.2)  # MATH_GUARD: score ceiling
-        decision_weight = min(1.0, decision_weight + 0.1)  # MATH_GUARD: score ceiling
+        complexity = min(1.0, complexity + MATERIAL_COMPLEXITY_BOOST)  # MATH_GUARD: score ceiling
+        decision_weight = min(1.0, decision_weight + MATERIAL_DECISION_BOOST)  # MATH_GUARD: score ceiling
 
     return TaskDemand(
         complexity=complexity,

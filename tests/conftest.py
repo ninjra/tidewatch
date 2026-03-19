@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0 OR Commercial
 """Shared fixtures for Tidewatch tests."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -12,7 +12,7 @@ from tidewatch.types import Obligation
 @pytest.fixture
 def standard_obligation() -> Obligation:
     """Standard obligation: id=1, due in 7 days, materiality=routine."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     return Obligation(
         id=1,
         title="Standard test obligation",
@@ -36,7 +36,7 @@ def mixed_zone_obligations() -> list[Obligation]:
     - Orange: close deadline, material
     - Red: overdue, material
     """
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     return [
         Obligation(
             id=1,

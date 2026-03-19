@@ -5,15 +5,15 @@
 delivery urgency, plan completion, and custom system prompts.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from tidewatch.planner import SpeculativePlanner
-from tidewatch.pressure import calculate_pressure, recalculate_batch
-from tidewatch.types import Obligation, PlanRequest, PlanResult, PressureResult
+from tidewatch.pressure import recalculate_batch
+from tidewatch.types import Obligation, PlanRequest, PlanResult
 
 
 def _now():
-    return datetime(2026, 6, 1, 12, 0, 0, tzinfo=timezone.utc)
+    return datetime(2026, 6, 1, 12, 0, 0, tzinfo=UTC)
 
 
 def _make_ob(id: int, days_out: float, materiality: str = "routine", **kwargs) -> Obligation:
