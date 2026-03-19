@@ -169,7 +169,7 @@ class CognitiveContext:
             signals.append(normalized)
 
         if not signals:
-            return 1.0  # No data = assume full capacity
+            return 1.0  # ASSUMPTION_OK: No data = assume full capacity (fail-open by design)
         return sum(signals) / len(signals)
 
 

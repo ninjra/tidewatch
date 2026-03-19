@@ -11,10 +11,20 @@ Usage:
 import argparse
 import json
 import random
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 DOMAINS = ["legal", "financial", "client_work", "personal_admin", "health"]
 MATERIALITY_DIST = {"material": 0.3, "routine": 0.7}
+
+# --- SOB generation parameters ---
+MATERIAL_PROBABILITY = 0.3       # Fraction of obligations that are "material"
+OVERDUE_PROBABILITY = 0.1        # Fraction of obligations that are overdue
+OVERDUE_MAX_DAYS = 14            # Max days overdue for generated obligations
+DEADLINE_HORIZON_DAYS = 90       # Max days out for non-overdue obligations
+MAX_DEPENDENCY_COUNT = 10        # Cap on power-law dependency generation
+DEPENDENCY_PARETO_ALPHA = 1.5    # Shape parameter for dependency count distribution
+OPTIMAL_ATTENTION_FRACTION = 0.3 # Start work at this fraction of remaining time
+MIN_ATTENTION_DAYS = 2           # Minimum attention window (days)
 
 
 def generate(n: int = 1000, seed: int = 42) -> list[dict]:
@@ -29,29 +39,28 @@ def generate(n: int = 1000, seed: int = 42) -> list[dict]:
     """
     rng = random.Random(seed)
     obligations = []
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     for i in range(n):
         domain = rng.choice(DOMAINS)
-        materiality = "material" if rng.random() < 0.3 else "routine"
+        materiality = "material" if rng.random() < MATERIAL_PROBABILITY else "routine"
 
-        # Deadline: uniform 1-90 days, with 10% overdue
-        if rng.random() < 0.1:
-            days_out = -rng.randint(1, 14)  # overdue
+        # Deadline: uniform 1-DEADLINE_HORIZON days, with OVERDUE_PROBABILITY overdue
+        if rng.random() < OVERDUE_PROBABILITY:
+            days_out = -rng.randint(1, OVERDUE_MAX_DAYS)
         else:
-            days_out = rng.randint(1, 90)
+            days_out = rng.randint(1, DEADLINE_HORIZON_DAYS)
 
         due_date = (now + timedelta(days=days_out)).isoformat()
 
-        # Dependencies: power-law, mean ~2
-        dep_count = min(int(rng.paretovariate(1.5)), 10)
+        # Dependencies: power-law, capped
+        dep_count = min(int(rng.paretovariate(DEPENDENCY_PARETO_ALPHA)), MAX_DEPENDENCY_COUNT)  # MATH_GUARD: cap on power-law tail
 
         # Completion: random progress
         completion = round(rng.random() * rng.random(), 2)  # skewed toward 0
 
         # Ground truth: optimal attention time
-        # Heuristic: start working at max(days_out * 0.3, 2) days before deadline
-        optimal_attention_days = max(days_out * 0.3, 2) if days_out > 0 else 0
+        optimal_attention_days = max(days_out * OPTIMAL_ATTENTION_FRACTION, MIN_ATTENTION_DAYS) if days_out > 0 else 0  # MATH_GUARD: floor on attention window
 
         obligations.append({
             "id": i + 1,

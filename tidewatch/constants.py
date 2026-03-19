@@ -19,6 +19,9 @@ DEPENDENCY_AMPLIFICATION = 0.1  # Per-dependency amplifier (junction multiplier)
 
 # --- Completion ---
 COMPLETION_DAMPENING = 0.6  # Max dampening at 100% completion (relief valve)
+COMPLETION_DAMPENING_MODE = "logistic"  # "linear" or "logistic"
+COMPLETION_LOGISTIC_K = 8.0   # Steepness of logistic curve
+COMPLETION_LOGISTIC_MID = 0.5 # Midpoint of logistic curve (50% completion)
 
 # --- Zone thresholds ---
 ZONE_YELLOW = 0.30

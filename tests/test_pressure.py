@@ -115,9 +115,10 @@ class TestCompletion:
         r_half = calculate_pressure(ob_half, now=now)
         r_full = calculate_pressure(ob_full, now=now)
 
-        assert r_zero.completion_damp == 1.0
+        # Logistic: at 0% damp ≈ 0.989, at 50% damp = 0.7, at 100% damp ≈ 0.411
+        assert abs(r_zero.completion_damp - 0.989) < 0.01
         assert abs(r_half.completion_damp - 0.7) < 0.001
-        assert abs(r_full.completion_damp - 0.4) < 0.001
+        assert abs(r_full.completion_damp - 0.411) < 0.01
 
 
 class TestCombined:
@@ -132,11 +133,12 @@ class TestCombined:
         )
         result = calculate_pressure(ob, now=now)
 
-        # Manual computation
+        # Manual computation with logistic dampening
         time_p = 1.0 - math.exp(-3.0 / 3.0)
         mat = 1.5
         dep = 1.0 + (2 * 0.1)
-        comp = 1.0 - (0.25 * 0.6)
+        sigmoid = 1.0 / (1.0 + math.exp(-8.0 * (0.25 - 0.5)))
+        comp = 1.0 - (0.6 * sigmoid)
         expected = min(1.0, time_p * mat * dep * comp)
         assert abs(result.pressure - expected) < 0.001
 
@@ -150,7 +152,8 @@ class TestCombined:
         )
         result = calculate_pressure(ob, now=now)
         assert result.pressure <= 1.0
-        assert result.pressure == 1.0  # Should be clamped
+        # With logistic dampening at 0%, pressure is clamped to 1.0 (product exceeds 1.0)
+        assert result.pressure == 1.0
 
 
 class TestZones:
@@ -207,7 +210,9 @@ class TestBatch:
         assert result.time_pressure > 0
         assert result.materiality_mult == 1.5
         assert result.dependency_amp == 1.3
-        assert abs(result.completion_damp - 0.76) < 0.001
+        # Logistic damp at 40%: sigmoid(8*(0.4-0.5)) = sigmoid(-0.8) ≈ 0.3100
+        # D = 1 - 0.6 * 0.3100 ≈ 0.814
+        assert abs(result.completion_damp - 0.814) < 0.01
         assert result.zone in ("green", "yellow", "orange", "red")
 
 

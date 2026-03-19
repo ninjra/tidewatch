@@ -8,7 +8,15 @@ Urgent/Important matrix:
   Q4 (not urgent + not important) = 0.0
 """
 
-URGENT_THRESHOLD_DAYS = 7
+URGENT_THRESHOLD_DAYS = 7  # ASSUMPTION_OK: baseline parameter, not tunable in production
+
+# Eisenhower quadrant scores — fixed by definition of the matrix
+QUADRANT_SCORES: dict[tuple[bool, bool], float] = {
+    (True, True): 1.0,    # Q1: urgent + important
+    (True, False): 0.75,  # Q3: urgent + not important
+    (False, True): 0.5,   # Q2: not urgent + important
+    (False, False): 0.0,  # Q4: not urgent + not important
+}
 
 
 def score(
@@ -30,12 +38,4 @@ def score(
 
     urgent = days_remaining <= URGENT_THRESHOLD_DAYS
     important = materiality == "material"
-
-    if urgent and important:
-        return 1.0  # Q1
-    elif urgent and not important:
-        return 0.75  # Q3
-    elif not urgent and important:
-        return 0.5  # Q2
-    else:
-        return 0.0  # Q4
+    return QUADRANT_SCORES[(urgent, important)]

@@ -6,21 +6,11 @@ Usage:
 """
 
 import argparse
-import json
-import sys
-from datetime import datetime, timedelta, timezone
-from pathlib import Path
-
-from tidewatch import Obligation, recalculate_batch
+from datetime import UTC, datetime
 
 from benchmarks.baselines import binary_deadline, eisenhower, linear_urgency
 from benchmarks.datasets.generate_obligations import generate
-from benchmarks.metrics import (
-    attention_allocation_efficiency,
-    false_alarm_rate,
-    missed_deadline_rate,
-    zone_transition_timeliness,
-)
+from tidewatch import Obligation, recalculate_batch
 
 
 def run_tidewatch(obligations_data: list[dict], now: datetime) -> list[float]:
@@ -69,7 +59,7 @@ def main():
 
     print(f"Generating {args.n} obligations (seed={args.seed})...")
     data = generate(n=args.n, seed=args.seed)
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     print("\n--- Tidewatch ---")
     tw_scores = run_tidewatch(data, now)

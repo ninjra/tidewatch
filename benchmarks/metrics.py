@@ -26,7 +26,7 @@ def zone_transition_timeliness(
     """
     if not first_alert_days:
         return float("inf")
-    gaps = [abs(a - o) for a, o in zip(first_alert_days, optimal_attention_days)]
+    gaps = [abs(a - o) for a, o in zip(first_alert_days, optimal_attention_days, strict=True)]
     return sum(gaps) / len(gaps)
 
 
@@ -63,7 +63,7 @@ def attention_allocation_efficiency(
     n = len(predicted_ranks)
     if n < 2:
         return 1.0
-    d_squared = sum((p - a) ** 2 for p, a in zip(predicted_ranks, actual_ranks))
+    d_squared = sum((p - a) ** 2 for p, a in zip(predicted_ranks, actual_ranks, strict=True))  # MATH_GUARD: Spearman rho formula (standard)
     return 1.0 - (6.0 * d_squared) / (n * (n ** 2 - 1))
 
 
@@ -84,6 +84,6 @@ def false_alarm_rate(
     if high_alerts == 0:
         return 0.0
     false_alarms = sum(
-        1 for a, c in zip(alerted_high, completed_early) if a and c
+        1 for a, c in zip(alerted_high, completed_early, strict=True) if a and c
     )
     return false_alarms / high_alerts

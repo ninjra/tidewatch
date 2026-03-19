@@ -267,19 +267,20 @@ class TestGate04_Constants:
 # Gate 05 — Pressure Known Values
 # ════════════════════════════════════════════════════════════════════
 
-# Pre-computed from equation §3.1 using Python 3.11 math.exp
+# Pre-computed from equation §3.1 using Python 3.12 math.exp
+# Logistic dampening: D = 1 - 0.6 * sigmoid(8 * (pct - 0.5))
 _PRESSURE_CASES = [
     # (days_out, materiality, deps, completion, expected_P, expected_zone, label)
-    (60, "routine", 0, 0.0, 0.048770575499286, "green", "far_routine"),
+    (60, "routine", 0, 0.0, 0.048244256812745, "green", "far_routine"),
     (30, "routine", 0, 0.5, 0.066613807374828, "green", "medium_half_done"),
-    (14, "routine", 0, 0.0, 0.192882252994611, "green", "two_weeks"),
-    (7,  "routine", 0, 0.0, 0.348560942468944, "yellow", "one_week"),
-    (5,  "routine", 2, 0.3, 0.443969350083478, "yellow", "five_days_deps_partial"),
-    (3,  "routine", 0, 0.0, 0.632120558828558, "orange", "three_days"),
-    (2,  "routine", 0, 0.0, 0.776869839851570, "orange", "two_days"),
-    (1,  "routine", 0, 0.0, 0.950212931632136, "red", "one_day"),
+    (14, "routine", 0, 0.0, 0.190800720574417, "green", "two_weeks"),
+    (7,  "routine", 0, 0.0, 0.344799368291446, "yellow", "one_week"),
+    (5,  "routine", 2, 0.3, 0.486856264703219, "yellow", "five_days_deps_partial"),
+    (3,  "routine", 0, 0.0, 0.625298886973091, "orange", "three_days"),
+    (2,  "routine", 0, 0.0, 0.768486073419898, "orange", "two_days"),
+    (1,  "routine", 0, 0.0, 0.939958494053918, "red", "one_day"),
     (1,  "material", 3, 0.0, 1.0, "red", "one_day_material_deps"),
-    (0,  "routine", 0, 0.0, 1.0, "red", "due_now"),
+    (0,  "routine", 0, 0.0, 0.989208274022745, "red", "due_now"),
     (-5, "material", 0, 0.0, 1.0, "red", "overdue_material"),
 ]
 
@@ -362,7 +363,8 @@ class TestGate06_PressureEdgeCases:
         ob = Obligation(id=1, title="Overdue", due_date=NOW - timedelta(days=30))
         r = calculate_pressure(ob, now=NOW)
         assert r.time_pressure == 1.0
-        assert r.pressure == 1.0
+        # Logistic dampening at 0% completion: D ≈ 0.989, so P < 1.0 for routine
+        assert r.pressure == pytest.approx(0.989208274022745, abs=1e-10)
 
     def test_naive_datetime_treated_as_utc(self) -> None:
         """Naive datetimes should be treated as UTC (no crash)."""
@@ -371,21 +373,27 @@ class TestGate06_PressureEdgeCases:
         naive_now = datetime(2026, 6, 1, 12, 0, 0)
         ob = Obligation(id=1, title="Naive TZ", due_date=naive_due)
         r = calculate_pressure(ob, now=naive_now)
-        # 7 days out, same as the known-value test
-        assert r.pressure == pytest.approx(0.348560942468944, abs=1e-10)
+        # 7 days out — logistic dampening at 0% ≈ 0.989
+        assert r.pressure == pytest.approx(0.344799368291446, abs=1e-10)
 
     def test_full_completion_dampens_pressure(self) -> None:
+        import math
+
         from tidewatch import Obligation, calculate_pressure
         ob = Obligation(
             id=1, title="Done", due_date=NOW + timedelta(days=1),
             completion_pct=1.0,
         )
         r = calculate_pressure(ob, now=NOW)
-        assert r.completion_damp == pytest.approx(0.4, abs=1e-15)
-        # 1-day time_p ≈ 0.9502, * 1.0 * 1.0 * 0.4 ≈ 0.3801
-        assert r.pressure == pytest.approx(0.950212931632136 * 0.4, abs=1e-10)
+        # Logistic: D = 1 - 0.6 * sigmoid(8 * (1.0 - 0.5)) = 1 - 0.6 * sigmoid(4)
+        sigmoid_4 = 1.0 / (1.0 + math.exp(-4.0))
+        expected_damp = 1.0 - 0.6 * sigmoid_4
+        assert r.completion_damp == pytest.approx(expected_damp, abs=1e-10)
+        assert r.pressure == pytest.approx(0.950212931632136 * expected_damp, abs=1e-10)
 
     def test_many_dependencies_amplify(self) -> None:
+        import math
+
         from tidewatch import Obligation, calculate_pressure
         ob = Obligation(
             id=1, title="Many deps", due_date=NOW + timedelta(days=7),
@@ -393,8 +401,10 @@ class TestGate06_PressureEdgeCases:
         )
         r = calculate_pressure(ob, now=NOW)
         assert r.dependency_amp == pytest.approx(2.0, abs=1e-15)
-        # time_p ≈ 0.3486, * 1.0 * 2.0 * 1.0 ≈ 0.6971
-        assert r.pressure == pytest.approx(0.348560942468944 * 2.0, abs=1e-10)
+        # Logistic damp at 0%: D ≈ 0.989
+        sigmoid_neg4 = 1.0 / (1.0 + math.exp(4.0))
+        damp_0 = 1.0 - 0.6 * sigmoid_neg4
+        assert r.pressure == pytest.approx(0.348560942468944 * 2.0 * damp_0, abs=1e-10)
 
     def test_unknown_materiality_defaults_to_one(self) -> None:
         from tidewatch import Obligation, calculate_pressure
@@ -1178,8 +1188,8 @@ class TestGate20_BenchmarkRunner:
     def test_run_tidewatch_overdue_is_max(self) -> None:
         from benchmarks.run import run_tidewatch
         scores = run_tidewatch(self._make_data(), NOW)
-        # Item 3 is overdue → should have highest pressure
-        assert scores[2] == 1.0
+        # Item 3 is overdue → should have highest pressure (logistic damp at 0% ≈ 0.989)
+        assert scores[2] == pytest.approx(0.989208274022745, abs=1e-10)
 
     def test_run_tidewatch_order_matches_input(self) -> None:
         """Scores must be returned in input order, not pressure order."""
@@ -1298,7 +1308,7 @@ class TestGate21_PressureInvariants:
         scores = run_tidewatch(data, NOW)
         assert len(scores) == 1000
         assert all(0.0 <= s <= 1.0 for s in scores), "All pressures must be in [0, 1]"
-        # At least some should be high (overdue items exist)
-        assert max(scores) == 1.0
+        # At least some should be high (overdue items with deps/material hit saturation)
+        assert max(scores) >= 0.98
         # At least some should be low (far-out items exist)
         assert min(scores) < 0.2

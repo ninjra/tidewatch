@@ -18,7 +18,8 @@ Equation (Section 3.1):
   P_time(t) = 1.0                            for t <= 0 (overdue)
   M = 1.5 if material, 1.0 if routine
   A = 1.0 + (dependency_count * 0.1)
-  D = 1.0 - (completion_pct * 0.6)
+  D = 1.0 - (max_damp * sigmoid(k * (pct - mid)))  [logistic, default]
+  D = 1.0 - (completion_pct * 0.6)                  [linear, legacy]
 
 Zones:
   green  = P < 0.30
@@ -33,6 +34,9 @@ from datetime import UTC, datetime
 from tidewatch.constants import (
     BANDWIDTH_FULL_THRESHOLD,
     COMPLETION_DAMPENING,
+    COMPLETION_DAMPENING_MODE,
+    COMPLETION_LOGISTIC_K,
+    COMPLETION_LOGISTIC_MID,
     DEPENDENCY_AMPLIFICATION,
     FIT_SCORE_MISMATCH_COMPONENTS,
     HARD_FLOOR_DAYS_THRESHOLD,
@@ -147,7 +151,14 @@ def calculate_pressure(
     dep_amp = 1.0 + (dependency_count * DEPENDENCY_AMPLIFICATION)
 
     # 4. Completion dampener
-    comp_damp = 1.0 - (completion_pct * COMPLETION_DAMPENING)
+    if COMPLETION_DAMPENING_MODE == "logistic":
+        # Logistic: smooth S-curve, more dampening at high completion
+        # D = 1 - max_damp * sigmoid(k * (pct - mid))
+        sigmoid = 1.0 / (1.0 + math.exp(-COMPLETION_LOGISTIC_K * (completion_pct - COMPLETION_LOGISTIC_MID)))
+        comp_damp = 1.0 - (COMPLETION_DAMPENING * sigmoid)
+    else:
+        # Linear: D = 1 - pct * max_damp (original §3.1)
+        comp_damp = 1.0 - (completion_pct * COMPLETION_DAMPENING)
 
     # Final pressure
     pressure = time_p * mat_mult * dep_amp * comp_damp
