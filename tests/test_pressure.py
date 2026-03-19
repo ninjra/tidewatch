@@ -216,6 +216,66 @@ class TestBatch:
         assert result.zone in ("green", "yellow", "orange", "red")
 
 
+class TestRateConstantSensitivity:
+    """Sensitivity analysis for RATE_CONSTANT (§4.2).
+
+    Verifies that the chosen k=3 produces the intended zone behavior
+    and documents the impact of ±1 perturbation.
+    """
+
+    def test_k3_7day_enters_yellow(self):
+        """k=3: 7-day deadline with no modifiers should be in yellow zone."""
+        ob, now = _make_obligation(days_out=7)
+        result = calculate_pressure(ob, now=now)
+        assert result.zone == "yellow", f"Expected yellow at 7d, got {result.zone} (P={result.pressure:.3f})"
+
+    def test_k3_14day_stays_green(self):
+        """k=3: 14-day deadline should stay green."""
+        ob, now = _make_obligation(days_out=14)
+        result = calculate_pressure(ob, now=now)
+        assert result.zone == "green", f"Expected green at 14d, got {result.zone} (P={result.pressure:.3f})"
+
+    def test_k3_3day_enters_orange(self):
+        """k=3: 3-day deadline should be in orange (with logistic dampening)."""
+        ob, now = _make_obligation(days_out=3)
+        result = calculate_pressure(ob, now=now)
+        assert result.zone == "orange", f"Expected orange at 3d, got {result.zone} (P={result.pressure:.3f})"
+
+    def test_sensitivity_k2_shifts_yellow_entry(self):
+        """k=2: yellow zone entry shifts to ~5 days (less aggressive)."""
+        import tidewatch.pressure as p
+        original = p.RATE_CONSTANT
+        try:
+            p.RATE_CONSTANT = 2.0
+            # At 7 days with k=2: P_time = 1-exp(-2/7) ≈ 0.248 → green
+            ob, now = _make_obligation(days_out=7)
+            result = calculate_pressure(ob, now=now)
+            assert result.zone == "green", f"k=2, 7d should be green, got {result.zone} (P={result.pressure:.3f})"
+            # At 5 days with k=2: P_time = 1-exp(-2/5) ≈ 0.330 → yellow
+            ob5, _ = _make_obligation(days_out=5)
+            r5 = calculate_pressure(ob5, now=now)
+            assert r5.zone == "yellow", f"k=2, 5d should be yellow, got {r5.zone} (P={r5.pressure:.3f})"
+        finally:
+            p.RATE_CONSTANT = original
+
+    def test_sensitivity_k4_shifts_yellow_entry(self):
+        """k=4: yellow zone entry shifts to ~10 days (more aggressive)."""
+        import tidewatch.pressure as p
+        original = p.RATE_CONSTANT
+        try:
+            p.RATE_CONSTANT = 4.0
+            # At 10 days with k=4: P_time = 1-exp(-4/10) ≈ 0.330 → yellow
+            ob, now = _make_obligation(days_out=10)
+            result = calculate_pressure(ob, now=now)
+            assert result.zone == "yellow", f"k=4, 10d should be yellow, got {result.zone} (P={result.pressure:.3f})"
+            # At 14 days with k=4: P_time = 1-exp(-4/14) ≈ 0.249 → green
+            ob14, _ = _make_obligation(days_out=14)
+            r14 = calculate_pressure(ob14, now=now)
+            assert r14.zone == "green", f"k=4, 14d should be green, got {r14.zone} (P={r14.pressure:.3f})"
+        finally:
+            p.RATE_CONSTANT = original
+
+
 class TestNanInfGuards:
     """NaN/Inf validation on float inputs."""
 

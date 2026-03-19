@@ -2,7 +2,10 @@
 """Tunable constants for Tidewatch pressure engine.
 
 Each constant has a hydraulic analog documented in its comment.
+Zone thresholds are configurable via environment variables (TIDEWATCH_ZONE_*).
 """
+
+import os
 
 # --- Pressure curve ---
 # RATE_CONSTANT derivation (§3.1):
@@ -41,9 +44,9 @@ COMPLETION_LOGISTIC_MID = 0.5 # Midpoint of logistic curve (50% completion)
 # These match the RATE_CONSTANT calibration: a 7-day deadline with no
 # completion enters yellow, a 3-day deadline enters orange, and a 1-day
 # deadline with dependencies is red.
-ZONE_YELLOW = 0.30
-ZONE_ORANGE = 0.60
-ZONE_RED = 0.80
+ZONE_YELLOW = float(os.environ.get("TIDEWATCH_ZONE_YELLOW", "0.30"))
+ZONE_ORANGE = float(os.environ.get("TIDEWATCH_ZONE_ORANGE", "0.60"))
+ZONE_RED = float(os.environ.get("TIDEWATCH_ZONE_RED", "0.80"))
 
 # --- Cognitive bandwidth ---
 BANDWIDTH_FULL_THRESHOLD = 0.99  # Above this, skip bandwidth adjustment
