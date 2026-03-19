@@ -38,14 +38,17 @@ from tidewatch.constants import (
     COMPLETION_LOGISTIC_K,
     COMPLETION_LOGISTIC_MID,
     DEPENDENCY_AMPLIFICATION,
+    DIVISION_GUARD,
     FIT_SCORE_MISMATCH_COMPONENTS,
     FORGE_PRESSURE_PAUSE_THRESHOLD,
     GRAVITY_TIEBREAK_WEIGHT,
     HARD_FLOOR_DAYS_THRESHOLD,
     HARD_FLOOR_DOMAINS,
     MATERIALITY_WEIGHTS,
+    MS_PER_SECOND,
     OVERDUE_PRESSURE,
     RATE_CONSTANT,
+    SECONDS_PER_DAY,
     TIMING_CRITICAL_DAYS,
     TIMING_CRITICAL_MULTIPLIER,
     TIMING_STALE_DAYS,
@@ -80,7 +83,7 @@ def _days_remaining(due_date: datetime, now: datetime) -> float:
     if now.tzinfo is None:
         now = now.replace(tzinfo=UTC)
     delta = (due_date - now).total_seconds()
-    return delta / 86400.0
+    return delta / SECONDS_PER_DAY
 
 
 def calculate_pressure(
@@ -150,7 +153,7 @@ def calculate_pressure(
     dependency_count = obligation.dependency_count
 
     # 1. Time pressure
-    time_p = OVERDUE_PRESSURE if days_rem <= 0 else 1.0 - math.exp(-RATE_CONSTANT / max(days_rem, 0.01))
+    time_p = OVERDUE_PRESSURE if days_rem <= 0 else 1.0 - math.exp(-RATE_CONSTANT / max(days_rem, DIVISION_GUARD))
 
     # 2. Materiality multiplier
     mat_mult = MATERIALITY_WEIGHTS.get(obligation.materiality, 1.0)
@@ -244,7 +247,7 @@ def recalculate_batch(
         now = datetime.now(UTC)
     results = [calculate_pressure(ob, now=now) for ob in obligations]
     results.sort(key=lambda r: r.pressure, reverse=True)
-    _latency_ms = (_time.monotonic() - _t0) * 1000
+    _latency_ms = (_time.monotonic() - _t0) * MS_PER_SECOND
 
     try:
         from sentinel_sdk.metrics import get_buffer

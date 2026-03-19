@@ -19,6 +19,9 @@ import os
 # See paper §4.2 for sensitivity analysis across k=[1,5].
 RATE_CONSTANT = 3.0        # Exponential steepness (pipe elasticity)
 OVERDUE_PRESSURE = 1.0     # Pressure when overdue (pipe at max)
+SECONDS_PER_DAY = 86400.0  # Conversion factor for timedelta → days
+DIVISION_GUARD = 0.01      # Floor for division-by-zero protection in P_time(t)
+MS_PER_SECOND = 1000       # Conversion factor for latency metrics
 
 # --- Materiality ---
 MATERIALITY_WEIGHTS: dict[str, float] = {

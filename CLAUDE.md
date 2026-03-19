@@ -2,11 +2,13 @@
 
 ## What This Repo Is
 
-Tidewatch is a standalone Python library + SSRN paper that extracts and
-formalizes the obligation pressure engine and speculative planning system
-from Sentinel. It models deadline urgency as a continuous pressure field
-rather than a binary overdue/not-overdue flag, and uses idle compute cycles
-to proactively generate action plans for high-pressure obligations.
+Tidewatch is a pure-math scoring engine for obligation pressure with a benchmark
+analytics harness. It computes continuous pressure scores (0.0-1.0) from deadline
+proximity, materiality, dependencies, and completion progress. It also provides
+cognitive bandwidth-aware sorting (CognitiveContext) and speculative planning
+(SpeculativePlanner) for proactive idle-time plan generation.
+
+An accompanying SSRN paper formalizes the exponential decay pressure model.
 
 ## Build Commands
 
