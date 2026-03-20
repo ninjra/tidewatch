@@ -110,6 +110,37 @@ class TestDependencies:
         assert r_zero.dependency_amp == 1.0
         assert r_five.pressure == pytest.approx(r_zero.pressure * expected_dep_amp, abs=1e-10)
 
+    def test_dependency_urgency_propagation(self):
+        """Blocker with far deadline but near dependent gets amplified (#1180)."""
+        import math
+
+        from tidewatch.constants import FANOUT_TEMPORAL_K
+        now = datetime(2026, 6, 1, 12, 0, 0, tzinfo=UTC)
+        # Blocker: due in 30 days, 3 deps, no dependent info
+        ob_no_prop = Obligation(
+            id=1, title="Blocker no prop", dependency_count=3,
+            due_date=now + timedelta(days=30),
+        )
+        # Same blocker but with earliest_dependent_deadline = 2 days out
+        ob_with_prop = Obligation(
+            id=2, title="Blocker with prop", dependency_count=3,
+            due_date=now + timedelta(days=30),
+            earliest_dependent_deadline=now + timedelta(days=2),
+        )
+        r_no = calculate_pressure(ob_no_prop, now=now)
+        r_yes = calculate_pressure(ob_with_prop, now=now)
+        # With propagation, temporal gate uses min(30, 2) = 2 days
+        t_gate_30 = 1.0 - math.exp(-FANOUT_TEMPORAL_K / 30.0)
+        t_gate_2 = 1.0 - math.exp(-FANOUT_TEMPORAL_K / 2.0)
+        assert t_gate_2 > t_gate_30  # 2-day gate much higher than 30-day
+        # Propagated version should have higher dep_amp
+        assert r_yes.dependency_amp > r_no.dependency_amp
+        # Verify exact values
+        expected_no = 1.0 + 3 * 0.1 * t_gate_30
+        expected_yes = 1.0 + 3 * 0.1 * t_gate_2
+        assert r_no.dependency_amp == pytest.approx(expected_no, abs=1e-10)
+        assert r_yes.dependency_amp == pytest.approx(expected_yes, abs=1e-10)
+
 
 class TestCompletion:
 
