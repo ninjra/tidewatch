@@ -11,7 +11,7 @@ The `now` parameter defaults to `datetime.now(UTC)` for convenience; callers
 requiring reproducibility must pass an explicit `now` value.
 
 Equation (Section 3.1):
-  P = min(1.0, P_time * M * A * D)
+  P = min(1.0, P_time * M * A * D * timing_amp * violation_amp)
 
   Domain: P in [0, 1]. The upper bound is the equation's defined ceiling —
   pressure is a probability-like quantity that cannot exceed 1.0.
@@ -19,7 +19,8 @@ Equation (Section 3.1):
   P_time(t) = 1 - exp(-3 / max(t, 0.01))   for t > 0
   P_time(t) = 1.0                            for t <= 0 (overdue)
   M = 1.5 if material, 1.0 if routine
-  A = 1.0 + (dependency_count * 0.1)
+  A = 1.0 + (dependency_count * 0.1 * temporal_gate(t))   [§3.2]
+  temporal_gate(t) = 1 - exp(-k_fanout / t)  for t > 0; 1.0 for t <= 0
   D = 1.0 - (max_damp * sigmoid(k * (pct - mid)))  [logistic, default]
   D = 1.0 - (completion_pct * 0.6)                  [linear, legacy]
 
@@ -45,6 +46,7 @@ from tidewatch.constants import (
     COMPLETION_LOGISTIC_MID,
     DEPENDENCY_AMPLIFICATION,
     DIVISION_GUARD,
+    FANOUT_TEMPORAL_K,
     FIT_SCORE_MISMATCH_COMPONENTS,
     FORGE_PRESSURE_PAUSE_THRESHOLD,
     GRAVITY_TIEBREAK_WEIGHT,
@@ -140,9 +142,26 @@ def _violation_amplifier(violation_count: int) -> float:
     return 1.0 + min(violation_count * VIOLATION_AMPLIFICATION, VIOLATION_MAX_AMPLIFICATION)
 
 
+def _temporal_gate(days_remaining: float) -> float:
+    """Compute temporal gate for dependency fanout (§3.2).
+
+    temporal_gate(t) = 1 - exp(-FANOUT_TEMPORAL_K / t)   for t > 0
+    temporal_gate(t) = 1.0                                for t <= 0 (overdue)
+
+    Dependencies amplify pressure only when the deadline is close enough
+    that cascading failure risk is material. When slack is large, the system
+    can absorb dependency-chain delays. See constants.py for full derivation.
+    """
+    if days_remaining <= 0:
+        return 1.0
+    return 1.0 - _exponential(-FANOUT_TEMPORAL_K / max(days_remaining, DIVISION_GUARD))
+
+
 def calculate_pressure(
     obligation: Obligation,
     now: datetime | None = None,
+    *,
+    ablate: frozenset[str] | None = None,
 ) -> PressureResult:
     """Compute pressure for a single obligation (§3.1).
 
@@ -150,6 +169,15 @@ def calculate_pressure(
     are MODULATING COMPONENTS. Factors are preserved as named dimensions in a
     ComponentSpace (Late Collapse). The scalar .pressure field is the default
     product collapse, saturated to [0,1].
+
+    Extended equation (§3.2):
+      dep_amp = 1.0 + (deps × AMPLIFICATION × temporal_gate(t))
+      temporal_gate(t) = 1 - exp(-k_fanout / t) for t > 0; 1.0 for t ≤ 0
+
+    Args:
+        ablate: frozenset of component names to neutralize (set to 1.0).
+            Used for factor ablation studies (§4.3). Example:
+            ablate=frozenset({"dependency_amp"}) disables dependency amplification.
     """
     if now is None:
         now = datetime.now(UTC)
@@ -161,20 +189,47 @@ def calculate_pressure(
 
     time_p = OVERDUE_PRESSURE if days_rem <= 0 else 1.0 - _exponential(-RATE_CONSTANT / max(days_rem, DIVISION_GUARD))
     mat_mult = MATERIALITY_WEIGHTS.get(obligation.materiality, 1.0)
-    dep_amp = 1.0 + (obligation.dependency_count * DEPENDENCY_AMPLIFICATION)
+    t_gate = _temporal_gate(days_rem)
+    dep_amp = 1.0 + (obligation.dependency_count * DEPENDENCY_AMPLIFICATION * t_gate)
     comp_damp = _completion_dampening(obligation.completion_pct)
     timing_amp = _timing_amplifier(obligation.days_in_status)
     violation_amp = _violation_amplifier(obligation.violation_count)
 
+    # Apply ablation: neutralize specified components to their identity value (1.0)
+    from tidewatch.components import (
+        COMP_COMPLETION_DAMP,
+        COMP_DEPENDENCY_AMP,
+        COMP_MATERIALITY,
+        COMP_TIME_PRESSURE,
+        COMP_TIMING_AMP,
+        COMP_VIOLATION_AMP,
+        build_pressure_space,
+    )
+
+    if ablate:
+        _IDENTITY = 1.0
+        if COMP_TIME_PRESSURE in ablate:
+            time_p = _IDENTITY
+        if COMP_MATERIALITY in ablate:
+            mat_mult = _IDENTITY
+        if COMP_DEPENDENCY_AMP in ablate:
+            dep_amp = _IDENTITY
+        if COMP_COMPLETION_DAMP in ablate:
+            comp_damp = _IDENTITY
+        if COMP_TIMING_AMP in ablate:
+            timing_amp = _IDENTITY
+        if COMP_VIOLATION_AMP in ablate:
+            violation_amp = _IDENTITY
+
     # Build ComponentSpace — preserves factors as named dimensions (Late Collapse)
-    from tidewatch.components import build_pressure_space
     components = build_pressure_space(
         time_pressure=time_p, materiality=mat_mult,
         dependency_amp=dep_amp, completion_damp=comp_damp,
         timing_amp=timing_amp, violation_amp=violation_amp,
         obligation_id=obligation.id,
         raw_inputs={"days_remaining": days_rem, "completion_pct": obligation.completion_pct,
-                    "dependency_count": obligation.dependency_count},
+                    "dependency_count": obligation.dependency_count,
+                    "temporal_gate": t_gate},
     )
 
     # Scalar pressure is the default product collapse, saturated to [0,1]
@@ -222,21 +277,72 @@ def pressure_zone(pressure: float) -> str:
     return "red"
 
 
+def _find_pareto_front(results: list[PressureResult]) -> list[PressureResult]:
+    """Identify the Pareto front: results not dominated by any other.
+
+    A result is in the front if no other result dominates it on all
+    component dimensions simultaneously. Uses ComponentSpace.dominates()
+    which is O(d) per comparison, O(n²d) total.
+    """
+    front: list[PressureResult] = []
+    for candidate in results:
+        dominated = False
+        if candidate.component_space is None:
+            front.append(candidate)
+            continue
+        for other in results:
+            if other is candidate or other.component_space is None:
+                continue
+            if other.component_space.dominates(candidate.component_space) is True:
+                dominated = True
+                break
+        if not dominated:
+            front.append(candidate)
+    return front
+
+
+def _pareto_layered_sort(results: list[PressureResult]) -> list[PressureResult]:
+    """Sort results using Pareto-layered ranking.
+
+    Step 1: Extract the Pareto front (non-dominated results).
+    Step 2: Sort the front by scalar pressure descending.
+    Step 3: Remove front from remaining, repeat until empty.
+
+    This preserves multi-dimensional information: a result that dominates
+    another always ranks higher, even if its scalar collapse is lower.
+    """
+    ranked: list[PressureResult] = []
+    remaining = list(results)
+    while remaining:
+        front = _find_pareto_front(remaining)
+        front.sort(key=lambda r: r.pressure, reverse=True)
+        ranked.extend(front)
+        front_ids = {id(r) for r in front}
+        remaining = [r for r in remaining if id(r) not in front_ids]
+    return ranked
+
+
 def recalculate_batch(
     obligations: list[Obligation],
     now: datetime | None = None,
+    *,
+    pareto: bool = False,
 ) -> list[PressureResult]:
     """Recalculate pressure for a batch of obligations.
 
     Inputs:
       obligations: list of Obligation dataclasses
       now: current datetime (default: utcnow, shared across batch)
+      pareto: if True, use Pareto-layered ranking instead of scalar sort.
+        Obligations that dominate others on ALL component dimensions rank
+        higher, even if their scalar collapse is lower. Within each Pareto
+        front, sorting is by scalar pressure descending.
 
     Logic:
-      Calculate pressure for each, sort by pressure descending.
+      Calculate pressure for each, sort by pressure descending (or Pareto-layered).
 
     Outputs:
-      list[PressureResult] sorted by pressure descending
+      list[PressureResult] sorted by pressure descending (or Pareto rank)
     """
     import time as _time
 
@@ -244,7 +350,12 @@ def recalculate_batch(
     if now is None:
         now = datetime.now(UTC)
     results = [calculate_pressure(ob, now=now) for ob in obligations]
-    results.sort(key=lambda r: r.pressure, reverse=True)
+
+    if pareto:
+        results = _pareto_layered_sort(results)
+    else:
+        results.sort(key=lambda r: r.pressure, reverse=True)
+
     _latency_ms = (_time.monotonic() - _t0) * MS_PER_SECOND
 
     try:
@@ -254,7 +365,7 @@ def recalculate_batch(
         get_buffer().record(
             source_repo="tidewatch",
             operation_type="pressure.recalculate_batch",
-            operation_detail=f"batch_size={len(obligations)} red={red_count}",
+            operation_detail=f"batch_size={len(obligations)} red={red_count} pareto={pareto}",
             latency_ms=_latency_ms,
             success=True,
         )

@@ -43,6 +43,10 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
+# Golden pipeline tests verify exact numerical outputs — reclassified as
+# numerical_verification per §4.4.
+pytestmark = pytest.mark.numerical_verification
+
 # ── Fixed reference time for deterministic tests ──
 NOW = datetime(2026, 6, 1, 12, 0, 0, tzinfo=UTC)
 
@@ -289,7 +293,7 @@ _PRESSURE_CASES = [
     (30, "routine", 0, 0.5, 0.066613807374828, "green", "medium_half_done"),
     (14, "routine", 0, 0.0, 0.190800720574417, "green", "two_weeks"),
     (7,  "routine", 0, 0.0, 0.344799368291446, "yellow", "one_week"),
-    (5,  "routine", 2, 0.3, 0.486856264703219, "yellow", "five_days_deps_partial"),
+    (5,  "routine", 2, 0.3, 0.442324200840819, "yellow", "five_days_deps_partial"),
     (3,  "routine", 0, 0.0, 0.625298886973091, "orange", "three_days"),
     (2,  "routine", 0, 0.0, 0.768486073419898, "orange", "two_days"),
     (1,  "routine", 0, 0.0, 0.939958494053918, "red", "one_day"),
@@ -414,11 +418,14 @@ class TestGate06_PressureEdgeCases:
             dependency_count=10,
         )
         r = calculate_pressure(ob, now=NOW)
-        assert r.dependency_amp == pytest.approx(2.0, abs=1e-15)
+        # dep_amp = 1.0 + 10 × 0.1 × temporal_gate(7d) (§3.2)
+        t_gate = 1.0 - math.exp(-3.0 / 7.0)
+        expected_dep_amp = 1.0 + 10 * 0.1 * t_gate
+        assert r.dependency_amp == pytest.approx(expected_dep_amp, abs=1e-10)
         # Logistic damp at 0%: D ≈ 0.989
         sigmoid_neg4 = 1.0 / (1.0 + math.exp(4.0))
         damp_0 = 1.0 - 0.6 * sigmoid_neg4
-        assert r.pressure == pytest.approx(0.348560942468944 * 2.0 * damp_0, abs=1e-10)
+        assert r.pressure == pytest.approx(0.348560942468944 * expected_dep_amp * damp_0, abs=1e-10)
 
     def test_unknown_materiality_defaults_to_one(self) -> None:
         from tidewatch import Obligation, calculate_pressure

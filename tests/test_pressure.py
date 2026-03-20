@@ -95,13 +95,18 @@ class TestMateriality:
 class TestDependencies:
 
     def test_dependency_amplification(self):
+        """dep_amp = 1.0 + deps × AMPLIFICATION × temporal_gate(t) (§3.2)."""
+        import math
         ob_zero, now = _make_obligation(days_out=7, dependency_count=0)
         ob_five, _ = _make_obligation(days_out=7, dependency_count=5)
         r_zero = calculate_pressure(ob_zero, now=now)
         r_five = calculate_pressure(ob_five, now=now)
-        assert r_five.dependency_amp == 1.5
+        # temporal_gate at 7d = 1 - exp(-3/7) ≈ 0.349
+        t_gate = 1.0 - math.exp(-3.0 / 7.0)
+        expected_dep_amp = 1.0 + 5 * 0.1 * t_gate
+        assert r_five.dependency_amp == pytest.approx(expected_dep_amp, abs=1e-10)
         assert r_zero.dependency_amp == 1.0
-        assert abs(r_five.pressure - r_zero.pressure * 1.5) < 0.001
+        assert r_five.pressure == pytest.approx(r_zero.pressure * expected_dep_amp, abs=1e-10)
 
 
 class TestCompletion:
@@ -124,7 +129,7 @@ class TestCompletion:
 class TestCombined:
 
     def test_combined_factors_multiply(self):
-        """All factors interact multiplicatively."""
+        """All factors interact multiplicatively including temporal gate."""
         ob, now = _make_obligation(
             days_out=3,
             materiality="material",
@@ -133,14 +138,15 @@ class TestCombined:
         )
         result = calculate_pressure(ob, now=now)
 
-        # Manual computation with logistic dampening
+        # Manual computation with logistic dampening and temporal gating (§3.2)
         time_p = 1.0 - math.exp(-3.0 / 3.0)
         mat = 1.5
-        dep = 1.0 + (2 * 0.1)
+        t_gate = 1.0 - math.exp(-3.0 / 3.0)  # temporal_gate at 3 days
+        dep = 1.0 + (2 * 0.1 * t_gate)
         sigmoid = 1.0 / (1.0 + math.exp(-8.0 * (0.25 - 0.5)))
         comp = 1.0 - (0.6 * sigmoid)
         expected = min(1.0, time_p * mat * dep * comp)
-        assert abs(result.pressure - expected) < 0.001
+        assert result.pressure == pytest.approx(expected, abs=1e-10)
 
     def test_pressure_clamped_to_one(self):
         """High factors should not exceed 1.0."""
@@ -209,7 +215,10 @@ class TestBatch:
         assert isinstance(result, PressureResult)
         assert result.time_pressure > 0
         assert result.materiality_mult == 1.5
-        assert result.dependency_amp == 1.3
+        # dep_amp = 1 + 3 × 0.1 × temporal_gate(5d) ≈ 1.135
+        import math as _m
+        t_gate_5d = 1.0 - _m.exp(-3.0 / 5.0)
+        assert result.dependency_amp == pytest.approx(1.0 + 3 * 0.1 * t_gate_5d, abs=1e-10)
         # Logistic damp at 40%: sigmoid(8*(0.4-0.5)) = sigmoid(-0.8) ≈ 0.3100
         # D = 1 - 0.6 * 0.3100 ≈ 0.814
         assert abs(result.completion_damp - 0.814) < 0.01

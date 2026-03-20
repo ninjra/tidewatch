@@ -74,6 +74,24 @@ MATERIALITY_WEIGHTS: dict[str, float] = {
 # --- Dependencies ---
 DEPENDENCY_AMPLIFICATION = 0.1  # Per-dependency amplifier (junction multiplier)
 
+# Temporal gating for dependency fanout (§3.2):
+# dep_amp = 1.0 + (deps × AMPLIFICATION × temporal_gate)
+# temporal_gate(t) = 1 - exp(-FANOUT_TEMPORAL_K / t)
+#
+# Derivation: In a dependency DAG, cascading delay risk is proportional to
+# remaining slack. When an obligation has 30 days remaining, the system can
+# absorb dependency-chain delays without cascading. At 1 day remaining,
+# any dependency failure propagates immediately. The temporal gate uses the
+# same exponential form as P_time for consistency (Eq. 2, §3.2) but with an
+# independent rate constant so dependency sensitivity can be tuned separately
+# from base urgency.
+#
+# At t=1d:  temporal_gate = 1 - exp(-3/1)  = 0.950 (near-full amplification)
+# At t=7d:  temporal_gate = 1 - exp(-3/7)  = 0.349 (weak amplification)
+# At t=30d: temporal_gate = 1 - exp(-3/30) = 0.095 (near-zero amplification)
+# At t≤0 (overdue): temporal_gate = 1.0 (dependency risk fully materialized)
+FANOUT_TEMPORAL_K = 3.0  # Rate constant for dependency temporal gating
+
 # --- Completion ---
 COMPLETION_DAMPENING = 0.6  # Max dampening at 100% completion (relief valve)
 COMPLETION_DAMPENING_MODE = "logistic"  # "linear" or "logistic"

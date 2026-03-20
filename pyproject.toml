@@ -29,6 +29,7 @@ benchmarks = [
     "matplotlib>=3.7",
     "pandas>=2.0",
     "numpy>=1.24",
+    "simpy>=4.0",
 ]
 telemetry = [
     "sentinel-sdk",
@@ -39,6 +40,9 @@ include = ["tidewatch*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "numerical_verification: tests that verify numerical/statistical properties (not exact values)",
+]
 
 [tool.ruff]
 target-version = "py312"
