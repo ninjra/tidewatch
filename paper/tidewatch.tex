@@ -64,21 +64,23 @@
 \begin{abstract}
 Conventional obligation trackers model deadlines as binary events:
 an item is either overdue or not.
-This discrete framing discards critical information about the
+This discrete framing discards information about the
 \emph{rate} at which urgency accumulates and offers no mechanism
 for adapting task presentation to the operator's current cognitive
 capacity.
-We introduce \textbf{Tidewatch}, a deterministic pressure engine that
-assigns every tracked obligation a continuous score in $[0, 1]$ via
-an exponential-decay time model modulated by materiality, dependency
+We present \textbf{Tidewatch}, a deterministic scoring engine that
+assigns each tracked obligation a continuous pressure score in $[0, 1]$
+via an exponential-decay time model modulated by materiality, dependency
 fanout, and completion progress.
-Tidewatch further incorporates a \emph{cognitive bandwidth} dimension:
-physiological signals (sleep quality, pain level, HRV trend) re-rank
-the obligation queue so that low-demand tasks surface when operator
-capacity is reduced.
-The model is pure deterministic math with zero runtime dependencies,
-fully decomposable for auditability, and validated against 11
-pre-computed known-value scenarios covering the full pressure curve.
+Tidewatch additionally provides a \emph{cognitive bandwidth} modulator:
+normalized physiological signals (sleep quality, pain level, HRV trend)
+re-rank the obligation queue so that low-demand tasks surface when
+operator capacity is reduced, without altering underlying pressure scores.
+We validate the model against 11 pre-computed known-value scenarios
+($|{\Delta}| < 10^{-10}$), compare against EDF, linear, and binary
+baselines, and present a sensitivity analysis of the rate constant.
+The implementation is 1{,}061 lines of pure Python with zero runtime
+dependencies and 342 deterministic tests.
 \end{abstract}
 
 % ======================================================================
@@ -362,6 +364,24 @@ The effective bandwidth $b$ is the arithmetic mean of available
 signals, defaulting to 1.0 (full capacity) when no signals are present.
 A pre-computed \texttt{bandwidth\_score} field overrides the
 signal average if provided.
+
+\paragraph{Relationship to NASA-TLX and Wickens MRT.}
+Tidewatch's bandwidth model draws on two established frameworks but
+differs in scope and timing.
+NASA-TLX~\citep{hart1988development} measures \emph{perceived} workload
+across six dimensions (mental, physical, temporal demand; performance,
+effort, frustration) as a \emph{post-hoc} subjective assessment.
+Wickens' Multiple Resource Theory~\citep{wickens2008multiple} models
+\emph{interference} between concurrent tasks sharing cognitive resources.
+Tidewatch's CognitiveContext is narrower: it captures \emph{current
+physiological capacity} via objective or semi-objective signals
+(HRV, sleep hours, pain level) and uses them \emph{prospectively} to
+adjust task \emph{presentation order}, not to measure or predict
+task difficulty.
+This is a complementary mechanism---NASA-TLX could inform post-task
+calibration of demand profiles, while Wickens' resource theory could
+extend the model to multi-task interference---but Tidewatch deliberately
+avoids conflating capacity measurement with workload assessment.
 
 \paragraph{TaskDemand.}
 Each obligation is mapped to a cognitive demand profile
@@ -732,6 +752,23 @@ can audit exactly why obligation $A$ ranked above obligation $B$
 by inspecting the four-factor decomposition.
 The pressure score is reproducible: same inputs, same output, no
 stochastic variation.
+
+\paragraph{The hard-floor tension.}
+Tidewatch is ``deliberately not a scheduler'' (Section~\ref{sec:intro}),
+yet the hard-floor override (Section~\ref{sec:bandwidth}) forces binding
+obligations to the top of the sort order regardless of bandwidth.
+This appears contradictory: if Tidewatch only produces scores, why does
+it impose ordering constraints?
+The resolution is that hard-floor is a \emph{safety invariant}, not a
+scheduling decision.
+It ensures that bandwidth modulation---a heuristic re-ranking---cannot
+suppress obligations with externally binding deadlines (court filings,
+tax payments).
+The hard-floor does not assign execution times or allocate resources;
+it constrains the sort order to prevent a specific class of failure
+(missing a binding deadline because the operator's bandwidth was low).
+This is analogous to a type system constraint: it restricts the space
+of valid outputs without prescribing a specific output.
 
 \paragraph{Limitations.}
 Several limitations warrant acknowledgment:
