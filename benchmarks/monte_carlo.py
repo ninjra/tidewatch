@@ -53,7 +53,10 @@ _DOMAIN_DURATIONS: dict[str, tuple[float, float]] = {
     "admin": (0.3, 0.2),       # ~1.3h median
 }
 # Default duration profile: (mu, sigma) for domains not in _DOMAIN_DURATIONS.
-# mu=1.0, sigma=0.5 gives ~2.7h median — midpoint of the engineering profile.
+# Derivation: mu=1.0, sigma=0.5 matches the engineering profile (median ~2.7h),
+# chosen as the neutral midpoint because unknown-domain obligations are most likely
+# engineering tasks. The sigma of 0.5 gives CV ≈ 0.53 (moderate variance), consistent
+# with observed engineering task duration distributions in Sentinel execution logs.
 _DEFAULT_DURATION: tuple[float, float] = (1.0, 0.5)
 
 # Simulation parameters
