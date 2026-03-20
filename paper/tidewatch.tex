@@ -70,17 +70,25 @@ for adapting task presentation to the operator's current cognitive
 capacity.
 We present \textbf{Tidewatch}, a deterministic scoring engine that
 assigns each tracked obligation a continuous pressure score in $[0, 1]$
-via an exponential-decay time model modulated by materiality, dependency
-fanout, and completion progress.
+via an exponential-decay time model modulated by six multiplicative
+factors: materiality weighting, dependency fanout, completion dampening
+(logistic sigmoid), timing amplification for stuck obligations,
+violation-count amplification, and a saturation bound.
 Tidewatch additionally provides a \emph{cognitive bandwidth} modulator:
 normalized physiological signals (sleep quality, pain level, HRV trend)
 re-rank the obligation queue so that low-demand tasks surface when
 operator capacity is reduced, without altering underlying pressure scores.
+A hard-floor override ensures binding deadlines (court filings, tax
+payments) bypass bandwidth adjustment when they fall within 24 hours.
+A \emph{speculative planner} uses idle cycles to pre-generate
+action plans for high-pressure obligations, and a \emph{triage queue}
+stages candidate obligations from external scanners with deduplication.
 We validate the model against 11 pre-computed known-value scenarios
-($|{\Delta}| < 10^{-10}$), compare against EDF, linear, and binary
-baselines, and present a sensitivity analysis of the rate constant.
-The implementation is 1{,}061 lines of pure Python with zero runtime
-dependencies and 342 deterministic tests.
+($|{\Delta}| < 10^{-10}$), compare against EDF, linear, and
+Eisenhower-matrix baselines via a formal \texttt{BaselineScorer}
+protocol, and present a sensitivity analysis of the rate constant.
+The implementation is 1{,}119 lines of pure Python with zero runtime
+dependencies and 483 deterministic tests.
 \end{abstract}
 
 % ======================================================================
@@ -515,7 +523,7 @@ any storage backend to be plugged in above it.
 Tidewatch is implemented in Python 3.11+ with \textbf{zero runtime
 dependencies}---only \texttt{math}, \texttt{datetime}, \texttt{dataclasses},
 and \texttt{uuid} from the standard library.
-The core library comprises 861 lines across five modules:
+The core library comprises 1{,}119 lines across five modules:
 
 \begin{itemize}[nosep]
   \item \texttt{pressure.py}: pressure equation and batch recalculation
