@@ -82,17 +82,21 @@ with 541 deterministic and property-based tests---including 23
 Hypothesis-driven bounds-and-monotonicity checks---factor ablation,
 and Monte Carlo scheduling simulations against earliest-deadline-first
 (EDF), FIFO, and random baselines.  Across workload scales ($N{=}50$,
-$200$), Tidewatch eliminates queue inversions entirely ($0.0\%$ vs.\
-$10$--$13\%$ for EDF) while maintaining comparable missed-deadline
+$200$), Tidewatch maintains comparable missed-deadline
 rates; against na\"{\i}ve baselines it reduces missed deadlines by
 $35$--$47\%$.  Under simulation, bandwidth reranking at reduced
 capacity ($b{=}0.5$) slightly improves deadline compliance, and
-product collapse outperforms weighted-sum MCDM by $23\%$ on
-missed deadlines.  The implementation comprises 1{,}671 lines of
-pure-stdlib Python with zero runtime dependencies.  All scoring
-functions ship with golden-value regression tests verified to
-$\Delta < 10^{-10}$, establishing deterministic reproducibility as a
-first-class design constraint.
+product collapse outperforms normalized weighted-sum MCDM on
+missed deadlines.  The dependency temporal gate uses an independent
+rate constant ($k_f = 2.0$) decoupled from base time pressure
+($k = 3.0$), the timing amplifier uses a logistic ramp replacing
+the prior step function, and violation amplification decays with a
+14-day half-life to prevent perverse feedback loops.
+The implementation comprises 1{,}704 lines of pure-stdlib Python
+with zero runtime dependencies.  All scoring functions ship with
+golden-value regression tests verified to $\Delta < 10^{-10}$,
+establishing deterministic reproducibility as a first-class design
+constraint.
 \end{abstract}
 
 % ======================================================================
@@ -143,12 +147,16 @@ Tidewatch addresses both problems with three orthogonal mechanisms:
         binding deadlines from being suppressed.
 \end{enumerate}
 
-Tidewatch is deliberately \emph{not} a scheduler.
+Tidewatch is a \emph{prioritization heuristic}, not a scheduler.
 It does not assign start times, allocate resources, or generate
 Gantt charts.
 It produces a single, auditable score per obligation and a
 bandwidth-aware sort order, leaving execution decisions to the
 operator or the autonomous agent consuming the signal.
+We evaluate it against scheduling baselines (EDF, FIFO) to
+demonstrate that a multi-factor prioritization heuristic can achieve
+deadline compliance comparable to scheduling-theoretic optima while
+encoding richer input dimensions.
 
 % ======================================================================
 % 2  RELATED WORK
@@ -180,6 +188,19 @@ self-reflection.
 autonomous agents.
 None of these systems incorporate a continuous pressure signal or
 adapt task ordering to physiological operator state.
+
+\textbf{Multi-criteria decision making (MCDM).}
+Weighted-sum aggregation, TOPSIS~\citep{hwang1981topsis}, and
+PROMETHEE~\citep{brans1985promethee} are standard approaches for
+combining multiple scored dimensions into a single ranking.
+AHP~\citep{saaty1980ahp} derives weights from pairwise preference
+judgments.  Tidewatch's product collapse differs from additive MCDM
+methods: it treats factors as multiplicative modulators of a base
+signal rather than interchangeable dimensions, preventing a high
+score on one factor from compensating for zero urgency on another.
+The weighted-sum MCDM baseline in Section~\ref{sec:monte_carlo}
+uses normalized equal weights after scaling each component to $[0,1]$
+by its algebraic bounds.
 
 \textbf{Cognitive load and workload.}
 NASA-TLX~\citep{hart1988development} measures perceived workload
@@ -261,7 +282,8 @@ A = 1 + \bigl(n_{\text{deps}} \times \alpha_{\text{dep}}
     \times g(t)\bigr)
 \end{equation}
 where $\alpha_{\text{dep}} = 0.1$ and the temporal gate
-$g(t)$ mirrors the time-pressure curve:
+$g(t)$ uses an independent rate constant $k_f$ decoupled from the
+base time-pressure $k$:
 \begin{equation}
 \label{eq:gate}
 g(t) =
@@ -271,10 +293,16 @@ g(t) =
   1.0 & \text{if } t \leq 0
 \end{cases}
 \end{equation}
-with $k_f = 3.0$.
-At $t = 30$ days, $g(30) \approx 0.095$---an obligation blocking 10
-others receives only $A \approx 1.095$.
-At $t = 2$ days, $g(2) \approx 0.78$, yielding $A \approx 1.78$ for
+with $k_f = 2.0$ (independent of $k = 3.0$).
+The lower $k_f$ gives dependency amplification a wider activation
+window than base time pressure: dependencies start mattering slightly
+later, matching the intuition that cascading failure risk materializes
+after the deadline itself becomes urgent.
+Effective dependency count is capped at $n_{\text{max}} = 20$ to
+prevent artificial saturation from spurious fanout.
+At $t = 30$ days, $g(30) \approx 0.064$---an obligation blocking 10
+others receives only $A \approx 1.064$.
+At $t = 2$ days, $g(2) \approx 0.63$, yielding $A \approx 1.63$ for
 the same fanout.
 
 \paragraph{Completion dampener $D$.}
@@ -295,24 +323,31 @@ prefer proportional dampening.
 
 \paragraph{Timing amplifier $T_{\text{amp}}$.}
 Obligations that remain in the same status for extended periods
-receive escalating amplification to prevent stagnation:
+receive continuous amplification via a logistic ramp:
 \begin{equation}
-T_{\text{amp}} =
-\begin{cases}
-  1.0 & \text{if days in status} < 7 \\
-  1.1 & \text{if } 7 \leq \text{days} < 14 \\
-  1.2 & \text{if days in status} \geq 14
-\end{cases}
+T_{\text{amp}}(d) = 1 + \frac{\Delta_{\max}}{1 + \exp\!\bigl(-k_t \cdot (d - d_{\text{mid}})\bigr)}
 \end{equation}
+where $d$ is days in status, $\Delta_{\max} = 0.2$ is the asymptotic
+boost, $k_t = 0.5$ controls steepness, and $d_{\text{mid}} = 7$ days
+is the inflection point.  At $d = 0$: $T_{\text{amp}} \approx 1.00$;
+at $d = 7$: $T_{\text{amp}} \approx 1.10$;
+at $d = 14$: $T_{\text{amp}} \approx 1.19$.
+The logistic form replaces the prior step function for consistency
+with the continuous-framework thesis.
 
 \paragraph{Violation amplifier $V_{\text{amp}}$.}
-Past deadline violations increase future pressure:
+Past deadline violations increase future pressure, but decay
+exponentially to prevent perverse feedback loops where a missed
+deadline permanently amplifies an already-difficult obligation:
 \begin{equation}
-V_{\text{amp}} = 1 + \min(v \times 0.05,\; 0.5)
+V_{\text{amp}} = 1 + \min\!\bigl(v \cdot 2^{-d / h} \times 0.05,\; 0.5\bigr)
 \end{equation}
-where $v$ is the cumulative violation count.
-The cap at~$1.5$ prevents runaway amplification from historical
-violations.
+where $v$ is the cumulative violation count, $d$ is days in current
+status, and $h = 14$ is the decay half-life.
+The cap at~$1.5$ prevents runaway amplification.
+At $d = 0$: full violation effect.
+At $d = 14$: half the effect.
+At $d = 28$: one quarter.
 
 \paragraph{Saturation bound.}
 The $\min(1, \cdot)$ in Equation~\ref{eq:pressure} is the
@@ -341,21 +376,26 @@ Table~\ref{tab:constants} summarizes all constants.
 \textbf{Constant} & \textbf{Symbol} & \textbf{Value} \\
 \midrule
 Rate constant             & $k$                      & 3.0  \\
-Fanout temporal gate      & $k_f$                    & 3.0  \\
+Fanout temporal gate      & $k_f$                    & 2.0  \\
+Dependency count cap      & $n_{\text{max}}$         & 20   \\
 Overdue pressure          & $P_{\text{overdue}}$     & 1.0  \\
 Material weight           & $M_{\text{mat}}$         & 1.5  \\
 Dependency amplification  & $\alpha_{\text{dep}}$    & 0.1  \\
 Completion dampening      & $\beta$                  & 0.6  \\
 Logistic steepness        & $\kappa$                 & 8.0  \\
-Timing stale threshold    &                          & 7\,d \\
-Timing critical threshold &                          & 14\,d \\
+Timing midpoint           & $d_{\text{mid}}$         & 7\,d \\
+Timing steepness          & $k_t$                    & 0.5  \\
+Timing max boost          & $\Delta_{\max}$          & 0.2  \\
 Violation amplification   &                          & 0.05 \\
 Violation cap             &                          & 0.5  \\
+Violation decay half-life & $h$                      & 14\,d \\
 \midrule
 Zone: yellow              & $\theta_Y$               & 0.30 \\
 Zone: orange              & $\theta_O$               & 0.60 \\
 Zone: red                 & $\theta_R$               & 0.80 \\
 \midrule
+Bandwidth no-data default &                          & 0.8  \\
+Bandwidth floor           &                          & 0.2  \\
 Bandwidth full threshold  &                          & 0.99 \\
 Hard-floor days           &                          & 1.0  \\
 \bottomrule
@@ -482,8 +522,11 @@ where $1.0$ = optimal:
         \texttt{session\_load} --- system-derived signals
 \end{itemize}
 The effective bandwidth $b$ is the arithmetic mean of available
-signals.  If no signals are present, $b = 1.0$ (fail-open: assume
-full capacity).  A pre-computed \texttt{bandwidth\_score} overrides
+signals, clamped to $[0.2, 1.0]$.  The floor of $0.2$ prevents
+compromised or misconfigured telemetry from creating a denial-of-service
+state for complex work.  If no signals are present, $b = 0.8$
+(fail-safe-conservative: assume mild degradation rather than full
+capacity).  A pre-computed \texttt{bandwidth\_score} overrides
 the average when provided.
 
 \paragraph{Task demand estimation.}
@@ -600,7 +643,7 @@ Tidewatch is implemented in Python~3.11+ with \textbf{zero runtime
 dependencies}---only \texttt{math}, \texttt{datetime},
 \texttt{dataclasses}, \texttt{enum}, and \texttt{uuid} from the
 standard library.
-The core library comprises 1{,}671 lines across seven modules:
+The core library comprises 1{,}704 lines across seven modules:
 
 \begin{table}[t]
 \centering
@@ -610,15 +653,15 @@ The core library comprises 1{,}671 lines across seven modules:
 \toprule
 \textbf{Module} & \textbf{Lines} \\
 \midrule
-\texttt{pressure.py}   & 522 \\
-\texttt{types.py}      & 286 \\
+\texttt{pressure.py}   & 542 \\
+\texttt{types.py}      & 294 \\
 \texttt{components.py} & 242 \\
-\texttt{constants.py}  & 234 \\
-\texttt{planner.py}    & 219 \\
+\texttt{constants.py}  & 236 \\
+\texttt{planner.py}    & 230 \\
 \texttt{triage.py}     & 114 \\
 \texttt{\_\_init\_\_.py} & 46 \\
 \midrule
-\textbf{Total}         & \textbf{1{,}671} \\
+\textbf{Total}         & \textbf{1{,}704} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -754,10 +797,14 @@ order determined by the scheduling strategy.
 \begin{enumerate}[nosep]
   \item \textbf{Tidewatch:} order by pressure descending (product collapse).
   \item \textbf{Tidewatch+BW ($b{=}0.5$, $0.2$):} pressure with
-        bandwidth-adjusted reranking at medium and low capacity.
-  \item \textbf{Weighted-sum:} MCDM baseline---order by
-        weighted-sum collapse of the component space with equal
-        weights across all six factors.
+        bandwidth-adjusted reranking at fixed medium/low capacity.
+  \item \textbf{Tidewatch+BW (variable):} bandwidth sampled from
+        $\text{Beta}(2, 3)$ per trial (mean $\approx 0.4$).
+  \item \textbf{Weighted-sum:} MCDM baseline---normalized
+        weighted-sum collapse with equal weights, each component
+        scaled to $[0, 1]$ by its algebraic bounds.
+  \item \textbf{Weighted-EDF:} hybrid---zone-tier urgency
+        (red$>$orange$>$yellow$>$green) with EDF within each tier.
   \item \textbf{EDF:} earliest deadline first.
   \item \textbf{FIFO:} insertion order.
   \item \textbf{Random:} shuffled (null hypothesis).
@@ -777,10 +824,11 @@ order determined by the scheduling strategy.
 \begin{table}[t]
 \centering
 \caption{Monte Carlo results ($N{=}50$, 200 trials, seed~$= 42$).
-Tidewatch eliminates inversions while matching EDF on deadline
-compliance.  Bandwidth reranking at $b{=}0.5$ slightly
-\emph{improves} deadline compliance.  Weighted-sum MCDM
-underperforms product collapse on all metrics.}
+Values are mean $\pm$ one standard deviation across trials.
+Bandwidth reranking at $b{=}0.5$ slightly \emph{improves} deadline
+compliance.  Weighted-sum MCDM underperforms product collapse on
+all metrics.  Zero inversions for Tidewatch is a design property
+(see text), not an empirical finding.}
 \label{tab:mc50}
 \begin{tabular}{@{}lccc@{}}
 \toprule
@@ -805,13 +853,49 @@ Random             & $0.130 \pm 0.022$ & $0.495 \pm 0.047$ &
 \end{tabular}
 \end{table}
 
-\paragraph{Key findings.}
-Across both workload scales, Tidewatch eliminates queue inversions
-entirely ($0.0\%$ vs.\ $10$--$13\%$ for EDF).  This is a structural
-result: pressure-ordered processing never processes a low-urgency
-item while a higher-urgency one waits, by construction.
+\begin{table}[t]
+\centering
+\caption{Monte Carlo results ($N{=}200$, 200 trials, seed~$= 42$).
+Values are mean $\pm$ one standard deviation.  95\% bootstrap CIs
+in brackets.  Weighted-EDF is a hybrid baseline combining zone-based
+urgency tiers with deadline ordering.  Saturation rate: fraction of
+obligations at $P \geq 0.999$.}
+\label{tab:mc200}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Strategy} & \textbf{Missed} & \textbf{Inversions} &
+  \textbf{Efficiency} & \textbf{Sat.} \\
+\midrule
+Tidewatch          & $0.201 \pm 0.018$ & $0.000$ &
+  $0.818$ & $9.0\%$ \\
+TW+BW ($b{=}0.5$) & $0.200 \pm 0.017$ & $0.036$ &
+  $0.816$ & $9.0\%$ \\
+Weighted-EDF       & $0.186 \pm 0.014$ & $0.097$ &
+  $0.838$ & $9.0\%$ \\
+Weighted-sum       & $0.320 \pm 0.015$ & $0.256$ &
+  $0.696$ & $9.0\%$ \\
+EDF                & $\mathbf{0.185 \pm 0.015}$ & $0.099$ &
+  $\mathbf{0.837}$ & $9.0\%$ \\
+FIFO               & $0.319 \pm 0.013$ & $0.495$ &
+  $0.692$ & $9.0\%$ \\
+Random             & $0.312 \pm 0.024$ & $0.498$ &
+  $0.696$ & $9.0\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-On missed-deadline rate, Tidewatch matches EDF at $N{=}50$ and
+\paragraph{Key findings.}
+Tidewatch's zero queue-inversion rate ($0.0\%$) is a \emph{design
+property}, not an empirical finding: processing obligations in
+pressure-descending order cannot, by construction, invert the
+pressure ranking.  We report it for completeness but emphasize that
+EDF's $10$--$13\%$ inversion rate measures inversions on
+\emph{Tidewatch's metric}, not on EDF's own deadline-ordering
+objective.  Each strategy achieves zero inversions on its own
+criterion.
+
+On missed-deadline rate---an exogenous metric independent of any
+strategy's internal ordering---Tidewatch matches EDF at $N{=}50$ and
 trails by~$9\%$ at $N{=}200$.  This is expected: EDF is
 theoretically optimal for single-resource, deadline-only scheduling.
 Tidewatch's additional factors (materiality, dependencies,
@@ -822,6 +906,15 @@ barely-deadline-urgent item.
 Against na\"{\i}ve baselines (FIFO, Random), Tidewatch reduces
 missed deadlines by $35$--$47\%$ and improves attention efficiency
 by $3$--$4\%$.
+
+\paragraph{Saturation and tie-breaking.}
+The $\min(1, \cdot)$ bound means multiple obligations can saturate at
+$P = 1.0$ simultaneously.  When ties occur, obligations are ordered by
+their position in the input list (stable sort).  This is a known
+information-loss boundary: the Late Collapse component space
+preserves the raw (unclamped) product for consumers that need
+discrimination above the ceiling, but the default scalar pressure
+does not.
 
 \paragraph{Bandwidth reranking.}
 At $b = 0.5$ (medium capacity), bandwidth-adjusted reranking slightly
@@ -902,6 +995,36 @@ run rather than modelling capacity variation \emph{within} a trial
 (e.g., operator fatigue over a workday).
 Intra-trial capacity dynamics remain future work.
 
+\paragraph{Deployment safety for physiological reranking.}
+The cognitive bandwidth modulator raises deployment considerations
+beyond model accuracy:
+\begin{itemize}[nosep]
+  \item \textbf{Consent:} physiological signals (pain, sleep, HRV) are
+    sensitive health data.  Any deployment must obtain explicit opt-in
+    and support full opt-out without degrading the base prioritization.
+  \item \textbf{Override precedence:} the operator must be able to
+    manually override any bandwidth-driven demotion.  The three-tier
+    risk classification provides structural override via
+    \textsc{never\_demotable}, but per-obligation manual override
+    is not yet implemented.
+  \item \textbf{Audit logging:} every bandwidth-driven reranking should
+    produce an auditable record of which signals were used, what the
+    effective bandwidth was, and which obligations were reranked.
+    The current implementation logs at debug level; production use
+    requires persistent audit trails.
+  \item \textbf{Failure modes:} if signal quality degrades (stale
+    wearable data, sensor malfunction), the system defaults to
+    $b = 0.8$ (conservative) rather than $b = 1.0$ (optimistic).
+    A bandwidth floor of $0.2$ prevents poisoned signals from
+    suppressing all high-demand work.
+  \item \textbf{Gaming:} self-reported signals are gameable.  The
+    system does not currently verify signal provenance; integration
+    with authenticated wearable APIs would mitigate this.
+\end{itemize}
+This paper does not claim production readiness for physiological
+reranking.  The mechanism is presented as a research contribution
+with explicit safety boundaries.
+
 \paragraph{Limitations.}
 \begin{enumerate}[nosep]
   \item \textbf{Single-operator calibration.}
@@ -915,11 +1038,13 @@ Intra-trial capacity dynamics remain future work.
   \item \textbf{No feedback loop.}
         Constants are fixed.  A closed-loop system would observe
         completion patterns and adjust parameters over time.
-  \item \textbf{Coherence score gap.}
-        The gravity tiebreak weight in the fit score
-        (Equation~\ref{eq:fit}) does not yet have a principled
-        derivation; it is a placeholder for integration with
-        the Gravitas coherence scoring system.
+  \item \textbf{Gravity tiebreak placeholder.}
+        The $g_w \cdot s_g$ term in Equation~\ref{eq:fit} is a
+        placeholder for integration with the Gravitas coherence
+        scoring system.  Currently $s_g$ defaults to $0$ (no effect)
+        unless the caller provides a pre-computed gravity score.
+        This term is explicitly zeroed in all evaluation results
+        reported in this paper; it does not affect any claim.
 \end{enumerate}
 
 \paragraph{Future work.}
@@ -948,7 +1073,7 @@ ensures that the right task surfaces for the operator's current
 capacity---not just the most urgent one, but the most urgent one
 they can execute.
 
-At 1{,}671 lines with zero dependencies and 541 deterministic tests,
+At 1{,}704 lines with zero dependencies and 541 deterministic tests,
 Tidewatch demonstrates that useful prioritization infrastructure
 does not require complexity.
 It requires the right equation.
