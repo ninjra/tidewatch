@@ -15,6 +15,8 @@ MIN_RANKS_FOR_CORRELATION = 2
 
 # ── Eisenhower baseline ──
 EISENHOWER_URGENT_THRESHOLD_DAYS = 7.0
+EISENHOWER_Q2_SCORE = 0.5   # Not urgent + important
+EISENHOWER_Q3_SCORE = 0.75  # Urgent + not important
 
 # ── SOB generation defaults ──
 DEFAULT_N = 1000

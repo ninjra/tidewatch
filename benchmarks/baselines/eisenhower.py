@@ -8,16 +8,20 @@ Urgent/Important matrix:
   Q4 (not urgent + not important) = 0.0
 """
 
-from benchmarks.constants import EISENHOWER_URGENT_THRESHOLD_DAYS
+from benchmarks.constants import (
+    EISENHOWER_Q2_SCORE,
+    EISENHOWER_Q3_SCORE,
+    EISENHOWER_URGENT_THRESHOLD_DAYS,
+)
 
 
 def _quadrant_scores() -> dict[tuple[bool, bool], float]:
     """Eisenhower quadrant scores — fixed by definition of the matrix."""
     return {
-        (True, True): 1.0,    # Q1: urgent + important
-        (True, False): 0.75,  # Q3: urgent + not important
-        (False, True): 0.5,   # Q2: not urgent + important
-        (False, False): 0.0,  # Q4: not urgent + not important
+        (True, True): 1.0,                # Q1: urgent + important
+        (True, False): EISENHOWER_Q3_SCORE,  # Q3: urgent + not important
+        (False, True): EISENHOWER_Q2_SCORE,  # Q2: not urgent + important
+        (False, False): 0.0,               # Q4: not urgent + not important
     }
 
 

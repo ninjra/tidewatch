@@ -47,12 +47,21 @@ from scripts.constants import (
     PRESSURE_CURVE_T_MIN,
     PRESSURE_CURVE_Y_MAX,
     ZONE_LABEL_X,
+    ZONE_LABEL_Y_GREEN,
+    ZONE_LABEL_Y_ORANGE,
+    ZONE_LABEL_Y_RED,
+    ZONE_LABEL_Y_YELLOW,
 )
 
 
 def _zone_label_positions() -> dict[str, float]:
     """Zone label y-positions for pressure curve annotation."""
-    return {"Green": 0.15, "Yellow": 0.45, "Orange": 0.70, "Red": 0.90}
+    return {
+        "Green": ZONE_LABEL_Y_GREEN,
+        "Yellow": ZONE_LABEL_Y_YELLOW,
+        "Orange": ZONE_LABEL_Y_ORANGE,
+        "Red": ZONE_LABEL_Y_RED,
+    }
 
 
 ZONE_LABEL_POSITIONS = _zone_label_positions()
