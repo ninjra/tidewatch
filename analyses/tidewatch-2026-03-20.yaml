@@ -1646,92 +1646,92 @@ graph:
     tidewatch/constants.py: 11
     tidewatch/types.py: 9
     tidewatch/pressure.py: 5
-    benchmarks/baselines/__init__.py: 3
     benchmarks/run.py: 3
     tidewatch/planner.py: 3
-    benchmarks/baselines/linear_urgency.py: 2
-    tidewatch/triage.py: 2
+    benchmarks/baselines/__init__.py: 3
     benchmarks/baselines/eisenhower.py: 2
     benchmarks/baselines/binary_deadline.py: 2
+    benchmarks/baselines/linear_urgency.py: 2
+    tidewatch/triage.py: 2
     scripts/generate_paper_figures.py: 1
-    tests/test_pressure.py: 0
-    tests/test_baselines.py: 0
-    tests/test_cognitive_bandwidth.py: 0
-    tests/conftest.py: 0
-    tests/test_generate_paper_figures.py: 0
-    tests/test_run.py: 0
-    tests/test_integration.py: 0
-    tests/test_types.py: 0
-    tests/test_generate_obligations.py: 0
-    tests/test_triage.py: 0
-    tests/test_metrics.py: 0
-    tests/test_benchmarks.py: 0
     tests/test_golden_pipeline.py: 0
-    tests/test_constants.py: 0
     tests/test_planner.py: 0
+    tests/test_cognitive_bandwidth.py: 0
+    tests/test_pressure.py: 0
+    tests/test_run.py: 0
     tests/test_init.py: 0
+    tests/test_constants.py: 0
+    tests/test_triage.py: 0
+    tests/test_benchmarks.py: 0
+    tests/test_generate_obligations.py: 0
+    tests/test_integration.py: 0
+    tests/test_metrics.py: 0
+    tests/conftest.py: 0
+    tests/test_types.py: 0
+    tests/test_baselines.py: 0
+    tests/test_generate_paper_figures.py: 0
   out_degree:
     tests/test_golden_pipeline.py: 102
     tests/test_pressure.py: 4
-    tidewatch/__init__.py: 4
     tests/test_benchmarks.py: 4
-    benchmarks/baselines/__init__.py: 3
+    tidewatch/__init__.py: 4
+    tests/test_planner.py: 3
     benchmarks/run.py: 3
     tidewatch/pressure.py: 3
-    tests/test_planner.py: 3
-    tests/conftest.py: 2
-    tests/test_run.py: 2
-    tests/test_integration.py: 2
+    benchmarks/baselines/__init__.py: 3
     tidewatch/types.py: 2
-    tests/test_triage.py: 2
     tidewatch/planner.py: 2
-    tests/test_baselines.py: 1
+    tests/test_run.py: 2
+    tests/test_triage.py: 2
+    tests/test_integration.py: 2
+    tests/conftest.py: 2
     tests/test_cognitive_bandwidth.py: 1
-    benchmarks/baselines/linear_urgency.py: 1
-    tidewatch/triage.py: 1
     scripts/generate_paper_figures.py: 1
-    tests/test_generate_paper_figures.py: 1
-    tests/test_types.py: 1
-    tests/test_generate_obligations.py: 1
-    tests/test_metrics.py: 1
-    tests/test_constants.py: 1
     tests/test_init.py: 1
-    benchmarks/metrics.py: 0
-    tidewatch/constants.py: 0
+    benchmarks/baselines/linear_urgency.py: 1
+    tests/test_constants.py: 1
+    tests/test_generate_obligations.py: 1
+    tidewatch/triage.py: 1
+    tests/test_metrics.py: 1
+    tests/test_types.py: 1
+    tests/test_baselines.py: 1
+    tests/test_generate_paper_figures.py: 1
     benchmarks/baselines/eisenhower.py: 0
     benchmarks/datasets/generate_obligations.py: 0
+    tidewatch/constants.py: 0
     benchmarks/baselines/binary_deadline.py: 0
+    benchmarks/metrics.py: 0
   betweenness_centrality:
     tidewatch/__init__.py: 32.666666666666664
     benchmarks/run.py: 16.0
     benchmarks/baselines/__init__.py: 14.333333333333334
     tidewatch/types.py: 6.583333333333334
-    tidewatch/pressure.py: 3.416666666666666
+    tidewatch/pressure.py: 3.4166666666666665
     benchmarks/baselines/linear_urgency.py: 3.333333333333333
     tidewatch/planner.py: 1.6666666666666665
     scripts/generate_paper_figures.py: 1.0
-    tests/test_pressure.py: 0.0
-    tests/test_baselines.py: 0.0
-    tests/test_cognitive_bandwidth.py: 0.0
-    benchmarks/metrics.py: 0.0
-    tidewatch/triage.py: 0.0
-    tidewatch/constants.py: 0.0
-    tests/conftest.py: 0.0
     benchmarks/baselines/eisenhower.py: 0.0
-    tests/test_generate_paper_figures.py: 0.0
-    tests/test_run.py: 0.0
-    tests/test_integration.py: 0.0
-    tests/test_types.py: 0.0
-    tests/test_generate_obligations.py: 0.0
-    tests/test_triage.py: 0.0
-    tests/test_metrics.py: 0.0
     benchmarks/datasets/generate_obligations.py: 0.0
-    tests/test_benchmarks.py: 0.0
-    benchmarks/baselines/binary_deadline.py: 0.0
     tests/test_golden_pipeline.py: 0.0
-    tests/test_constants.py: 0.0
     tests/test_planner.py: 0.0
+    tests/test_cognitive_bandwidth.py: 0.0
+    tidewatch/constants.py: 0.0
+    benchmarks/baselines/binary_deadline.py: 0.0
+    tests/test_pressure.py: 0.0
+    tests/test_run.py: 0.0
     tests/test_init.py: 0.0
+    tests/test_constants.py: 0.0
+    tests/test_triage.py: 0.0
+    tests/test_benchmarks.py: 0.0
+    tests/test_generate_obligations.py: 0.0
+    tests/test_integration.py: 0.0
+    tidewatch/triage.py: 0.0
+    tests/test_metrics.py: 0.0
+    tests/conftest.py: 0.0
+    tests/test_types.py: 0.0
+    tests/test_baselines.py: 0.0
+    tests/test_generate_paper_figures.py: 0.0
+    benchmarks/metrics.py: 0.0
   orphans: []
   clusters:
   - - benchmarks/baselines/__init__.py
@@ -1864,23 +1864,23 @@ graph:
     benchmarks/baselines/linear_urgency.py: 6.333333333333333
     tests/test_pressure.py: 4.0
     tests/test_benchmarks.py: 4.0
-    tidewatch/triage.py: 3.0
-    scripts/generate_paper_figures.py: 3.0
     tests/test_planner.py: 3.0
-    tests/conftest.py: 2.0
+    scripts/generate_paper_figures.py: 3.0
+    tidewatch/triage.py: 3.0
     benchmarks/baselines/eisenhower.py: 2.0
-    tests/test_run.py: 2.0
-    tests/test_integration.py: 2.0
-    tests/test_triage.py: 2.0
     benchmarks/baselines/binary_deadline.py: 2.0
-    tests/test_baselines.py: 1.0
+    tests/test_run.py: 2.0
+    tests/test_triage.py: 2.0
+    tests/test_integration.py: 2.0
+    tests/conftest.py: 2.0
     tests/test_cognitive_bandwidth.py: 1.0
-    tests/test_generate_paper_figures.py: 1.0
-    tests/test_types.py: 1.0
+    tests/test_init.py: 1.0
+    tests/test_constants.py: 1.0
     tests/test_generate_obligations.py: 1.0
     tests/test_metrics.py: 1.0
-    tests/test_constants.py: 1.0
-    tests/test_init.py: 1.0
+    tests/test_types.py: 1.0
+    tests/test_baselines.py: 1.0
+    tests/test_generate_paper_figures.py: 1.0
   external_imports:
     benchmarks/datasets/generate_obligations.py:
     - argparse
@@ -2029,154 +2029,45 @@ coherence:
 abstraction:
   findings:
   - file: benchmarks/datasets/generate_obligations.py
-    line: 95
-    category: magic_number
-    severity: high
-    severity_rank: 0
-    code: parser.add_argument("--n", type=int, default=1000)
-    note: Numeric literal 1000 in 'main' — extract to named constant or parameter
-    llm_evaluated: true
-  - file: benchmarks/datasets/generate_obligations.py
-    line: 96
-    category: magic_number
-    severity: high
-    severity_rank: 0
-    code: parser.add_argument("--seed", type=int, default=42)
-    note: Numeric literal 42 in 'main' — extract to named constant or parameter
-    llm_evaluated: true
-  - file: benchmarks/datasets/generate_obligations.py
-    line: 102
-    category: magic_number
-    severity: high
-    severity_rank: 0
-    code: json.dump(data, f, indent=2)
-    note: Numeric literal 2 in 'main' — extract to named constant or parameter
-    llm_evaluated: true
-  - file: benchmarks/metrics.py
-    line: 64
+    line: 84
     category: custom
     severity: high
-    code: 'if n < 2:'
-    note: The rank‑comparison threshold of 2 is hardcoded; making it a parameter would allow the metric to adapt to different
-      input sizes and maintain functional purity.
+    code: '{"id": i + 1, "title": f"{domain.replace(''_'', '' '').title()} Task {i + 1}", "due_date": due_date, "materiality":
+      materiality, "dependency_count": dep_count}'
+    note: The obligation dict is built inline with many fields; extracting it into a dedicated class or config schema would
+      improve abstraction and avoid duplication.
     severity_rank: 0
     llm_evaluated: true
-  - file: benchmarks/run.py
-    line: 56
-    category: magic_number
-    severity: high
-    severity_rank: 0
-    code: parser.add_argument("--n", type=int, default=1000)
-    note: Numeric literal 1000 in 'main' — extract to named constant or parameter
-    llm_evaluated: true
-  - file: benchmarks/run.py
-    line: 57
-    category: magic_number
-    severity: high
-    severity_rank: 0
-    code: parser.add_argument("--seed", type=int, default=42)
-    note: Numeric literal 42 in 'main' — extract to named constant or parameter
-    llm_evaluated: true
+    remediation_context:
+      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: resilience_patterns\
+        \ — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: future_regret — 4 finding(s)"
+      items_scored: 4
+      items_selected: 3
+      source_breakdown:
+        obligations: 3
+      scoring: gravitas_unified
+      assembly_ms: 1.0769080035970546
   - file: scripts/generate_paper_figures.py
-    line: 177
-    category: magic_number
+    line: 83
+    category: custom
     severity: high
+    code: '{"font.family": self.font_family, "font.size": self.font_size, "axes.labelsize": self.label_size, "axes.titlesize":
+      self.title_size, "legend.fontsize": self.legend_size}'
+    note: The rcParams update dict contains many hardcoded settings; moving them to a config or constants file would make
+      the style configuration more modular and reusable.
     severity_rank: 0
-    code: t = np.linspace(0.1, PRESSURE_CURVE_T_MAX, STYLE.sample_points_fine)
-    note: Numeric literal 0.1 in 'fig_pressure_curve' — extract to named constant or parameter
     llm_evaluated: true
-  - file: scripts/generate_paper_figures.py
-    line: 194
-    category: magic_number
-    severity: high
-    severity_rank: 0
-    code: 'zone_label_positions = {"Green": 0.15, "Yellow": 0.45, "Orange": 0.70, "Red": 0.90}'
-    note: Numeric literal 0.15 in 'fig_pressure_curve' — extract to named constant or parameter
-    llm_evaluated: true
-  - file: scripts/generate_paper_figures.py
-    line: 260
-    category: magic_number
-    severity: high
-    severity_rank: 0
-    code: linewidth=STYLE.zone_line_width, alpha=STYLE.zone_line_alpha + 0.1)
-    note: Numeric literal 0.1 in 'fig_sensitivity' — extract to named constant or parameter
-    llm_evaluated: true
-  - file: tidewatch/planner.py
-    line: 91
-    category: magic_number
-    severity: high
-    severity_rank: 0
-    code: cleaned = "".join(c for c in text if c == "\n" or c == "\t" or (ord(c) >= 32))
-    note: Numeric literal 32 in '_sanitize' — extract to named constant or parameter
-    llm_evaluated: true
-  - file: tidewatch/planner.py
-    line: 99
-    category: magic_number
-    severity: high
-    severity_rank: 0
-    code: title = self._sanitize(obligation.title, max_len=200)
-    note: Numeric literal 200 in '_build_prompt' — extract to named constant or parameter
-    llm_evaluated: true
-  - file: tidewatch/planner.py
-    line: 100
-    category: magic_number
-    severity: high
-    severity_rank: 0
-    code: desc = self._sanitize(obligation.description or "", max_len=500)
-    note: Numeric literal 500 in '_build_prompt' — extract to named constant or parameter
-    llm_evaluated: true
-  - file: tidewatch/planner.py
-    line: 101
-    category: magic_number
-    severity: high
-    severity_rank: 0
-    code: domain = self._sanitize(obligation.domain or "general", max_len=50)
-    note: Numeric literal 50 in '_build_prompt' — extract to named constant or parameter
-    llm_evaluated: true
-  - file: tidewatch/pressure.py
-    line: 175
-    category: conditional_chain
-    severity: high
-    severity_rank: 0
-    code: 'if obligation.days_in_status >= TIMING_CRITICAL_DAYS:
-
-      timing_amp = TIMING_CRITICAL_MULTIPLIER
-
-      elif obligation.days_in_status >= TIMING_STALE_DAYS:
-
-      ... (3 more lines)'
-    note: 3-branch if/elif in 'calculate_pressure' — consider data-driven simplification
-    llm_evaluated: true
-  - file: tidewatch/pressure.py
-    line: 217
-    category: conditional_chain
-    severity: high
-    severity_rank: 0
-    code: 'if pressure < ZONE_YELLOW:
-
-      return "green"
-
-      elif pressure < ZONE_ORANGE:
-
-      ... (5 more lines)'
-    note: 4-branch if/elif in 'pressure_zone' — consider data-driven simplification
-    llm_evaluated: true
-  - file: tidewatch/pressure.py
-    line: 219
-    category: conditional_chain
-    severity: high
-    severity_rank: 0
-    code: 'elif pressure < ZONE_ORANGE:
-
-      return "yellow"
-
-      elif pressure < ZONE_RED:
-
-      ... (3 more lines)'
-    note: Numeric literal 2 in 'fit_score' — extract to named constant or parameter
-    llm_evaluated: true
+    remediation_context:
+      context_text: "  [OBLIGATION] [P1][open] tidewatch: minimalist — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
+        \ future_regret — 4 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: resilience_patterns — 3 finding(s)"
+      items_scored: 4
+      items_selected: 3
+      source_breakdown:
+        obligations: 3
+      scoring: gravitas_unified
+      assembly_ms: 0.49617799959378317
   - file: benchmarks/datasets/generate_obligations.py
-    line: 78
+    line: 84
     category: inline_collection
     severity: medium
     severity_rank: 1
@@ -2187,34 +2078,53 @@ abstraction:
       "title": f"{domain.replace(''_'', '' '').title()} Task {i + 1}",
 
       ... (8 more lines)'
-    note: dict with 9 elements in 'generate' — extract to module-level constant or load from config
+    note: refined assessment
     llm_evaluated: true
+    remediation_context:
+      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: resilience_patterns\
+        \ — 3 finding(s)"
+      items_scored: 4
+      items_selected: 2
+      source_breakdown:
+        obligations: 2
+      scoring: gravitas_unified
+      assembly_ms: 0.4323430039221421
   - file: benchmarks/metrics.py
-    line: 64
-    category: magic_number
-    severity: medium
-    severity_rank: 1
-    code: 'if n < 2:'
-    note: Numeric literal 2 in 'attention_allocation_efficiency' — extract to named constant or parameter
-    llm_evaluated: true
-  - file: benchmarks/metrics.py
-    line: 66
+    line: 69
     category: magic_number
     severity: medium
     severity_rank: 1
     code: d_squared = sum((p - a) ** 2 for p, a in zip(predicted_ranks, actual_ranks, strict=True))
-    note: Numeric literal 2 in 'attention_allocation_efficiency' — extract to named constant or parameter
+    note: refined assessment
     llm_evaluated: true
+    remediation_context:
+      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: resilience_patterns\
+        \ — 3 finding(s)"
+      items_scored: 4
+      items_selected: 2
+      source_breakdown:
+        obligations: 2
+      scoring: gravitas_unified
+      assembly_ms: 0.4847089949180372
   - file: benchmarks/metrics.py
-    line: 67
+    line: 70
     category: magic_number
     severity: medium
     severity_rank: 1
     code: return 1.0 - (6.0 * d_squared) / (n * (n ** 2 - 1))
-    note: Numeric literal 6.0 in 'attention_allocation_efficiency' — extract to named constant or parameter
+    note: refined assessment
     llm_evaluated: true
+    remediation_context:
+      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: resilience_patterns\
+        \ — 3 finding(s)"
+      items_scored: 4
+      items_selected: 2
+      source_breakdown:
+        obligations: 2
+      scoring: gravitas_unified
+      assembly_ms: 0.39273199945455417
   - file: scripts/generate_paper_figures.py
-    line: 72
+    line: 83
     category: inline_collection
     severity: medium
     severity_rank: 1
@@ -2225,36 +2135,52 @@ abstraction:
       "font.size": self.font_size,
 
       ... (8 more lines)'
-    note: dict with 9 elements in 'apply' — extract to module-level constant or load from config
+    note: refined assessment
     llm_evaluated: true
+    remediation_context:
+      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: resilience_patterns\
+        \ — 3 finding(s)"
+      items_scored: 4
+      items_selected: 2
+      source_breakdown:
+        obligations: 2
+      scoring: gravitas_unified
+      assembly_ms: 0.44453100417740643
   - file: tidewatch/pressure.py
-    line: 340
+    line: 350
     category: magic_number
     severity: medium
     severity_rank: 1
     code: 'return (2, result.pressure)  # Hard floor: sorts above all bandwidth-adjusted items'
     note: Numeric literal 2 in 'fit_score' — extract to named constant or parameter
+    remediation_context:
+      context_text: "  [OBLIGATION] [P1][open] tidewatch: minimalist — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
+        \ resilience_patterns — 3 finding(s)"
+      items_scored: 4
+      items_selected: 2
+      source_breakdown:
+        obligations: 2
+      scoring: gravitas_unified
+      assembly_ms: 0.4155530041316524
   summary:
-    total: 22
+    total: 7
     by_category:
-      magic_number: 16
-      conditional_chain: 3
+      magic_number: 3
+      custom: 2
       inline_collection: 2
-      custom: 1
     by_severity:
-      high: 16
-      medium: 6
+      high: 2
+      medium: 5
       low: 0
     hotspots:
-      benchmarks/datasets/generate_obligations.py: 4
-      benchmarks/metrics.py: 4
-      scripts/generate_paper_figures.py: 4
-      tidewatch/planner.py: 4
-      tidewatch/pressure.py: 4
+      benchmarks/datasets/generate_obligations.py: 2
+      scripts/generate_paper_figures.py: 2
+      benchmarks/metrics.py: 2
+      tidewatch/pressure.py: 1
   files_analyzed: 14
   llm_refinement:
-    evaluations: 20
-    additions: 1
+    evaluations: 4
+    additions: 2
     dropped: 0
 assumptions:
   findings:
@@ -2267,6 +2193,15 @@ assumptions:
       \ False): 0.75,  # Q3: urgent + not important\n    (False, True): 0.5,   # Q2: not urgent + important\n    (False, False):\
       \ 0.0,  # Q4: not urgent + not important\n    ..."
     note: Mapping 'QUADRANT_SCORES' with 4 entries — assumes complete domain coverage
+    remediation_context:
+      context_text: "  [OBLIGATION] [P1][open] tidewatch: future_regret — 4 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
+        \ resilience_patterns — 3 finding(s)"
+      items_scored: 4
+      items_selected: 2
+      source_breakdown:
+        obligations: 2
+      scoring: gravitas_unified
+      assembly_ms: 0.40470599924447015
   - file: benchmarks/baselines/eisenhower.py
     line: 23
     category: default_value
@@ -2276,30 +2211,119 @@ assumptions:
     note: Default urgent_threshold_days=7.0 in score() — assumed safe for all callers
     current_value: 7.0
     perturbation_range: '[3.5, 14]'
+    remediation_context:
+      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: resilience_patterns\
+        \ — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: future_regret — 4 finding(s)"
+      items_scored: 4
+      items_selected: 3
+      source_breakdown:
+        obligations: 3
+      scoring: gravitas_unified
+      assembly_ms: 0.39679799374425784
+  - file: benchmarks/datasets/generate_obligations.py
+    line: 21
+    category: tunable_threshold
+    severity: medium
+    severity_rank: 1
+    code: DEFAULT_SEED = 42
+    note: Module-level constant 'DEFAULT_SEED' = 42 — tunable parameter
+    current_value: 42
+    perturbation_range: '[21, 84]'
+    remediation_context:
+      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: minimalist\
+        \ — 3 finding(s)"
+      items_scored: 4
+      items_selected: 2
+      source_breakdown:
+        obligations: 2
+      scoring: gravitas_unified
+      assembly_ms: 0.3783669963013381
   - file: benchmarks/metrics.py
-    line: 66
+    line: 69
     category: formula_choice
     severity: medium
     severity_rank: 1
     code: d_squared = sum((p - a) ** 2 for p, a in zip(predicted_ranks, actual_ranks, strict=True))
     note: Power operation in attention_allocation_efficiency() — geometric aggregation assumption
+    remediation_context:
+      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: minimalist\
+        \ — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: future_regret — 4 finding(s)"
+      items_scored: 4
+      items_selected: 3
+      source_breakdown:
+        obligations: 3
+      scoring: gravitas_unified
+      assembly_ms: 0.42850099998759106
   - file: benchmarks/metrics.py
-    line: 67
+    line: 70
     category: formula_choice
     severity: medium
     severity_rank: 1
     code: return 1.0 - (6.0 * d_squared) / (n * (n ** 2 - 1))
     note: Power operation in attention_allocation_efficiency() — geometric aggregation assumption
+    remediation_context:
+      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: minimalist\
+        \ — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: future_regret — 4 finding(s)"
+      items_scored: 4
+      items_selected: 3
+      source_breakdown:
+        obligations: 3
+      scoring: gravitas_unified
+      assembly_ms: 0.4335229969001375
   - file: scripts/generate_paper_figures.py
-    line: 88
+    line: 45
+    category: tunable_threshold
+    severity: medium
+    severity_rank: 1
+    code: PRESSURE_CURVE_T_MIN = 0.1
+    note: Module-level constant 'PRESSURE_CURVE_T_MIN' = 0.1 — tunable parameter
+    current_value: 0.1
+    perturbation_range: '[0.05, 0.2]'
+    remediation_context:
+      context_text: "  [OBLIGATION] [P1][open] tidewatch: minimalist — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
+        \ future_regret — 4 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: resilience_patterns — 3 finding(s)"
+      items_scored: 4
+      items_selected: 3
+      source_breakdown:
+        obligations: 3
+      scoring: gravitas_unified
+      assembly_ms: 0.45264200161909685
+  - file: scripts/generate_paper_figures.py
+    line: 48
+    category: mapping_assumption
+    severity: medium
+    severity_rank: 1
+    code: "ZONE_LABEL_POSITIONS: dict[str, float] = {\n    \"Green\": 0.15, \"Yellow\": 0.45, \"Orange\": 0.70, \"Red\": 0.90,\n\
+      }"
+    note: Mapping 'ZONE_LABEL_POSITIONS' with 4 entries — assumes complete domain coverage
+    remediation_context:
+      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: future_regret\
+        \ — 4 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: resilience_patterns — 3 finding(s)"
+      items_scored: 4
+      items_selected: 3
+      source_breakdown:
+        obligations: 3
+      scoring: gravitas_unified
+      assembly_ms: 0.40674400224816054
+  - file: scripts/generate_paper_figures.py
+    line: 99
     category: mapping_assumption
     severity: medium
     severity_rank: 1
     code: "COLORS: dict[str, str] = {\n    \"green\": \"#2ecc71\",\n    \"yellow\": \"#f1c40f\",\n    \"dark_yellow\": \"\
       #b8860b\",\n    \"orange\": \"#e67e22\",\n    ..."
     note: Mapping 'COLORS' with 8 entries — assumes complete domain coverage
+    remediation_context:
+      context_text: "  [OBLIGATION] [P1][open] tidewatch: minimalist — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
+        \ resilience_patterns — 3 finding(s)"
+      items_scored: 4
+      items_selected: 2
+      source_breakdown:
+        obligations: 2
+      scoring: gravitas_unified
+      assembly_ms: 0.3823360020760447
   - file: scripts/generate_paper_figures.py
-    line: 145
+    line: 156
     category: tunable_threshold
     severity: medium
     severity_rank: 1
@@ -2307,8 +2331,16 @@ assumptions:
     note: Module-level constant 'PRESSURE_CURVE_T_MAX' = 60.0 — tunable parameter
     current_value: 60.0
     perturbation_range: '[30, 120]'
+    remediation_context:
+      context_text: '  [OBLIGATION] [P1][open] tidewatch: minimalist — 3 finding(s)'
+      items_scored: 4
+      items_selected: 1
+      source_breakdown:
+        obligations: 1
+      scoring: gravitas_unified
+      assembly_ms: 0.418728006479796
   - file: scripts/generate_paper_figures.py
-    line: 146
+    line: 157
     category: tunable_threshold
     severity: medium
     severity_rank: 1
@@ -2316,8 +2348,16 @@ assumptions:
     note: Module-level constant 'PRESSURE_CURVE_Y_MAX' = 1.05 — tunable parameter
     current_value: 1.05
     perturbation_range: '[0.525, 2.1]'
+    remediation_context:
+      context_text: '  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)'
+      items_scored: 4
+      items_selected: 1
+      source_breakdown:
+        obligations: 1
+      scoring: gravitas_unified
+      assembly_ms: 0.38791500264778733
   - file: scripts/generate_paper_figures.py
-    line: 147
+    line: 158
     category: tunable_threshold
     severity: medium
     severity_rank: 1
@@ -2325,13 +2365,31 @@ assumptions:
     note: Module-level constant 'ZONE_LABEL_X' = 55.0 — tunable parameter
     current_value: 55.0
     perturbation_range: '[27.5, 110]'
+    remediation_context:
+      context_text: "  [OBLIGATION] [P1][open] tidewatch: future_regret — 4 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
+        \ resilience_patterns — 3 finding(s)"
+      items_scored: 4
+      items_selected: 2
+      source_breakdown:
+        obligations: 2
+      scoring: gravitas_unified
+      assembly_ms: 0.3938910012948327
   - file: scripts/generate_paper_figures.py
-    line: 156
+    line: 167
     category: formula_choice
     severity: medium
     severity_rank: 1
     code: return 1.0 - math.exp(-k / t)
     note: Uses exp() — assumes this aggregation model is appropriate
+    remediation_context:
+      context_text: "  [OBLIGATION] [P1][open] tidewatch: minimalist — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
+        \ future_regret — 4 finding(s)"
+      items_scored: 4
+      items_selected: 2
+      source_breakdown:
+        obligations: 2
+      scoring: gravitas_unified
+      assembly_ms: 0.39193900011014193
   - file: tidewatch/constants.py
     line: 95
     category: mapping_assumption
@@ -2342,6 +2400,15 @@ assumptions:
       \    \"engineering\": {\"complexity\": 0.5, \"decision_weight\": 0.4, \"novelty\": 0.5},\n    \"ops\":        {\"complexity\"\
       : 0.3, \"decision_weight\": 0.2, \"novelty\": 0.2},\n    ..."
     note: Mapping 'TASK_DEMAND_PROFILES' with 5 entries — assumes complete domain coverage
+    remediation_context:
+      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: resilience_patterns\
+        \ — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: minimalist — 3 finding(s)"
+      items_scored: 4
+      items_selected: 3
+      source_breakdown:
+        obligations: 3
+      scoring: gravitas_unified
+      assembly_ms: 0.4251119971740991
   - file: tidewatch/constants.py
     line: 102
     category: mapping_assumption
@@ -2350,6 +2417,15 @@ assumptions:
     code: "TASK_DEMAND_DEFAULT: dict[str, float] = {\n    \"complexity\": 0.5, \"decision_weight\": 0.5, \"novelty\": 0.5,\n\
       }"
     note: Mapping 'TASK_DEMAND_DEFAULT' with 3 entries — assumes complete domain coverage
+    remediation_context:
+      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: minimalist\
+        \ — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: future_regret — 4 finding(s)"
+      items_scored: 4
+      items_selected: 3
+      source_breakdown:
+        obligations: 3
+      scoring: gravitas_unified
+      assembly_ms: 0.41169000178342685
   - file: tidewatch/constants.py
     line: 119
     category: mapping_assumption
@@ -2358,8 +2434,68 @@ assumptions:
     code: "DELIVERY_URGENCY_MAP: dict[str, str] = {\n    \"green\": \"background\",\n    \"yellow\": \"background\",\n   \
       \ \"orange\": \"toast\",\n    \"red\": \"interrupt\",\n    ..."
     note: Mapping 'DELIVERY_URGENCY_MAP' with 4 entries — assumes complete domain coverage
+    remediation_context:
+      context_text: "  [OBLIGATION] [P1][open] tidewatch: minimalist — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
+        \ resilience_patterns — 3 finding(s)"
+      items_scored: 4
+      items_selected: 2
+      source_breakdown:
+        obligations: 2
+      scoring: gravitas_unified
+      assembly_ms: 0.4100160003872588
   - file: tidewatch/planner.py
-    line: 82
+    line: 33
+    category: tunable_threshold
+    severity: medium
+    severity_rank: 1
+    code: _TITLE_MAX_LEN = 200
+    note: Module-level constant '_TITLE_MAX_LEN' = 200 — tunable parameter
+    current_value: 200
+    perturbation_range: '[100, 400]'
+    remediation_context:
+      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: minimalist\
+        \ — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: future_regret — 4 finding(s)"
+      items_scored: 4
+      items_selected: 3
+      source_breakdown:
+        obligations: 3
+      scoring: gravitas_unified
+      assembly_ms: 0.4231060011079535
+  - file: tidewatch/planner.py
+    line: 34
+    category: tunable_threshold
+    severity: medium
+    severity_rank: 1
+    code: _DESC_MAX_LEN = 500
+    note: Module-level constant '_DESC_MAX_LEN' = 500 — tunable parameter
+    current_value: 500
+    perturbation_range: '[250, 1000]'
+    remediation_context:
+      context_text: '  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)'
+      items_scored: 4
+      items_selected: 1
+      source_breakdown:
+        obligations: 1
+      scoring: gravitas_unified
+      assembly_ms: 0.39151999953901395
+  - file: tidewatch/planner.py
+    line: 35
+    category: tunable_threshold
+    severity: medium
+    severity_rank: 1
+    code: _DOMAIN_MAX_LEN = 50
+    note: Module-level constant '_DOMAIN_MAX_LEN' = 50 — tunable parameter
+    current_value: 50
+    perturbation_range: '[25, 100]'
+    remediation_context:
+      context_text: "Related obligations (4):\n  [P1][open] tidewatch: custom — 1 finding(s)\n  [P1][open] tidewatch: minimalist\
+        \ — 3 finding(s)\n  [P1][open] tidewatch: resilience_patterns — 3 finding(s)\n  [P1][open] tidewatch: future_regret\
+        \ — 4 finding(s)"
+      obligations_found: 4
+      memories_found: 0
+      scoring: raw_mssql
+  - file: tidewatch/planner.py
+    line: 90
     category: default_value
     severity: medium
     severity_rank: 1
@@ -2367,45 +2503,62 @@ assumptions:
     note: Default max_len=500 in _sanitize() — assumed safe for all callers
     current_value: 500
     perturbation_range: '[250, 1000]'
-  - file: tidewatch/planner.py
-    line: 91
-    category: comparison_constant
-    severity: medium
-    severity_rank: 1
-    code: cleaned = "".join(c for c in text if c == "\n" or c == "\t" or (ord(c) >= 32))
-    note: Comparison against literal 32 — classification boundary
-    current_value: 32
-    perturbation_range: '[16, 64]'
+    remediation_context:
+      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: future_regret\
+        \ — 4 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: resilience_patterns — 3 finding(s)"
+      items_scored: 4
+      items_selected: 3
+      source_breakdown:
+        obligations: 3
+      scoring: gravitas_unified
+      assembly_ms: 0.4943649983033538
   - file: tidewatch/pressure.py
-    line: 156
+    line: 163
     category: formula_choice
     severity: medium
     severity_rank: 1
     code: time_p = OVERDUE_PRESSURE if days_rem <= 0 else 1.0 - math.exp(-RATE_CONSTANT / max(days_rem, DIVISION_GUARD))
     note: Uses exp() — assumes this aggregation model is appropriate
+    remediation_context:
+      context_text: "  [OBLIGATION] [P1][open] tidewatch: minimalist — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
+        \ future_regret — 4 finding(s)"
+      items_scored: 4
+      items_selected: 2
+      source_breakdown:
+        obligations: 2
+      scoring: gravitas_unified
+      assembly_ms: 0.40206600533565506
   - file: tidewatch/pressure.py
-    line: 168
+    line: 175
     category: formula_choice
     severity: medium
     severity_rank: 1
     code: sigmoid = 1.0 / (1.0 + math.exp(-COMPLETION_LOGISTIC_K * (completion_pct - COMPLETION_LOGISTIC_MID)))
     note: Uses exp() — assumes this aggregation model is appropriate
+    remediation_context:
+      context_text: "  [OBLIGATION] [P1][open] tidewatch: minimalist — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
+        \ future_regret — 4 finding(s)"
+      items_scored: 4
+      items_selected: 2
+      source_breakdown:
+        obligations: 2
+      scoring: gravitas_unified
+      assembly_ms: 0.37997699837433174
   summary:
-    total: 16
+    total: 21
     by_category:
-      mapping_assumption: 5
+      tunable_threshold: 8
+      mapping_assumption: 6
       formula_choice: 5
-      tunable_threshold: 3
       default_value: 2
-      comparison_constant: 1
     by_severity:
-      medium: 16
+      medium: 21
     hotspots:
-      scripts/generate_paper_figures.py: 5
+      scripts/generate_paper_figures.py: 7
+      tidewatch/planner.py: 4
       tidewatch/constants.py: 3
       benchmarks/baselines/eisenhower.py: 2
       benchmarks/metrics.py: 2
-      tidewatch/planner.py: 2
   files_analyzed: 14
 hubris:
   findings:
@@ -2416,6 +2569,15 @@ hubris:
     severity_rank: 1
     code: return 1.0
     note: saturate() has 1 perfect-score return(s) alongside 2 computed return(s) — some paths bypass measurement
+    remediation_context:
+      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: resilience_patterns\
+        \ — 3 finding(s)"
+      items_scored: 4
+      items_selected: 2
+      source_breakdown:
+        obligations: 2
+      scoring: gravitas_unified
+      assembly_ms: 0.4006289964308962
   summary:
     total: 1
     by_category:
@@ -2432,41 +2594,92 @@ viewpoints:
       viewpoint_type: ast
       findings:
       - file: benchmarks/datasets/generate_obligations.py
-        line: 34
+        line: 40
         severity: medium
         observation: 'generate(): 57 lines'
         recommendation: Consider decomposing into smaller functions
         viewpoint: complexity_hotspots
+        remediation_context:
+          context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
+            \ minimalist — 3 finding(s)"
+          items_scored: 4
+          items_selected: 2
+          source_breakdown:
+            obligations: 2
+          scoring: gravitas_unified
+          assembly_ms: 0.4291989971534349
       - file: tests/test_benchmarks.py
         line: 204
         severity: medium
         observation: 'test_full_pipeline_generate_score_evaluate(): complexity 11, 53 lines'
         recommendation: Consider decomposing into smaller functions
         viewpoint: complexity_hotspots
+        remediation_context:
+          context_text: "  [OBLIGATION] [P1][open] tidewatch: future_regret — 4 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
+            \ resilience_patterns — 3 finding(s)"
+          items_scored: 4
+          items_selected: 2
+          source_breakdown:
+            obligations: 2
+          scoring: gravitas_unified
+          assembly_ms: 0.41234400123357773
       - file: tests/test_golden_pipeline.py
         line: 867
         severity: medium
         observation: 'test_triage_to_plan(): complexity 11'
         recommendation: Consider decomposing into smaller functions
         viewpoint: complexity_hotspots
+        remediation_context:
+          context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
+            \ minimalist — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: future_regret — 4 finding(s)"
+          items_scored: 4
+          items_selected: 3
+          source_breakdown:
+            obligations: 3
+          scoring: gravitas_unified
+          assembly_ms: 0.3832050060736947
       - file: tidewatch/planner.py
-        line: 122
+        line: 130
         severity: medium
         observation: 'generate_plan_requests(): 62 lines'
         recommendation: Consider decomposing into smaller functions
         viewpoint: complexity_hotspots
+        remediation_context:
+          context_text: "Related obligations (4):\n  [P1][open] tidewatch: custom — 1 finding(s)\n  [P1][open] tidewatch:\
+            \ minimalist — 3 finding(s)\n  [P1][open] tidewatch: resilience_patterns — 3 finding(s)\n  [P1][open] tidewatch:\
+            \ future_regret — 4 finding(s)"
+          obligations_found: 4
+          memories_found: 0
+          scoring: raw_mssql
       - file: tidewatch/pressure.py
-        line: 89
+        line: 96
         severity: medium
-        observation: 'calculate_pressure(): complexity 12, 112 lines'
+        observation: 'calculate_pressure(): complexity 12, 111 lines'
         recommendation: Consider decomposing into smaller functions
         viewpoint: complexity_hotspots
+        remediation_context:
+          context_text: '  [OBLIGATION] [P1][open] tidewatch: future_regret — 4 finding(s)'
+          items_scored: 4
+          items_selected: 1
+          source_breakdown:
+            obligations: 1
+          scoring: gravitas_unified
+          assembly_ms: 0.36912900395691395
       - file: tidewatch/pressure.py
-        line: 287
+        line: 297
         severity: medium
         observation: 'bandwidth_adjusted_sort(): 66 lines'
         recommendation: Consider decomposing into smaller functions
         viewpoint: complexity_hotspots
+        remediation_context:
+          context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
+            \ minimalist — 3 finding(s)"
+          items_scored: 4
+          items_selected: 2
+          source_breakdown:
+            obligations: 2
+          scoring: gravitas_unified
+          assembly_ms: 0.40250599704449996
       summary: 'Complexity Hotspots: 6 finding(s) (0 high, 6 medium, 0 low).'
     import_hygiene:
       display_name: Import Hygiene
@@ -2488,11 +2701,21 @@ viewpoints:
       viewpoint_type: hybrid
       findings:
       - file: tidewatch/pressure.py
-        line: 263
+        line: 273
         severity: medium
         observation: Exception caught and silently swallowed
         recommendation: Log the exception or re-raise — silent swallowing hides bugs
         viewpoint: observability_gaps
+        remediation_context:
+          context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
+            \ resilience_patterns — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: minimalist — 3 finding(s)\n  [OBLIGATION]\
+            \ [P1][open] tidewatch: future_regret — 4 finding(s)"
+          items_scored: 4
+          items_selected: 4
+          source_breakdown:
+            obligations: 4
+          scoring: gravitas_unified
+          assembly_ms: 0.5329560008249246
       summary: 'Observability Gaps: 1 finding(s) (0 high, 1 medium, 0 low).'
     sovereign_reviewer:
       display_name: The Sovereign Reviewer
@@ -2506,6 +2729,15 @@ viewpoints:
         goal_relevance: Phantom dependency — adds supply chain surface without serving the code
         recommendation: Remove from dependencies or verify it's used at runtime (lazy import, plugin)
         viewpoint: sovereign_reviewer
+        remediation_context:
+          context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
+            \ future_regret — 4 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: resilience_patterns — 3 finding(s)"
+          items_scored: 4
+          items_selected: 3
+          source_breakdown:
+            obligations: 3
+          scoring: gravitas_unified
+          assembly_ms: 0.4255300009390339
       - file: pyproject.toml
         line: 0
         severity: medium
@@ -2514,6 +2746,15 @@ viewpoints:
         goal_relevance: Phantom dependency — adds supply chain surface without serving the code
         recommendation: Remove from dependencies or verify it's used at runtime (lazy import, plugin)
         viewpoint: sovereign_reviewer
+        remediation_context:
+          context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
+            \ future_regret — 4 finding(s)"
+          items_scored: 4
+          items_selected: 2
+          source_breakdown:
+            obligations: 2
+          scoring: gravitas_unified
+          assembly_ms: 0.44563600386027247
       - file: pyproject.toml
         line: 0
         severity: medium
@@ -2522,6 +2763,15 @@ viewpoints:
         goal_relevance: Phantom dependency — adds supply chain surface without serving the code
         recommendation: Remove from dependencies or verify it's used at runtime (lazy import, plugin)
         viewpoint: sovereign_reviewer
+        remediation_context:
+          context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
+            \ future_regret — 4 finding(s)"
+          items_scored: 4
+          items_selected: 2
+          source_breakdown:
+            obligations: 2
+          scoring: gravitas_unified
+          assembly_ms: 0.41008099651662633
       summary: 'The Sovereign Reviewer: 3 finding(s) (0 high, 3 medium, 0 low).'
     test_adequacy:
       display_name: Test Adequacy
@@ -2545,67 +2795,200 @@ viewpoints:
         observation: 'No test file for ''benchmarks/baselines/linear_urgency.py'' (hub score: 6.3)'
         recommendation: Add test coverage, especially for structural hub files
         viewpoint: test_adequacy
+        remediation_context:
+          context_text: "Related obligations (4):\n  [P1][open] tidewatch: custom — 1 finding(s)\n  [P1][open] tidewatch:\
+            \ minimalist — 3 finding(s)\n  [P1][open] tidewatch: resilience_patterns — 3 finding(s)\n  [P1][open] tidewatch:\
+            \ future_regret — 4 finding(s)"
+          obligations_found: 4
+          memories_found: 0
+          scoring: raw_mssql
       summary: 'Test Adequacy: 3 finding(s) (0 high, 1 medium, 2 low).'
-    resilience_patterns:
-      display_name: Resilience Patterns
+    config_shaman:
+      display_name: The Ops Engineer at 4am
       viewpoint_type: llm
       findings:
       - file: benchmarks/run.py
-        line: 0
+        line: 18
         severity: high
-        observation: The function fetch_suite_data performs an HTTP GET request to retrieve remote benchmark suites but does
-          not specify a timeout, causing the process to block indefinitely if the server is unreachable or slow.
-        recommendation: Wrap the request with a timeout (e.g., requests.get(url, timeout=10)) and consider adding a circuit‑breaker
-          wrapper to fail fast when the endpoint is unresponsive.
-        viewpoint: resilience_patterns
+        observation: Code calls `config.get('benchmark_mode')` but the top-level `config.yaml` does not contain a `benchmark_mode`
+          key; the default is None, causing the benchmark runner to skip all scheduled tests silently.
+        recommendation: 'Add `benchmark_mode` entry to `config.yaml` with a default value (e.g., `benchmark_mode: false`)
+          and document it in the README.'
+        viewpoint: config_shaman
+        remediation_context:
+          context_text: '  [OBLIGATION] [P1][open] tidewatch: future_regret — 4 finding(s)'
+          items_scored: 4
+          items_selected: 1
+          source_breakdown:
+            obligations: 1
+          scoring: gravitas_unified
+          assembly_ms: 0.42742899677250534
       - file: tidewatch/planner.py
-        line: 0
+        line: 42
+        severity: high
+        observation: Uses `os.getenv('TIDEWATCH_MAX_RETRIES', 0)`; the environment variable is never declared in any `.env`
+          file or documented config schema, so a missing variable results in zero retries and a "connection refused" failure
+          that is hard to trace.
+        recommendation: 'Document `TIDEWATCH_MAX_RETRIES` in the environment variable list and add it to the default config
+          with a sensible default (e.g., `max_retries: 3`).'
+        viewpoint: config_shaman
+        remediation_context:
+          context_text: "  [OBLIGATION] [P1][open] tidewatch: minimalist — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
+            \ future_regret — 4 finding(s)"
+          items_scored: 4
+          items_selected: 2
+          source_breakdown:
+            obligations: 2
+          scoring: gravitas_unified
+          assembly_ms: 0.417709001339972
+      - file: scripts/generate_paper_figures.py
+        line: 27
         severity: medium
-        observation: The generate_plan_requests method contains an unbounded while True retry loop when contacting the speculative
-          planning service; it retries until a non‑error response is received without any backoff or maximum attempt limit.
-        recommendation: Introduce a configurable retry count and exponential backoff, and raise a clear exception after the
-          limit is exceeded to prevent infinite blocking.
-        viewpoint: resilience_patterns
-      - file: benchmarks/baselines/binary_deadline.py
-        line: 0
+        observation: References `config.get('output_dir')` without checking for its presence; if the key is absent the script
+          writes figures to the current working directory, overwriting unrelated files and causing silent data loss.
+        recommendation: Validate existence of `output_dir` and raise a clear error if missing, or default to a dedicated `output/`
+          directory and update the config file accordingly.
+        viewpoint: config_shaman
+        remediation_context:
+          context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
+            \ resilience_patterns — 3 finding(s)"
+          items_scored: 4
+          items_selected: 2
+          source_breakdown:
+            obligations: 2
+          scoring: gravitas_unified
+          assembly_ms: 0.416829003370367
+      - file: tests/test_generate_obligations.py
+        line: 12
         severity: low
-        observation: The score function directly accesses a local cache file without handling the case where the file may
-          be missing or corrupted during automated runs, which could cause the benchmark to abort unexpectedly.
-        recommendation: Add defensive file‑existence and integrity checks, falling back to regeneration of the cache or returning
-          a safe default score when the file cannot be read.
-        viewpoint: resilience_patterns
-      summary: Overall, the system lacks defensive timeouts on external I/O, has unbounded retry behavior in the speculative
-        planner, and makes unguarded assumptions about the availability of local resources, all of which can lead to cascading
-        failures or indefinite hangs when any dependency degrades or disappears.
+        observation: Assumes the environment variable `SOB_CONFIG_PATH` is set to point at the SOB config file, but this variable
+          is not listed in any documentation or sample `.env`, leading to a fallback to the current directory when the variable
+          is absent.
+        recommendation: Add `SOB_CONFIG_PATH` to the documented env‑var list and provide a default fallback path in the test
+          setup.
+        viewpoint: config_shaman
+      summary: 'From an Ops Engineer''s 4am perspective, the codebase contains several config‑code mismatches that cause silent
+        failures: missing config keys (`benchmark_mode`, `output_dir`) and undocumented environment variables (`TIDEWATCH_MAX_RETRIES`,
+        `SOB_CONFIG_PATH`). These gaps lead to default values that silently break functionality—zero retries, overwritten
+        output files, or test path failures—making production incidents hard to diagnose. The fixes are straightforward: explicitly
+        define and document these config entries and env vars, and add validation to catch missing values early.'
       model: Nemotron-3-Nano-30B-A3B-IQ4_XS.gguf
       source: local
-    minimalist:
-      display_name: Code Minimalist
+    archaeologist:
+      display_name: Code Archaeologist
       viewpoint_type: llm
       findings:
       - file: benchmarks/baselines/binary_deadline.py
-        line: 27
+        line: 1
         severity: high
-        observation: The `score` function returns a constant 0.5 and is never referenced by any other module; removing it
-          would save 3 lines and eliminate dead code.
-        recommendation: Delete the `score` function and its corresponding test case.
-        viewpoint: minimalist
-      - file: tests/test_generate_paper_figures.py
-        line: 84
+        observation: The `score` function is defined inline without any shared base class or abstraction, mirroring the identical
+          implementation in `eisenhower.py` and `linear_urgency.py`. This duplication is a historical accident from copy-paste
+          evolution rather than an intentional design.
+        recommendation: Extract a common `UrgencyStrategy` protocol and have each baseline inherit from it to eliminate duplicated
+          code.
+        viewpoint: archaeologist
+        remediation_context:
+          context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
+            \ minimalist — 3 finding(s)"
+          items_scored: 4
+          items_selected: 2
+          source_breakdown:
+            obligations: 2
+          scoring: gravitas_unified
+          assembly_ms: 0.42373900214442983
+      - file: benchmarks/baselines/eisenhower.py
+        line: 1
+        severity: high
+        observation: Same `score` function appears here, identical to `binary_deadline.py`. The presence of three near‑identical
+          files signals an accumulated accidental layer rather than a purposeful modular design.
+        recommendation: Delete the redundant files and consolidate the logic into a single configurable strategy module.
+        viewpoint: archaeologist
+        remediation_context:
+          context_text: "  [OBLIGATION] [P1][open] tidewatch: minimalist — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
+            \ future_regret — 4 finding(s)"
+          items_scored: 4
+          items_selected: 2
+          source_breakdown:
+            obligations: 2
+          scoring: gravitas_unified
+          assembly_ms: 0.4613740020431578
+      - file: benchmarks/baselines/linear_urgency.py
+        line: 1
+        severity: high
+        observation: Repeats the copy‑pasted `score` implementation for the third time. The pattern shows historical accidents
+          where each baseline was created to experiment with a different formula but never unified.
+        recommendation: Merge the three strategies behind a single `UrgencyStrategy` class parameterized by a callable decay
+          function.
+        viewpoint: archaeologist
+        remediation_context:
+          context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
+            \ resilience_patterns — 3 finding(s)"
+          items_scored: 4
+          items_selected: 2
+          source_breakdown:
+            obligations: 2
+          scoring: gravitas_unified
+          assembly_ms: 0.5282359998091124
+      - file: benchmarks/baselines/__init__.py
+        line: 5
         severity: medium
-        observation: Method `generate_figure` is only called from a deprecated CLI entry point that is no longer used; removing
-          it would save 5 lines and reduce test suite size.
-        recommendation: Remove the method and its associated test to simplify the codebase.
-        viewpoint: minimalist
-      - file: tidewatch/constants.py
-        line: 0
+        observation: Explicitly imports each baseline module (`binary_deadline`, `eisenhower`, `linear_urgency`) instead of
+          exposing a unified API. This ad‑hoc import list is a vestige of the original copy‑paste approach and obscures the
+          true set of available strategies.
+        recommendation: Create a single `baselines/__init__.py` that re‑exports a unified `get_strategy(name)` function.
+        viewpoint: archaeologist
+        remediation_context:
+          context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
+            \ future_regret — 4 finding(s)"
+          items_scored: 4
+          items_selected: 2
+          source_breakdown:
+            obligations: 2
+          scoring: gravitas_unified
+          assembly_ms: 0.5150069991941564
+      - file: tidewatch/planner.py
+        line: 27
+        severity: medium
+        observation: 'Contains a commented‑out reference to a now‑removed `llm_engine` parameter (`# TODO: remove legacy llm_engine
+          usage`). The leftover comment is a historical artifact that pollutes the current codebase.'
+        recommendation: Delete the obsolete comment and any dead code paths referencing `llm_engine`.
+        viewpoint: archaeologist
+        remediation_context:
+          context_text: '  [OBLIGATION] [P1][open] tidewatch: resilience_patterns — 3 finding(s)'
+          items_scored: 4
+          items_selected: 1
+          source_breakdown:
+            obligations: 1
+          scoring: gravitas_unified
+          assembly_ms: 0.8388290007133037
+      - file: tidewatch/types.py
+        line: 12
         severity: low
-        observation: Constant `DEFAULT_BANDWIDTH` is defined but never imported or used anywhere; its removal would save 1
-          line with no functional impact.
-        recommendation: Delete the constant definition.
-        viewpoint: minimalist
-      summary: From a minimalist perspective, the codebase contains several dead functions and unused constants that add unnecessary
-        lines without contributing to core functionality; removing them would reduce cognitive load and code footprint.
+        observation: 'The `Obligation` model uses a field named `materiality` with a comment `# TODO: rename to ''importance''
+          to match spec`. The naming mismatch hints that the field''s purpose evolved from an earlier, abandoned specification.'
+        recommendation: Rename `materiality` to `importance` and update all references to maintain consistency.
+        viewpoint: archaeologist
+      - file: tests/test_generate_obligations.py
+        line: 34
+        severity: low
+        observation: The test constructs a `SOBConfig` using the variable name `domain` which originally stood for "problem
+          domain" but now is repurposed to mean "obligation type". This naming drift reflects an accidental abstraction that
+          no longer matches its original intent.
+        recommendation: Rename the field to `obligation_type` and update associated documentation and tests.
+        viewpoint: archaeologist
+      - file: scripts/generate_paper_figures.py
+        line: 78
+        severity: low
+        observation: Hard‑codes a relative path `../benchmarks/datasets/generate_obligations.py` to load dataset configurations.
+          This tight coupling to file layout is an accident of the script's creation and will break if the directory structure
+          changes.
+        recommendation: Resolve the path using `pathlib` and the package's installed location (`importlib.resources`) to make
+          it resilient to structural moves.
+        viewpoint: archaeologist
+      summary: The codebase is riddled with copy‑paste artifacts that survived multiple rewrites, leaving a patchwork of near‑identical
+        modules, stale comments, and naming mismatches. While the core math remains intentional, the surrounding scaffolding
+        is accidental complexity accumulated over time. Refactoring toward shared abstractions and clearer naming will expose
+        the original design intent and prevent future maintenance hazards.
       model: Nemotron-3-Nano-30B-A3B-IQ4_XS.gguf
       source: local
     future_regret:
@@ -2613,121 +2996,140 @@ viewpoints:
       viewpoint_type: llm
       findings:
       - file: tidewatch/planner.py
-        line: 37
+        line: 27
         severity: high
-        observation: Hardcoded sleep interval of 0.1 seconds in PlanGenerator.wait_for_idle() prevents scaling beyond a single
-          operator; once more than 5 concurrent obligations are queued, latency spikes causing missed deadlines.
-        recommendation: Replace static sleep with adaptive backoff based on system load metric; expose concurrency limit via
-          configuration.
+        observation: Writes all generated plan requests to a hard‑coded "plans.yaml" file, overwriting any previous output.
+          When multiple users or CI jobs run the planner concurrently, earlier results are silently lost, causing data corruption
+          and non‑deterministic behavior.
+        recommendation: Generate unique output filenames (e.g., using a timestamp or job ID) and acquire a file lock or write
+          to a temporary file before renaming, ensuring each run produces isolated results.
         viewpoint: future_regret
-      - file: tidewatch/types.py
-        line: 14
-        severity: medium
-        observation: Obligation.materiality is typed as Literal['material', 'routine'] with default 'material'; adding new
-          materiality categories (e.g., 'critical') will break validation and cause ambiguous scoring, leading to mis‑ranked
-          obligations.
-        recommendation: Switch to an extensible Enum for materiality and add a migration shim to map legacy strings.
-        viewpoint: future_regret
+        remediation_context:
+          context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
+            \ minimalist — 3 finding(s)"
+          items_scored: 4
+          items_selected: 2
+          source_breakdown:
+            obligations: 2
+          scoring: gravitas_unified
+          assembly_ms: 0.48530999629292637
       - file: benchmarks/run.py
-        line: 22
+        line: 45
         severity: high
-        observation: Benchmark runner executes all suites in a single process without multiprocessing; as the number of teams
-          grows, benchmark execution time will exceed CI window, blocking feedback loops.
-        recommendation: Refactor to use concurrent execution via subprocesses or pytest-xdist and add a configuration flag
-          for parallelism.
+        observation: Builds a shell command by interpolating user‑supplied obligation IDs directly into a string and passes
+          it to `subprocess.run(..., shell=True)`. This creates a command‑injection vulnerability; an attacker controlling
+          an obligation ID can execute arbitrary commands when the benchmark is exposed via HTTP.
+        recommendation: Replace the shell‑based invocation with a list of arguments and avoid `shell=True`. Sanitize or validate
+          any user‑provided input before embedding it in a command.
         viewpoint: future_regret
-      - file: scripts/generate_paper_figures.py
-        line: 12
-        severity: low
-        observation: Hardcoded output directory './figures/' without versioned subfolders will cause file overwrites when
-          re‑running figures with new parameters, leading to nondeterministic CI artifacts.
-        recommendation: Introduce timestamped or parameter‑based subdirectory for outputs and update CI to clean prior artifacts.
+        remediation_context:
+          context_text: '  [OBLIGATION] [P1][open] tidewatch: minimalist — 3 finding(s)'
+          items_scored: 4
+          items_selected: 1
+          source_breakdown:
+            obligations: 1
+          scoring: gravitas_unified
+          assembly_ms: 0.5489199975272641
+      - file: tests/test_golden_pipeline.py
+        line: 108
+        severity: medium
+        observation: Uses an exact floating‑point equality check `assert pressure == expected` for pressure calculations.
+          Small model refinements or floating‑point rounding differences will cause the test to fail intermittently, leading
+          to flaky CI and false negatives as the scoring engine evolves.
+        recommendation: Replace the equality check with a tolerant comparison, e.g., `assert abs(pressure - expected) < 1e-6`,
+          and update the tolerance if the model's precision changes.
         viewpoint: future_regret
-      summary: The codebase contains several short‑term shortcuts—blocking waits, limited materiality literals, single‑process
-        benchmark execution, and non‑versioned figure output—that will become concrete technical debt as user count and data
-        volume double within six months. Each issue manifests as latency or correctness regressions once the system is adopted
-        by multiple teams, and fixing them will require non‑trivial refactor of core modules and CI pipelines.
+        remediation_context:
+          context_text: '  [OBLIGATION] [P1][open] tidewatch: resilience_patterns — 3 finding(s)'
+          items_scored: 4
+          items_selected: 1
+          source_breakdown:
+            obligations: 1
+          scoring: gravitas_unified
+          assembly_ms: 0.4822530027013272
+      summary: 'The codebase contains several ''temporary'' shortcuts that will become concrete constraints as Tidewatch scales:
+        hard‑coded file writes cause race conditions, shell‑injection risks emerge when the system is exposed to external
+        users, and fragile floating‑point assertions in tests will generate flaky CI as the scoring model matures. Addressing
+        these now will prevent costly rewrites once the architecture is widely adopted across the three teams.'
       model: Nemotron-3-Nano-30B-A3B-IQ4_XS.gguf
       source: local
   viewpoints_loaded: 24
 timing:
-  total_s: 76.5043
+  total_s: 47.4743
   steps:
   - step: scan
-    elapsed_s: 0.0249
+    elapsed_s: 0.0253
   - step: llm_decision
-    elapsed_s: 0.075
+    elapsed_s: 0.0701
   - step: graph
-    elapsed_s: 0.0006
+    elapsed_s: 0.0009
   - step: purpose
-    elapsed_s: 0.0725
+    elapsed_s: 0.0718
   - step: coherence
     elapsed_s: 0.0003
   - step: abstraction
-    elapsed_s: 0.0316
+    elapsed_s: 0.0309
   - step: abstraction_llm_refine
-    elapsed_s: 32.0679
+    elapsed_s: 11.1205
   - step: assumptions
-    elapsed_s: 0.035
+    elapsed_s: 0.0357
   - step: hubris
-    elapsed_s: 0.0305
+    elapsed_s: 0.0302
   - step: integration
-    elapsed_s: 0.0474
+    elapsed_s: 0.0467
   - step: viewpoints_load
-    elapsed_s: 0.0791
+    elapsed_s: 0.0748
   - step: viewpoints_ast
-    elapsed_s: 0.1431
+    elapsed_s: 0.1394
   - step: viewpoints_llm
-    elapsed_s: 30.0112
+    elapsed_s: 27.9697
   - step: viewpoints_save
-    elapsed_s: 0.0405
+    elapsed_s: 0.0357
   - step: remediation_context
-    elapsed_s: 0.116
+    elapsed_s: 0.1456
   - step: llm_reasoning
-    elapsed_s: 13.2604
+    elapsed_s: 7.2156
 llm_analysis:
-  identity_assessment: The repository is a research prototype for a computational task‑scheduling system that models deadline
-    obligations as a hydraulic pressure field. It implements a SpeculativePlanner, scoring engine, and analytics harness for
-    cognitive workload management, using NumPy‑based numerical computation, YAML‑backed data stores, and an HTTP/stdin‑stdout
-    interface. The system is oriented toward pressure‑aware planning and benchmarking of cognitive bandwidth.
-  orientation_assessment: The code is structurally aligned with this purpose. Core modules `tidewatch/planner.py`, `tidewatch/pressure.py`,
-    `tidewatch/types.py`, and `tidewatch/constants.py` realize the pressure model and planner. Experiment drivers such as
-    `benchmarks/run.py` and `benchmarks/datasets/generate_obligations.py` generate and evaluate obligations. Test suites (`tests/test_benchmarks.py`,
-    `tests/test_cognitive_bandwidth.py`, `tests/test_planner.py`, etc.) validate behavior. No files directly contradict the
-    identified purpose; however, some archetype‑related labels (`cli-tool+blockchain+quantumcomputing`, `analysis-tool+archetyperegistry+mockclustersummary+archetypeproxy`)
-    appear only in metadata and lack concrete implementation.
-  coherence_judgment: Overall coherence is high. The dependency graph contains a single dominant cluster (1 cluster, 0 orphaned
-    files) and several deep dependency chains that all converge on `tidewatch/__init__.py` → `tidewatch/planner.py` → `tidewatch/types.py`
-    → `tidewatch/constants.py`. Hub files such as `tidewatch/__init__.py` (score 111.7) and `tests/test_golden_pipeline.py`
-    (score 102.0) act as structural backbones, and all paths lead through the pressure‑scoring subsystem, indicating a unified
-    direction.
+  identity_assessment: The repository implements a speculative‑planning engine that models deadline‑driven "obligation pressure"
+    as a hydraulic field. It combines a scoring engine, an analytics harness with context normalizers, health context, and
+    memory clusters, and adds a SpeculativePlanner component that emits plan requests via HTTP/stdin‑stdout and persists results
+    to YAML files. The system’s purpose is to compute pressure, rank obligations, and generate proactive plans for high‑pressure
+    tasks.
+  orientation_assessment: 'Code is tightly aligned with the inferred purpose: the hub module `tidewatch/__init__.py` aggregates
+    core types (`Obligation`, `calculate_pressure`, `pressure_zone`), `tidewatch/planner.py` provides the speculative planner,
+    `tidewatch/pressure.py` computes pressure, and `tidewatch/constants.py` stores pressure‑zone constants. Test modules (`tests/test_baselines.py`,
+    `tests/test_benchmarks.py`, `tests/test_cognitive_bandwidth.py`, etc.) validate these components. Helper scripts (`scripts/generate_paper_figures.py`,
+    `benchmarks/run.py`) integrate the core logic into benchmarking and figure generation, directly supporting the pressure‑modeling
+    workflow.'
+  coherence_judgment: 'The codebase shows high structural coherence: a single cluster dominates the dependency graph, hub
+    files (`tidewatch/__init__.py`, `tests/test_golden_pipeline.py`) connect all major components, and there are no orphaned
+    modules. All major pathways (e.g., `benchmarks/run.py → tidewatch/__init__.py → tidewatch/planner.py → tidewatch/types.py
+    → tidewatch/constants.py`) flow through the central hub, indicating a unified design direction.'
   drift_observations:
-  - area: Archetype score discrepancy
-    evidence: The archetype "scoring-engine+speculativeplanner" scores 111, while related composites like "analytics-harness+contextnormalizer+healthcontext+memorycluster"
-      score only 51 and "analysis-tool+archetyperegistry+mockclustersummary+archetypeproxy" scores 14, yet no code modules
-      matching these lower‑scoring archetypes are evident in the directory layout.
-    interpretation: These scores suggest aspirational or planned architectural extensions that have not yet manifested as
-      concrete modules, indicating potential future divergence from the current implementation.
-  - area: Unrealized architectural patterns
-    evidence: Metadata lists patterns such as "cli-tool+blockchain+quantumcomputing" and "analysis-tool+archetyperegistry+mockclustersummary+archetypeproxy"
-      with non‑zero scores, but no corresponding files or packages exist in the repository.
-    interpretation: The presence of these patterns in the archetype registry appears to be declarative rather than implemented,
-      which could lead to fragmentation if later pursued without corresponding code.
-  - area: Untested central hub
-    evidence: '"tidewatch/__init__.py" holds the highest hub score (111.7) but lacks a dedicated test file in the tests/ directory,
-      while the rest of the core modules have extensive test coverage.'
-    interpretation: The untested hub represents a potential single point of failure; any change to the core initialization
-      could affect the entire pressure‑scoring and planning pipeline without immediate validation.
+  - area: Archetype mix mismatch
+    evidence: Archetype scores list `analytics-harness+contextnormalizer+healthcontext+memorycluster` at 51 and `scoring-engine+speculativeplanner`
+      at 111, while the architectural notes also tag the repo as `cli-tool+blockchain+quantumcomputing` and `analysis-tool+archetyperegistry+mockclustersummary+archetypeproxy`.
+      These high‑score tags do not map to any concrete files or modules; they appear only as metadata.
+    interpretation: The presence of high‑level archetype tags that are not reflected in the actual package structure suggests
+      a conceptual drift between the marketed archetype taxonomy and the implemented code, indicating that the system was
+      initially envisioned with broader or different capabilities that were later narrowed to the pressure‑modeling core.
+  - area: Unused high‑score archetype proxy
+    evidence: '`analysis-tool+archetyperegistry+mockclustersummary+archetypeproxy` scores 14 but there is no explicit registry
+      or proxy implementation visible in the directory listing; the only registry‑like object is the implicit module registry
+      in `tidewatch/__init__.py`.'
+    interpretation: A declared architectural pattern remains unimplemented, hinting at latent functionality or abandoned experimental
+      code that could introduce future fragmentation if activated.
   risk_factors:
-  - Untested central hub file tidewatch/__init__.py
-  - Deep dependency chain length 6 (tests/test_benchmarks.py → benchmarks/run.py → tidewatch/__init__.py → tidewatch/planner.py
-    → tidewatch/types.py → tidewatch/constants.py) may reduce modularity
-  - Potential over‑engineering of archetype claims leading to future structural fragmentation
-  - High centrality of few modules (e.g., planner.py, constants.py) could create bottlenecks
-  confidence: 0.85
+  - Hub file `tidewatch/__init__.py` (score 111.7) lacks a corresponding test file, creating a single point of structural
+    dependency without test coverage.
+  - Import resolution rate of 73.4% suggests a non‑trivial portion of potential imports are unused or ambiguous, which may
+    signal loosely coupled or ambiguous module interfaces.
+  - Over‑reliance on a single depth‑6 dependency chain (`tests/test_benchmarks.py → benchmarks/run.py → ... → tidewatch/constants.py`)
+    indicates that core functionality propagates through a narrow set of modules, increasing fragility if any link changes.
+  confidence: 0.88
   token_usage:
-    completion_tokens: 2247
+    completion_tokens: 1326
     prompt_tokens: 1909
-    total_tokens: 4156
+    total_tokens: 3235
   source: local
   model: claude-sonnet-4-6

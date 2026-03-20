@@ -4,7 +4,7 @@
 Convention-matched test file for the baselines package hub.
 """
 
-from benchmarks.baselines import binary_deadline, eisenhower, linear_urgency
+from benchmarks.baselines import BASELINES, binary_deadline, eisenhower, linear_urgency
 
 
 class TestBinaryDeadline:
@@ -60,3 +60,18 @@ class TestEisenhower:
     def test_custom_threshold(self):
         assert eisenhower.score(10.0, urgent_threshold_days=14.0, materiality="routine") == 0.75
         assert eisenhower.score(10.0, urgent_threshold_days=7.0, materiality="routine") == 0.0
+
+
+class TestBaselineRegistry:
+    def test_all_baselines_registered(self):
+        assert set(BASELINES.keys()) == {"binary", "linear", "eisenhower"}
+
+    def test_all_baselines_callable(self):
+        for name, scorer in BASELINES.items():
+            result = scorer(7.0)
+            assert isinstance(result, float), f"{name} returned {type(result)}"
+            assert 0.0 <= result <= 1.0
+
+    def test_all_baselines_handle_none(self):
+        for name, scorer in BASELINES.items():
+            assert scorer(None) == 0.0, f"{name} should return 0.0 for None"

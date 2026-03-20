@@ -8,7 +8,7 @@ Usage:
 import argparse
 from datetime import UTC, datetime
 
-from benchmarks.baselines import binary_deadline, eisenhower, linear_urgency
+from benchmarks.baselines import BASELINES
 from benchmarks.datasets.generate_obligations import DEFAULT_N, DEFAULT_SEED, generate
 from tidewatch import Obligation, recalculate_batch
 
@@ -35,12 +35,7 @@ def run_tidewatch(obligations_data: list[dict], now: datetime) -> list[float]:
 
 def run_baseline(name: str, obligations_data: list[dict]) -> list[float]:
     """Run a baseline scorer on obligation dicts."""
-    scorers = {
-        "binary": binary_deadline.score,
-        "linear": linear_urgency.score,
-        "eisenhower": eisenhower.score,
-    }
-    scorer = scorers[name]
+    scorer = BASELINES[name]
     return [
         scorer(
             days_remaining=d.get("days_out"),
@@ -67,7 +62,7 @@ def main():
     print(f"  Max pressure:  {max(tw_scores):.3f}")
     print(f"  Min pressure:  {min(tw_scores):.3f}")
 
-    for baseline in ["binary", "linear", "eisenhower"]:
+    for baseline in BASELINES:
         print(f"\n--- {baseline.title()} ---")
         scores = run_baseline(baseline, data)
         print(f"  Mean score: {sum(scores) / len(scores):.3f}")
