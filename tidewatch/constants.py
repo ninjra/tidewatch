@@ -46,7 +46,12 @@ def normalize_hours(hours: float, good: float, span: float) -> float:
     return 1.0 - (hours - good) / span
 
 
-BANDWIDTH_NO_DATA = 1.0  # Returned when no signals available (fail-open)
+# Bandwidth default when no signals available (#1186).
+# Changed from 1.0 (fail-open) to 0.8 (fail-safe-conservative):
+# assume mild degradation rather than full capacity. This prevents the
+# bandwidth modulation feature from silently becoming a no-op for users
+# without wearables while still not aggressively demoting tasks.
+BANDWIDTH_NO_DATA = 0.8
 
 
 # --- Pressure curve ---
@@ -82,15 +87,20 @@ DEPENDENCY_AMPLIFICATION = 0.1  # Per-dependency amplifier (junction multiplier)
 # remaining slack. When an obligation has 30 days remaining, the system can
 # absorb dependency-chain delays without cascading. At 1 day remaining,
 # any dependency failure propagates immediately. The temporal gate uses the
-# same exponential form as P_time for consistency (Eq. 2, §3.2) but with an
-# independent rate constant so dependency sensitivity can be tuned separately
-# from base urgency.
+# same exponential form as P_time but with an INDEPENDENT rate constant
+# so dependency sensitivity can be tuned separately from base urgency (#1183).
 #
-# At t=1d:  temporal_gate = 1 - exp(-3/1)  = 0.950 (near-full amplification)
-# At t=7d:  temporal_gate = 1 - exp(-3/7)  = 0.349 (weak amplification)
-# At t=30d: temporal_gate = 1 - exp(-3/30) = 0.095 (near-zero amplification)
+# k_f=2.0 (decoupled from RATE_CONSTANT=3.0) gives a wider activation window:
+# At t=1d:  temporal_gate = 1 - exp(-2/1)  = 0.865 (strong amplification)
+# At t=7d:  temporal_gate = 1 - exp(-2/7)  = 0.249 (moderate amplification)
+# At t=14d: temporal_gate = 1 - exp(-2/14) = 0.133 (weak amplification)
+# At t=30d: temporal_gate = 1 - exp(-2/30) = 0.064 (near-zero amplification)
 # At t≤0 (overdue): temporal_gate = 1.0 (dependency risk fully materialized)
-FANOUT_TEMPORAL_K = 3.0  # Rate constant for dependency temporal gating
+#
+# The lower k_f means dependencies start mattering slightly later than time
+# pressure, which matches intuition: dependency cascades matter when deadlines
+# are imminent, but the urgency ramp should be gentler than base time pressure.
+FANOUT_TEMPORAL_K = 2.0  # Rate constant for dependency temporal gating (independent of RATE_CONSTANT)
 
 # --- Completion ---
 COMPLETION_DAMPENING = 0.6  # Max dampening at 100% completion (relief valve)
@@ -152,9 +162,14 @@ TASK_DEMAND_DEFAULT: dict[str, float] = _build_demand_default()
 MATERIAL_COMPLEXITY_BOOST = 0.2    # Added to complexity for material items
 MATERIAL_DECISION_BOOST = 0.1      # Added to decision_weight for material items
 
-# --- Hard floor auto-detection ---
-HARD_FLOOR_DOMAINS: frozenset[str] = frozenset({"legal", "financial"})
-HARD_FLOOR_DAYS_THRESHOLD = 1.0    # 24h window — binding deadlines (court filings) within 1 day bypass bandwidth
+# --- Hard floor auto-detection (#1181) ---
+# Expanded beyond legal/financial to include safety-critical domains.
+# Any domain here with a deadline within HARD_FLOOR_DAYS_THRESHOLD gets
+# auto-promoted to NEVER_DEMOTABLE regardless of bandwidth state.
+HARD_FLOOR_DOMAINS: frozenset[str] = frozenset({
+    "legal", "financial", "security", "compliance", "safety",
+})
+HARD_FLOOR_DAYS_THRESHOLD = 1.0    # 24h window — binding deadlines within 1 day bypass bandwidth
 
 # --- Speculative planner ---
 PLANNER_MIN_ZONES: frozenset[str] = frozenset({"yellow", "orange", "red"})
@@ -178,16 +193,33 @@ DEFAULT_DELIVERY_URGENCY = "background"  # Fallback for unknown zones
 
 # --- Fit score ---
 FIT_SCORE_MISMATCH_COMPONENTS = 3  # Number of demand components averaged for mismatch
+# DEMOTABLE_WITH_FLOOR: minimum fraction of original pressure preserved (#1131)
+# At floor=0.7, bandwidth adjustment can reduce sort score by at most 30%.
+DEMOTABLE_FLOOR_FRACTION = 0.7
 
-# --- Timing amplification (#195) ---
-TIMING_STALE_DAYS = 7           # Days in-progress before first amplification tier
-TIMING_CRITICAL_DAYS = 14       # Days in-progress before second amplification tier
-TIMING_STALE_MULTIPLIER = 1.1   # 10% boost — empirically tuned: 7d stale should nudge, not dominate
-TIMING_CRITICAL_MULTIPLIER = 1.2  # 20% boost — 14d stuck needs stronger signal but still bounded by saturate()
+# --- Timing amplification (#195, #1179) ---
+# Logistic ramp replaces the original step function for internal consistency
+# with the continuous-framework thesis. The ramp is centered at TIMING_MID_DAYS
+# and asymptotes to TIMING_MAX_MULTIPLIER.
+#
+# T_amp(d) = 1.0 + (TIMING_MAX_MULTIPLIER - 1.0) / (1 + exp(-TIMING_LOGISTIC_K * (d - TIMING_MID_DAYS)))
+#
+# At d=7:  T_amp ≈ 1.10 (same as old stale tier)
+# At d=14: T_amp ≈ 1.19 (same as old critical tier, within rounding)
+# At d=0:  T_amp ≈ 1.00 (no amplification)
+TIMING_MID_DAYS = 7.0             # Midpoint of logistic ramp (inflection point)
+TIMING_MAX_MULTIPLIER = 1.2       # Asymptotic maximum (20% boost cap)
+TIMING_LOGISTIC_K = 0.5           # Steepness — k=0.5 gives gradual ramp matching old breakpoints
+# Legacy aliases for backward compatibility with tests
+TIMING_STALE_DAYS = 7
+TIMING_CRITICAL_DAYS = 14
+TIMING_STALE_MULTIPLIER = 1.1
+TIMING_CRITICAL_MULTIPLIER = 1.2
 
-# --- Violation amplification (#99) ---
+# --- Violation amplification (#99, #1184) ---
 VIOLATION_AMPLIFICATION = 0.05  # Per-violation pressure amplifier (additive to dep_amp)
 VIOLATION_MAX_AMPLIFICATION = 0.5  # Cap on total violation amplification
+VIOLATION_DECAY_HALFLIFE_DAYS = 14.0  # Violations lose half their potency every 14 days
 
 # --- Gravity tiebreak (#635) ---
 GRAVITY_TIEBREAK_WEIGHT = 0.1   # Weight of gravity score in bandwidth-adjusted sort

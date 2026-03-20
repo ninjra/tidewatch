@@ -97,12 +97,14 @@ class TestDependencies:
     def test_dependency_amplification(self):
         """dep_amp = 1.0 + deps × AMPLIFICATION × temporal_gate(t) (§3.2)."""
         import math
+
+        from tidewatch.constants import FANOUT_TEMPORAL_K
         ob_zero, now = _make_obligation(days_out=7, dependency_count=0)
         ob_five, _ = _make_obligation(days_out=7, dependency_count=5)
         r_zero = calculate_pressure(ob_zero, now=now)
         r_five = calculate_pressure(ob_five, now=now)
-        # temporal_gate at 7d = 1 - exp(-3/7) ≈ 0.349
-        t_gate = 1.0 - math.exp(-3.0 / 7.0)
+        # temporal_gate at 7d = 1 - exp(-FANOUT_TEMPORAL_K/7) ≈ 0.249
+        t_gate = 1.0 - math.exp(-FANOUT_TEMPORAL_K / 7.0)
         expected_dep_amp = 1.0 + 5 * 0.1 * t_gate
         assert r_five.dependency_amp == pytest.approx(expected_dep_amp, abs=1e-10)
         assert r_zero.dependency_amp == 1.0
@@ -130,6 +132,8 @@ class TestCombined:
 
     def test_combined_factors_multiply(self):
         """All factors interact multiplicatively including temporal gate."""
+        from tidewatch.constants import FANOUT_TEMPORAL_K
+        from tidewatch.pressure import _timing_amplifier, _violation_amplifier
         ob, now = _make_obligation(
             days_out=3,
             materiality="material",
@@ -141,11 +145,13 @@ class TestCombined:
         # Manual computation with logistic dampening and temporal gating (§3.2)
         time_p = 1.0 - math.exp(-3.0 / 3.0)
         mat = 1.5
-        t_gate = 1.0 - math.exp(-3.0 / 3.0)  # temporal_gate at 3 days
+        t_gate = 1.0 - math.exp(-FANOUT_TEMPORAL_K / 3.0)  # temporal_gate at 3 days
         dep = 1.0 + (2 * 0.1 * t_gate)
         sigmoid = 1.0 / (1.0 + math.exp(-8.0 * (0.25 - 0.5)))
         comp = 1.0 - (0.6 * sigmoid)
-        expected = min(1.0, time_p * mat * dep * comp)
+        timing = _timing_amplifier(ob.days_in_status)
+        violation = _violation_amplifier(ob.violation_count, ob.days_in_status)
+        expected = min(1.0, time_p * mat * dep * comp * timing * violation)
         assert result.pressure == pytest.approx(expected, abs=1e-10)
 
     def test_pressure_clamped_to_one(self):
@@ -205,6 +211,9 @@ class TestBatch:
 
     def test_pressure_result_decomposition(self):
         """All factors should be accessible individually."""
+        import math as _m
+
+        from tidewatch.constants import FANOUT_TEMPORAL_K
         ob, now = _make_obligation(
             days_out=5,
             materiality="material",
@@ -215,9 +224,8 @@ class TestBatch:
         assert isinstance(result, PressureResult)
         assert result.time_pressure > 0
         assert result.materiality_mult == 1.5
-        # dep_amp = 1 + 3 × 0.1 × temporal_gate(5d) ≈ 1.135
-        import math as _m
-        t_gate_5d = 1.0 - _m.exp(-3.0 / 5.0)
+        # dep_amp = 1 + 3 × 0.1 × temporal_gate(5d) with FANOUT_TEMPORAL_K=2.0
+        t_gate_5d = 1.0 - _m.exp(-FANOUT_TEMPORAL_K / 5.0)
         assert result.dependency_amp == pytest.approx(1.0 + 3 * 0.1 * t_gate_5d, abs=1e-10)
         # Logistic damp at 40%: sigmoid(8*(0.4-0.5)) = sigmoid(-0.8) ≈ 0.3100
         # D = 1 - 0.6 * 0.3100 ≈ 0.814

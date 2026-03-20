@@ -34,9 +34,9 @@ class TestObligation:
 
 
 class TestCognitiveContext:
-    def test_no_signals_returns_full_bandwidth(self):
+    def test_no_signals_returns_conservative_bandwidth(self):
         ctx = CognitiveContext()
-        assert ctx.effective_bandwidth() == 1.0
+        assert ctx.effective_bandwidth() == 0.8
 
     def test_explicit_bandwidth_score(self):
         ctx = CognitiveContext(bandwidth_score=0.5)

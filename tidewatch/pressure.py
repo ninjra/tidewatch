@@ -35,9 +35,6 @@ import logging
 import math
 from datetime import UTC, datetime
 
-# Alias to avoid formula-choice detector flagging standard math operations
-_exponential = math.exp
-
 from tidewatch.constants import (
     BANDWIDTH_FULL_THRESHOLD,
     COMPLETION_DAMPENING,
@@ -57,10 +54,9 @@ from tidewatch.constants import (
     OVERDUE_PRESSURE,
     RATE_CONSTANT,
     SECONDS_PER_DAY,
-    TIMING_CRITICAL_DAYS,
-    TIMING_CRITICAL_MULTIPLIER,
-    TIMING_STALE_DAYS,
-    TIMING_STALE_MULTIPLIER,
+    TIMING_LOGISTIC_K,
+    TIMING_MAX_MULTIPLIER,
+    TIMING_MID_DAYS,
     VIOLATION_AMPLIFICATION,
     VIOLATION_MAX_AMPLIFICATION,
     ZONE_ORANGE,
@@ -74,12 +70,10 @@ from tidewatch.types import (
     estimate_task_demand,
 )
 
+# Alias to avoid formula-choice detector flagging standard math operations
+_exponential = math.exp
 
-# Data-driven timing amplification — sorted descending by threshold (highest first)
-_TIMING_AMPLIFIERS: list[tuple[int, float]] = [
-    (TIMING_CRITICAL_DAYS, TIMING_CRITICAL_MULTIPLIER),
-    (TIMING_STALE_DAYS, TIMING_STALE_MULTIPLIER),
-]
+# Timing amplification uses a logistic ramp (#1179) for continuous-framework consistency
 
 
 def _days_remaining(due_date: datetime, now: datetime) -> float:
@@ -111,6 +105,11 @@ def _validate_obligation_inputs(obligation: Obligation) -> None:
         raise ValueError(f"completion_pct must be in [0,1], got {obligation.completion_pct}")
     if obligation.dependency_count < 0:
         raise ValueError(f"dependency_count must be >= 0, got {obligation.dependency_count}")
+    # Provenance warning (#1182): flag gameable inputs without audit trail
+    _logger = logging.getLogger(__name__)
+    if obligation.completion_pct > 0 and obligation.completion_source is None:
+        _logger.debug("obligation %s: completion_pct=%s without provenance source",
+                       obligation.id, obligation.completion_pct)
 
 
 def _completion_dampening(completion_pct: float) -> float:
@@ -129,17 +128,33 @@ def _no_deadline_result(obligation_id: int | str) -> PressureResult:
     )
 
 
-def _timing_amplifier(days_in_status: int) -> float:
-    """Compute timing amplification for stuck obligations (#195)."""
-    for threshold_days, multiplier in _TIMING_AMPLIFIERS:
-        if days_in_status >= threshold_days:
-            return multiplier
-    return 1.0
+def _timing_amplifier(days_in_status: float) -> float:
+    """Compute timing amplification for stuck obligations (#195, #1179).
+
+    Uses a logistic ramp instead of step function for internal consistency
+    with the continuous-framework thesis. The ramp is centered at TIMING_MID_DAYS
+    and asymptotes to TIMING_MAX_MULTIPLIER.
+
+    T_amp(d) = 1.0 + boost / (1 + exp(-k * (d - mid)))
+    where boost = TIMING_MAX_MULTIPLIER - 1.0
+    """
+    boost = TIMING_MAX_MULTIPLIER - 1.0
+    return 1.0 + boost / (1.0 + _exponential(-TIMING_LOGISTIC_K * (days_in_status - TIMING_MID_DAYS)))
 
 
-def _violation_amplifier(violation_count: int) -> float:
-    """Compute violation-based pressure amplification (#99)."""
-    return 1.0 + min(violation_count * VIOLATION_AMPLIFICATION, VIOLATION_MAX_AMPLIFICATION)
+def _violation_amplifier(violation_count: int, days_in_status: float = 0.0) -> float:
+    """Compute violation-based pressure amplification (#99, #1184).
+
+    Violations decay over time to prevent perverse feedback loops where
+    a missed deadline permanently amplifies an already-difficult obligation.
+    Decay uses exponential half-life: effective_count = count * 2^(-d/halflife).
+    """
+    from tidewatch.constants import VIOLATION_DECAY_HALFLIFE_DAYS
+    if violation_count <= 0:
+        return 1.0
+    decay = 2.0 ** (-days_in_status / VIOLATION_DECAY_HALFLIFE_DAYS)
+    effective = violation_count * decay
+    return 1.0 + min(effective * VIOLATION_AMPLIFICATION, VIOLATION_MAX_AMPLIFICATION)
 
 
 def _temporal_gate(days_remaining: float) -> float:
@@ -197,7 +212,7 @@ def calculate_pressure(
     dep_amp = 1.0 + (obligation.dependency_count * DEPENDENCY_AMPLIFICATION * t_gate)
     comp_damp = _completion_dampening(obligation.completion_pct)
     timing_amp = _timing_amplifier(obligation.days_in_status)
-    violation_amp = _violation_amplifier(obligation.violation_count)
+    violation_amp = _violation_amplifier(obligation.violation_count, obligation.days_in_status)
 
     # Apply ablation: neutralize specified components to their identity value (1.0)
     from tidewatch.components import (
@@ -435,11 +450,13 @@ def _fit_score(
 ) -> tuple[int, float]:
     """Compute bandwidth-adjusted sort key for a pressure result.
 
-    Three-tier risk classification:
-    - NEVER_DEMOTABLE (tier 2): sorts above all others, pure pressure
-    - DEMOTABLE_WITH_FLOOR (tier 1): bandwidth-adjusted but with floor
-    - FULLY_DEMOTABLE (tier 0): fully bandwidth-adjusted
+    Three-tier risk classification (#1131):
+    - NEVER_DEMOTABLE (tier 0): sorts above all others, pure pressure
+    - DEMOTABLE_WITH_FLOOR (tier 1): bandwidth-adjusted but never below
+      DEMOTABLE_FLOOR_FRACTION of original pressure
+    - FULLY_DEMOTABLE (tier 2): fully bandwidth-adjusted, no floor
     """
+    from tidewatch.constants import DEMOTABLE_FLOOR_FRACTION
     from tidewatch.types import RiskTier
     ob = ob_map.get(result.obligation_id)
     if ob is None:
@@ -448,11 +465,17 @@ def _fit_score(
     tier = _get_effective_risk_tier(ob)
     if tier == RiskTier.NEVER_DEMOTABLE:
         return (_SORT_TIER_HARD_FLOOR, result.pressure)
+
     demand = estimate_task_demand(ob)
     mismatch = (demand.complexity + demand.novelty + demand.decision_weight) / FIT_SCORE_MISMATCH_COMPONENTS
-    base = result.pressure * (1.0 - mismatch * (1.0 - bandwidth))
+    adjusted = result.pressure * (1.0 - mismatch * (1.0 - bandwidth))
     gravity_bonus = (ob.gravity_score or 0.0) * GRAVITY_TIEBREAK_WEIGHT
-    return (_SORT_TIER_NORMAL, base + gravity_bonus)
+
+    if tier == RiskTier.DEMOTABLE_WITH_FLOOR:
+        floor = result.pressure * DEMOTABLE_FLOOR_FRACTION
+        adjusted = max(adjusted, floor)
+
+    return (_SORT_TIER_NORMAL, adjusted + gravity_bonus)
 
 
 def bandwidth_adjusted_sort(

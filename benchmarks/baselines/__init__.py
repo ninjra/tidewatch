@@ -11,7 +11,8 @@ from __future__ import annotations
 from typing import Protocol
 
 from benchmarks.baselines.binary_deadline import score as binary_score
-from benchmarks.baselines.eisenhower import QUADRANT_SCORES, score as eisenhower_score
+from benchmarks.baselines.eisenhower import QUADRANT_SCORES
+from benchmarks.baselines.eisenhower import score as eisenhower_score
 from benchmarks.baselines.linear_urgency import score as linear_score
 
 

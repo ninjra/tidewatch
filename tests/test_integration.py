@@ -138,6 +138,6 @@ class TestPublicAPISurface:
         ob = tidewatch.Obligation(id=1, title="test", due_date=datetime.now(UTC))
         assert ob.id == 1
         ctx = tidewatch.CognitiveContext()
-        assert ctx.effective_bandwidth() == 1.0
+        assert ctx.effective_bandwidth() == 0.8
         demand = tidewatch.estimate_task_demand(ob)
         assert 0.0 <= demand.complexity <= 1.0

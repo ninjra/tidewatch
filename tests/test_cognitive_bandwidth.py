@@ -24,9 +24,9 @@ def _make_obligation(id, title, days_until_due=5, domain="engineering",
 
 
 class TestCognitiveContext:
-    def test_full_bandwidth_no_signals(self):
+    def test_conservative_bandwidth_no_signals(self):
         ctx = CognitiveContext()
-        assert ctx.effective_bandwidth() == 1.0
+        assert ctx.effective_bandwidth() == 0.8
 
     def test_explicit_bandwidth_score(self):
         ctx = CognitiveContext(bandwidth_score=0.3)

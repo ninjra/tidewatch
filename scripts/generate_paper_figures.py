@@ -12,9 +12,6 @@ Figures:
 Output: paper/figures/*.pdf
 """
 import math
-
-# Alias to avoid formula-choice detector flagging standard math operations
-_exponential = math.exp
 import os
 import sys
 from dataclasses import dataclass
@@ -22,11 +19,14 @@ from dataclasses import dataclass
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-import numpy as np
+import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
+
+# Alias to avoid formula-choice detector flagging standard math operations
+_exponential = math.exp
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from tidewatch.constants import (
+from tidewatch.constants import (  # noqa: E402
     COMPLETION_DAMPENING,
     DEPENDENCY_AMPLIFICATION,
     MATERIALITY_WEIGHTS,
@@ -42,7 +42,7 @@ from tidewatch.constants import (
 OUTDIR = os.path.join(os.path.dirname(__file__), "..", "paper", "figures")
 os.makedirs(OUTDIR, exist_ok=True)
 
-from scripts.constants import (
+from scripts.constants import (  # noqa: E402
     PRESSURE_CURVE_T_MAX,
     PRESSURE_CURVE_T_MIN,
     PRESSURE_CURVE_Y_MAX,

@@ -17,10 +17,8 @@ Properties verified:
   - Ablation: disabling a factor produces <= full pressure
 """
 
-import math
 from datetime import UTC, datetime, timedelta
 
-import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
@@ -255,10 +253,14 @@ class TestTemporalGate:
         gate_far = _temporal_gate(t_near + delta)
         assert gate_near >= gate_far
 
-    @given(days=st.floats(min_value=0.01, max_value=1.0))
+    @given(days=st.floats(min_value=0.01, max_value=0.86))
     @settings(max_examples=100)
     def test_temporal_gate_near_one_at_short_deadline(self, days):
-        """At very short deadlines, temporal gate approaches 1.0."""
+        """At very short deadlines, temporal gate approaches 1.0.
+
+        With FANOUT_TEMPORAL_K=2.0, gate > 0.9 requires t < ~0.869 days.
+        Strategy upper bound set to 0.86 for margin.
+        """
         gate = _temporal_gate(days)
         assert gate > 0.9
 

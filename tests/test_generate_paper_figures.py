@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0 OR Commercial
 """Tests for scripts/generate_paper_figures.py — domain functions and figure output."""
 
-import math
 import os
 import sys
 
@@ -14,7 +13,6 @@ pytest.importorskip("matplotlib")
 pytest.importorskip("numpy")
 
 import generate_paper_figures as gpf
-
 
 # ── Domain function tests ────────────────────────────────────────────────────
 

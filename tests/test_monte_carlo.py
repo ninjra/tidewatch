@@ -6,7 +6,6 @@ Marked as numerical_verification — these tests verify statistical
 properties of the simulation, not exact values.
 """
 
-import math
 from datetime import UTC, datetime, timedelta
 
 import numpy as np
@@ -216,7 +215,7 @@ class TestStrategyComparison:
     def test_compare_all_have_results(self):
         obs = _make_obligations(3)
         results = compare_strategies(obs, n_trials=5, seed=42, sim_start=NOW)
-        for name, result in results.items():
+        for _name, result in results.items():
             assert result.n_trials == 5
             assert isinstance(result, MonteCarloResult)
 

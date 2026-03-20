@@ -92,8 +92,8 @@ class TestConstantValues:
     def test_zone_ordering(self):
         assert ZONE_YELLOW < ZONE_ORANGE < ZONE_RED
 
-    def test_bandwidth_no_data_is_full_capacity(self):
-        assert BANDWIDTH_NO_DATA == 1.0
+    def test_bandwidth_no_data_is_conservative(self):
+        assert BANDWIDTH_NO_DATA == 0.8
 
 
 class TestZoneEnvOverride:

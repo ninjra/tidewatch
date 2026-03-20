@@ -83,6 +83,9 @@ class Obligation:
 
     Notes:
       Caller manages persistence. Tidewatch only computes on these.
+      Provenance fields (#1182) provide audit trail for mutable inputs
+      that affect scoring (completion_pct, materiality, dependency_count).
+      Tidewatch reads but does not write these — the caller populates them.
     """
     id: int | str
     title: str
@@ -98,6 +101,10 @@ class Obligation:
     violation_count: int = 0     # Rule violations associated with this obligation (#99)
     gravity_score: float | None = None  # Gravitational attraction score from gravitas (#635)
     risk_tier: RiskTier = RiskTier.FULLY_DEMOTABLE  # Bandwidth modulation classification
+    # Provenance fields (#1182) — caller-populated audit trail for gameable inputs
+    completion_source: str | None = None      # Who/what set completion_pct (e.g., "sentinel:autobot", "human:manual")
+    completion_updated_at: datetime | None = None  # When completion_pct was last changed
+    dependency_source: str | None = None      # How dependency_count was derived (e.g., "mssql:dep_chain", "manual")
 
 
 # --- Pressure result ---

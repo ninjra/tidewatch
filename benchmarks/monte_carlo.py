@@ -34,12 +34,15 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
+from typing import TYPE_CHECKING
 
 import numpy as np
 
 from tidewatch.pressure import calculate_pressure, recalculate_batch
 from tidewatch.types import Obligation
 
+if TYPE_CHECKING:
+    from statistic_harness.core.des_engine import ProcessProfile
 
 # ── Simulation constants ─────────────────────────────────────────────────────
 
@@ -124,6 +127,23 @@ class TrialResult:
         return self.effective_attention_hours / self.total_attention_hours if self.total_attention_hours > 0 else 0.0
 
 
+def _bootstrap_ci(data: np.ndarray, n_bootstrap: int = 10000, alpha: float = 0.05,
+                   seed: int = 42) -> tuple[float, float]:
+    """Compute bootstrap confidence interval for the mean (#1177).
+
+    Returns (lower, upper) bounds of the (1-alpha) CI.
+    Uses percentile method with n_bootstrap resamples.
+    """
+    rng = np.random.default_rng(seed)
+    means = np.empty(n_bootstrap)
+    n = len(data)
+    for i in range(n_bootstrap):
+        sample = data[rng.integers(0, n, size=n)]
+        means[i] = np.mean(sample)
+    return (float(np.percentile(means, 100 * alpha / 2)),
+            float(np.percentile(means, 100 * (1 - alpha / 2))))
+
+
 @dataclass
 class MonteCarloResult:
     """Aggregated outcome across all Monte Carlo trials."""
@@ -135,6 +155,10 @@ class MonteCarloResult:
     queue_inversion_rate_std: float
     attention_efficiency_mean: float
     attention_efficiency_std: float
+    # Bootstrap 95% CIs (#1177) — (lower, upper) bounds
+    missed_deadline_rate_ci: tuple[float, float] = (0.0, 0.0)
+    queue_inversion_rate_ci: tuple[float, float] = (0.0, 0.0)
+    attention_efficiency_ci: tuple[float, float] = (0.0, 0.0)
     trial_results: list[TrialResult] = field(default_factory=list, repr=False)
 
     def to_dict(self) -> dict:
@@ -144,14 +168,20 @@ class MonteCarloResult:
             "missed_deadline_rate": {
                 "mean": round(self.missed_deadline_rate_mean, 4),
                 "std": round(self.missed_deadline_rate_std, 4),
+                "ci_95": [round(self.missed_deadline_rate_ci[0], 4),
+                          round(self.missed_deadline_rate_ci[1], 4)],
             },
             "queue_inversion_rate": {
                 "mean": round(self.queue_inversion_rate_mean, 4),
                 "std": round(self.queue_inversion_rate_std, 4),
+                "ci_95": [round(self.queue_inversion_rate_ci[0], 4),
+                          round(self.queue_inversion_rate_ci[1], 4)],
             },
             "attention_efficiency": {
                 "mean": round(self.attention_efficiency_mean, 4),
                 "std": round(self.attention_efficiency_std, 4),
+                "ci_95": [round(self.attention_efficiency_ci[0], 4),
+                          round(self.attention_efficiency_ci[1], 4)],
             },
         }
 
@@ -206,28 +236,32 @@ def _tidewatch_bandwidth_order(
 
 
 def _weighted_sum_order(obligations: list[Obligation], now: datetime) -> list[int]:
-    """Order by weighted-sum collapse of component space (MCDM baseline).
+    """Order by normalized weighted-sum of component space (MCDM baseline, #1185).
 
-    Uses equal weights across all six factors. This is the standard
-    weighted-sum MCDM approach — a direct comparison to Tidewatch's
-    product collapse and Pareto-layered ranking.
+    Uses equal weights across all six factors AFTER normalizing each component
+    to [0,1] using its algebraic bounds. This prevents components with different
+    scales (e.g., materiality 1.0-1.5 vs time_pressure 0.0-1.0) from biasing
+    the additive combination.
     """
+    from tidewatch.components import _DEFAULT_BOUNDS
+
     results = recalculate_batch(obligations, now=now)
-    equal_weights = {
-        "time_pressure": 1.0 / 6,
-        "materiality": 1.0 / 6,
-        "dependency_amp": 1.0 / 6,
-        "completion_damp": 1.0 / 6,
-        "timing_amp": 1.0 / 6,
-        "violation_amp": 1.0 / 6,
-    }
     scored = []
     for r in results:
         cs = r.component_space
-        if hasattr(cs, 'space') and hasattr(cs.space, 'weighted_collapse'):
-            ws = cs.space.weighted_collapse(equal_weights)
+        if hasattr(cs, 'space') and hasattr(cs.space, 'components'):
+            components = cs.space.components
+            # Normalize each component to [0,1] using known bounds
+            normalized_sum = 0.0
+            count = 0
+            for name, value in components.items():
+                lo, hi = _DEFAULT_BOUNDS.get(name, (0.0, 1.0))
+                span = hi - lo
+                norm = (value - lo) / span if span > 0 else 0.0
+                normalized_sum += max(0.0, min(1.0, norm))
+                count += 1
+            ws = normalized_sum / count if count > 0 else 0.0
         else:
-            # Fallback: use pressure (product collapse) if weighted not available
             ws = r.pressure
         scored.append((r.obligation_id, ws))
     scored.sort(key=lambda x: x[1], reverse=True)
@@ -307,7 +341,7 @@ def _run_trial(
 
     completed: set[int] = set()
 
-    for pos, idx in enumerate(order):
+    for _pos, idx in enumerate(order):
         sob = sim_obs[idx]
         ob = sob.obligation
         duration = sob.duration_hours
@@ -378,7 +412,6 @@ def run_monte_carlo(
     if sim_start is None:
         sim_start = datetime.now(UTC)
 
-    rng = np.random.default_rng(seed)
     trials: list[TrialResult] = []
 
     for trial_i in range(n_trials):
@@ -395,6 +428,11 @@ def run_monte_carlo(
     inversion_rates = np.array([t.queue_inversion_rate for t in trials])
     efficiency_rates = np.array([t.attention_efficiency for t in trials])
 
+    # Bootstrap 95% CIs (#1177)
+    missed_ci = _bootstrap_ci(missed_rates, seed=seed) if n_trials >= 10 else (0.0, 0.0)
+    inversion_ci = _bootstrap_ci(inversion_rates, seed=seed) if n_trials >= 10 else (0.0, 0.0)
+    efficiency_ci = _bootstrap_ci(efficiency_rates, seed=seed) if n_trials >= 10 else (0.0, 0.0)
+
     return MonteCarloResult(
         strategy=strategy,
         n_trials=n_trials,
@@ -404,6 +442,9 @@ def run_monte_carlo(
         queue_inversion_rate_std=float(np.std(inversion_rates)),
         attention_efficiency_mean=float(np.mean(efficiency_rates)),
         attention_efficiency_std=float(np.std(efficiency_rates)),
+        missed_deadline_rate_ci=missed_ci,
+        queue_inversion_rate_ci=inversion_ci,
+        attention_efficiency_ci=efficiency_ci,
         trial_results=trials,
     )
 
@@ -496,7 +537,7 @@ def _build_obligation_dag(
 
 def _build_profiles_from_obligations(
     obligations: list[Obligation],
-) -> dict[str, "ProcessProfile"]:
+) -> dict[str, ProcessProfile]:
     """Build ProcessProfile instances from domain duration parameters.
 
     Uses the same domain → (mu, sigma) mapping as the Monte Carlo module
