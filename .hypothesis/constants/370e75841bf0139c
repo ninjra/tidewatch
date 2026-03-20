@@ -1,0 +1,4 @@
+# file: /home/justi/projects/tidewatch/benchmarks/datasets/generate_obligations.py
+# hypothesis_version: 6.151.9
+
+[0.0, 0.1, 0.3, 1.5, 2.0, 1000, '--n', '--output', '--seed', 'Generate SOB dataset', '__main__', 'client_work', 'completion_pct', 'days_out', 'dependency_count', 'domain', 'due_date', 'financial', 'health', 'id', 'legal', 'material', 'materiality', 'personal_admin', 'routine', 'title', 'w']

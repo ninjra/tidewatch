@@ -1,0 +1,4 @@
+# file: /home/justi/projects/gravitas/gravitas/epistemic_modulator.py
+# hypothesis_version: 6.151.9
+
+[0.0, 1.0, '\\b\\w+\\b', 'decision', 'entity', 'event', 'fact', 'factual', 'interaction', 'obligation', 'temporal', 'world_fact']

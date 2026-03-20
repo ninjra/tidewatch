@@ -209,7 +209,8 @@ class TestStrategyComparison:
         results = compare_strategies(obs, n_trials=5, seed=42, sim_start=NOW)
         assert set(results.keys()) == {
             "tidewatch", "tidewatch_bw_full", "tidewatch_bw_mid",
-            "tidewatch_bw_low", "weighted_sum", "edf", "fifo", "random",
+            "tidewatch_bw_low", "tidewatch_bw_variable",
+            "weighted_sum", "edf", "fifo", "random",
         }
 
     def test_compare_all_have_results(self):

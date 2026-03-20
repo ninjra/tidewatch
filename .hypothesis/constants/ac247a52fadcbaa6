@@ -1,0 +1,4 @@
+# file: /home/justi/projects/gravitas/gravitas/stats.py
+# hypothesis_version: 6.151.9
+
+[1.0, 'ci_lower', 'ci_upper', 'mean', 'mean_a', 'mean_b', 'mean_diff', 'n_queries', 'n_resamples', 'p_value_approx', 'seed', 'std']

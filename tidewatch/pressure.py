@@ -208,7 +208,13 @@ def calculate_pressure(
 
     time_p = OVERDUE_PRESSURE if days_rem <= 0 else 1.0 - _exponential(-RATE_CONSTANT / max(days_rem, DIVISION_GUARD))
     mat_mult = MATERIALITY_WEIGHTS.get(obligation.materiality, 1.0)
-    t_gate = _temporal_gate(days_rem)
+    # Dependency urgency propagation (#1180): if dependents have earlier deadlines,
+    # use the tighter deadline for the temporal gate so urgency propagates upward
+    dep_days = days_rem
+    if obligation.earliest_dependent_deadline is not None:
+        dep_days_rem = _days_remaining(obligation.earliest_dependent_deadline, now)
+        dep_days = min(days_rem, dep_days_rem)
+    t_gate = _temporal_gate(dep_days)
     dep_amp = 1.0 + (obligation.dependency_count * DEPENDENCY_AMPLIFICATION * t_gate)
     comp_damp = _completion_dampening(obligation.completion_pct)
     timing_amp = _timing_amplifier(obligation.days_in_status)

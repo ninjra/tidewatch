@@ -1,0 +1,4 @@
+# file: /home/justi/projects/tidewatch/benchmarks/run.py
+# hypothesis_version: 6.151.9
+
+[0.0, '\n--- Tidewatch ---', '\nBenchmark complete.', '--n', '--seed', '--suite', '__main__', 'all', 'baselines', 'completion_pct', 'days_out', 'dependency_count', 'domain', 'due_date', 'id', 'materiality', 'pressure', 'routine', 'title']

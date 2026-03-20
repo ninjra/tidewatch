@@ -5,7 +5,7 @@ scan:
   repo_path: /home/justi/projects/tidewatch
   repo_name: tidewatch
   stats:
-    total_files: 74
+    total_files: 92
     languages:
     - Python
     - Markdown
@@ -15,9 +15,9 @@ scan:
     - Shell
     language_counts:
       YAML: 4
-      Markdown: 8
+      Markdown: 12
       Python: 42
-      JSON: 2
+      JSON: 3
       TOML: 1
       Shell: 1
   tree:
@@ -44,9 +44,14 @@ scan:
   - benchmarks/metrics.py
   - benchmarks/monte_carlo.py
   - benchmarks/monte_carlo_results.json
+  - benchmarks/monte_carlo_results_full.json
   - benchmarks/monte_carlo_results_n200.json
   - benchmarks/run.py
   - paper/abstract_optimal_v1.md
+  - paper/abstract_optimal_v2.md
+  - paper/analysis_a.md
+  - paper/analysis_b.md
+  - paper/analysis_c.md
   - paper/figures/bandwidth_modulation.pdf
   - paper/figures/baseline_comparison.pdf
   - paper/figures/factor_decomposition.pdf
@@ -62,6 +67,19 @@ scan:
   - paper/tidewatch.out
   - paper/tidewatch.pdf
   - paper/tidewatch.tex
+  - paper/tmp/pdfs/page-01.png
+  - paper/tmp/pdfs/page-02.png
+  - paper/tmp/pdfs/page-03.png
+  - paper/tmp/pdfs/page-04.png
+  - paper/tmp/pdfs/page-05.png
+  - paper/tmp/pdfs/page-06.png
+  - paper/tmp/pdfs/page-07.png
+  - paper/tmp/pdfs/page-08.png
+  - paper/tmp/pdfs/page-09.png
+  - paper/tmp/pdfs/page-10.png
+  - paper/tmp/pdfs/page-11.png
+  - paper/tmp/pdfs/page-12.png
+  - paper/tmp/pdfs/page-13.png
   - pyproject.toml
   - scripts/constants.py
   - scripts/generate_paper_figures.py
@@ -292,6 +310,8 @@ scan:
       - numpy
       - tidewatch.pressure
       - tidewatch.types
+      - tidewatch.pressure
+      - tidewatch.types
       - statistic_harness.core.des_engine
       - statistic_harness.core.des_engine
       classes:
@@ -329,6 +349,10 @@ scan:
       - name: _fifo_order
         decorators: []
       - name: _random_order
+        decorators: []
+      - name: _tidewatch_bandwidth_order
+        decorators: []
+      - name: _weighted_sum_order
         decorators: []
       - name: _sample_durations
         decorators: []
@@ -918,6 +942,7 @@ scan:
       - tidewatch
       - tidewatch
       - tidewatch
+      - tidewatch
       - math
       - tidewatch
       - math
@@ -983,12 +1008,6 @@ scan:
       - benchmarks.baselines.binary_deadline
       - benchmarks.baselines.linear_urgency
       - benchmarks.baselines.eisenhower
-      - benchmarks.metrics
-      - benchmarks.metrics
-      - benchmarks.metrics
-      - benchmarks.metrics
-      - benchmarks.metrics
-      - benchmarks.metrics
       - benchmarks.metrics
       - benchmarks.metrics
       - benchmarks.metrics
@@ -1890,6 +1909,10 @@ graph:
   - - benchmarks/monte_carlo.py
     - tidewatch/pressure.py
   - - benchmarks/monte_carlo.py
+    - tidewatch/pressure.py
+  - - benchmarks/monte_carlo.py
+    - tidewatch/types.py
+  - - benchmarks/monte_carlo.py
     - tidewatch/types.py
   - - benchmarks/run.py
     - benchmarks/baselines/__init__.py
@@ -1974,17 +1997,7 @@ graph:
   - - tests/test_golden_pipeline.py
     - benchmarks/metrics.py
   - - tests/test_golden_pipeline.py
-    - benchmarks/metrics.py
-  - - tests/test_golden_pipeline.py
-    - benchmarks/metrics.py
-  - - tests/test_golden_pipeline.py
-    - benchmarks/metrics.py
-  - - tests/test_golden_pipeline.py
-    - benchmarks/metrics.py
-  - - tests/test_golden_pipeline.py
-    - benchmarks/metrics.py
-  - - tests/test_golden_pipeline.py
-    - benchmarks/metrics.py
+    - tidewatch/__init__.py
   - - tests/test_golden_pipeline.py
     - tidewatch/__init__.py
   - - tests/test_golden_pipeline.py
@@ -2214,125 +2227,125 @@ graph:
   - - tidewatch/types.py
     - tidewatch/constants.py
   in_degree:
-    tidewatch/__init__.py: 77
-    benchmarks/metrics.py: 17
+    tidewatch/__init__.py: 78
+    tidewatch/types.py: 15
     benchmarks/datasets/generate_obligations.py: 14
-    tidewatch/types.py: 14
+    benchmarks/metrics.py: 11
     tidewatch/constants.py: 10
-    tidewatch/pressure.py: 8
+    tidewatch/pressure.py: 9
     benchmarks/constants.py: 4
     benchmarks/baselines/linear_urgency.py: 3
-    benchmarks/baselines/binary_deadline.py: 3
     benchmarks/baselines/eisenhower.py: 3
-    benchmarks/baselines/__init__.py: 3
     tidewatch/planner.py: 3
+    benchmarks/baselines/binary_deadline.py: 3
+    benchmarks/baselines/__init__.py: 3
     tidewatch/components.py: 3
     tidewatch/triage.py: 2
     benchmarks/run.py: 2
-    benchmarks/monte_carlo.py: 1
     scripts/generate_paper_figures.py: 1
+    benchmarks/monte_carlo.py: 1
     scripts/constants.py: 1
-    tests/test_monte_carlo.py: 0
-    tests/test_benchmarks.py: 0
-    tests/test_triage.py: 0
-    tests/test_baselines.py: 0
-    tests/test_planner.py: 0
-    tests/test_golden_pipeline.py: 0
     tests/test_property_pressure.py: 0
-    tests/test_pressure.py: 0
-    tests/test_metrics.py: 0
-    tests/test_init.py: 0
-    tests/test_eisenhower.py: 0
+    tests/test_run.py: 0
+    tests/test_cognitive_bandwidth.py: 0
     tests/conftest.py: 0
+    tests/test_baselines.py: 0
+    tests/test_metrics.py: 0
+    tests/test_planner.py: 0
+    tests/test_benchmarks.py: 0
     tests/test_generate_obligations.py: 0
     tests/test_linear_urgency.py: 0
-    tests/test_integration.py: 0
-    tests/test_constants.py: 0
-    tests/test_run.py: 0
     tests/test_generate_paper_figures.py: 0
-    tests/test_cognitive_bandwidth.py: 0
+    tests/test_constants.py: 0
+    tests/test_integration.py: 0
+    tests/test_golden_pipeline.py: 0
+    tests/test_pressure.py: 0
     tests/test_binary_deadline.py: 0
+    tests/test_eisenhower.py: 0
+    tests/test_monte_carlo.py: 0
     tests/test_types.py: 0
+    tests/test_triage.py: 0
+    tests/test_init.py: 0
   out_degree:
-    tests/test_golden_pipeline.py: 103
+    tests/test_golden_pipeline.py: 98
     tidewatch/__init__.py: 5
     tidewatch/pressure.py: 5
     tests/test_benchmarks.py: 4
     tests/test_pressure.py: 4
-    tests/test_planner.py: 3
-    benchmarks/baselines/__init__.py: 3
+    benchmarks/monte_carlo.py: 4
     tests/test_property_pressure.py: 3
+    tests/test_planner.py: 3
     benchmarks/run.py: 3
-    tests/test_monte_carlo.py: 2
-    tests/test_triage.py: 2
-    tests/test_eisenhower.py: 2
-    tests/conftest.py: 2
-    benchmarks/monte_carlo.py: 2
-    tests/test_integration.py: 2
-    scripts/generate_paper_figures.py: 2
+    benchmarks/baselines/__init__.py: 3
     tests/test_run.py: 2
     tidewatch/types.py: 2
+    tests/conftest.py: 2
+    tests/test_integration.py: 2
+    scripts/generate_paper_figures.py: 2
+    tests/test_eisenhower.py: 2
     tidewatch/planner.py: 2
+    tests/test_monte_carlo.py: 2
+    tests/test_triage.py: 2
     tidewatch/components.py: 2
+    benchmarks/metrics.py: 1
     tidewatch/triage.py: 1
+    tests/test_cognitive_bandwidth.py: 1
     tests/test_baselines.py: 1
-    benchmarks/baselines/eisenhower.py: 1
-    benchmarks/datasets/generate_obligations.py: 1
     tests/test_metrics.py: 1
-    tests/test_init.py: 1
     tests/test_generate_obligations.py: 1
     tests/test_linear_urgency.py: 1
-    tests/test_constants.py: 1
-    benchmarks/metrics.py: 1
     tests/test_generate_paper_figures.py: 1
-    tests/test_cognitive_bandwidth.py: 1
+    tests/test_constants.py: 1
     tests/test_binary_deadline.py: 1
+    benchmarks/baselines/eisenhower.py: 1
+    benchmarks/datasets/generate_obligations.py: 1
     tests/test_types.py: 1
+    tests/test_init.py: 1
     benchmarks/baselines/linear_urgency.py: 0
-    benchmarks/baselines/binary_deadline.py: 0
     benchmarks/constants.py: 0
     tidewatch/constants.py: 0
+    benchmarks/baselines/binary_deadline.py: 0
     scripts/constants.py: 0
   betweenness_centrality:
     tidewatch/__init__.py: 41.0
     benchmarks/run.py: 18.0
     benchmarks/baselines/__init__.py: 13.0
-    tidewatch/types.py: 9.533333333333337
-    tidewatch/pressure.py: 7.833333333333335
-    benchmarks/datasets/generate_obligations.py: 3.8846153846153846
-    benchmarks/metrics.py: 2.0769230769230766
-    benchmarks/baselines/eisenhower.py: 2.0384615384615383
-    benchmarks/monte_carlo.py: 2.0
+    tidewatch/types.py: 9.533333333333335
+    tidewatch/pressure.py: 7.833333333333334
+    benchmarks/datasets/generate_obligations.py: 4.0
+    benchmarks/baselines/eisenhower.py: 2.05
     scripts/generate_paper_figures.py: 2.0
+    benchmarks/monte_carlo.py: 2.0
     tidewatch/planner.py: 1.9833333333333332
+    benchmarks/metrics.py: 1.95
     tidewatch/components.py: 1.65
-    benchmarks/baselines/linear_urgency.py: 0.0
-    tests/test_monte_carlo.py: 0.0
-    benchmarks/baselines/binary_deadline.py: 0.0
-    tests/test_benchmarks.py: 0.0
-    tests/test_triage.py: 0.0
-    tidewatch/triage.py: 0.0
-    tests/test_baselines.py: 0.0
-    tests/test_planner.py: 0.0
-    tests/test_golden_pipeline.py: 0.0
     tests/test_property_pressure.py: 0.0
-    tests/test_pressure.py: 0.0
-    tests/test_metrics.py: 0.0
-    tests/test_init.py: 0.0
-    tests/test_eisenhower.py: 0.0
+    tests/test_run.py: 0.0
+    tidewatch/triage.py: 0.0
+    tests/test_cognitive_bandwidth.py: 0.0
     tests/conftest.py: 0.0
+    tests/test_baselines.py: 0.0
+    tests/test_metrics.py: 0.0
+    tests/test_planner.py: 0.0
+    tests/test_benchmarks.py: 0.0
     tests/test_generate_obligations.py: 0.0
     tests/test_linear_urgency.py: 0.0
-    tests/test_integration.py: 0.0
-    benchmarks/constants.py: 0.0
-    tests/test_constants.py: 0.0
-    tests/test_run.py: 0.0
     tests/test_generate_paper_figures.py: 0.0
-    tests/test_cognitive_bandwidth.py: 0.0
+    benchmarks/baselines/linear_urgency.py: 0.0
+    tests/test_constants.py: 0.0
+    tests/test_integration.py: 0.0
+    tests/test_golden_pipeline.py: 0.0
+    tests/test_pressure.py: 0.0
     tests/test_binary_deadline.py: 0.0
+    benchmarks/constants.py: 0.0
+    tests/test_eisenhower.py: 0.0
     tidewatch/constants.py: 0.0
-    scripts/constants.py: 0.0
+    tests/test_monte_carlo.py: 0.0
+    benchmarks/baselines/binary_deadline.py: 0.0
     tests/test_types.py: 0.0
+    tests/test_triage.py: 0.0
+    scripts/constants.py: 0.0
+    tests/test_init.py: 0.0
   orphans: []
   clusters:
   - - benchmarks/baselines/__init__.py
@@ -2494,45 +2507,45 @@ graph:
     - tidewatch/types.py
     - tidewatch/constants.py
   hub_score:
-    tidewatch/__init__.py: 123.0
-    tests/test_golden_pipeline.py: 103.0
-    tidewatch/types.py: 25.53333333333334
+    tidewatch/__init__.py: 124.0
+    tests/test_golden_pipeline.py: 98.0
+    tidewatch/types.py: 26.533333333333335
     benchmarks/run.py: 23.0
-    tidewatch/pressure.py: 20.833333333333336
-    benchmarks/metrics.py: 20.076923076923077
+    tidewatch/pressure.py: 21.833333333333336
+    benchmarks/datasets/generate_obligations.py: 19.0
     benchmarks/baselines/__init__.py: 19.0
-    benchmarks/datasets/generate_obligations.py: 18.884615384615383
+    benchmarks/metrics.py: 13.95
     tidewatch/constants.py: 10.0
+    benchmarks/monte_carlo.py: 7.0
     tidewatch/planner.py: 6.983333333333333
     tidewatch/components.py: 6.65
-    benchmarks/baselines/eisenhower.py: 6.038461538461538
-    benchmarks/monte_carlo.py: 5.0
+    benchmarks/baselines/eisenhower.py: 6.05
     scripts/generate_paper_figures.py: 5.0
     tests/test_benchmarks.py: 4.0
     tests/test_pressure.py: 4.0
     benchmarks/constants.py: 4.0
-    benchmarks/baselines/linear_urgency.py: 3.0
-    benchmarks/baselines/binary_deadline.py: 3.0
+    tests/test_property_pressure.py: 3.0
     tidewatch/triage.py: 3.0
     tests/test_planner.py: 3.0
-    tests/test_property_pressure.py: 3.0
-    tests/test_monte_carlo.py: 2.0
-    tests/test_triage.py: 2.0
-    tests/test_eisenhower.py: 2.0
+    benchmarks/baselines/linear_urgency.py: 3.0
+    benchmarks/baselines/binary_deadline.py: 3.0
+    tests/test_run.py: 2.0
     tests/conftest.py: 2.0
     tests/test_integration.py: 2.0
-    tests/test_run.py: 2.0
+    tests/test_eisenhower.py: 2.0
+    tests/test_monte_carlo.py: 2.0
+    tests/test_triage.py: 2.0
+    tests/test_cognitive_bandwidth.py: 1.0
     tests/test_baselines.py: 1.0
     tests/test_metrics.py: 1.0
-    tests/test_init.py: 1.0
     tests/test_generate_obligations.py: 1.0
     tests/test_linear_urgency.py: 1.0
-    tests/test_constants.py: 1.0
     tests/test_generate_paper_figures.py: 1.0
-    tests/test_cognitive_bandwidth.py: 1.0
+    tests/test_constants.py: 1.0
     tests/test_binary_deadline.py: 1.0
-    scripts/constants.py: 1.0
     tests/test_types.py: 1.0
+    scripts/constants.py: 1.0
+    tests/test_init.py: 1.0
   external_imports:
     benchmarks/baselines/__init__.py:
     - __future__
@@ -2640,8 +2653,8 @@ graph:
     - enum
     - dataclasses
     - datetime
-  resolution_rate: 0.678714859437751
-  resolved_import_count: 169
+  resolution_rate: 0.6747967479674797
+  resolved_import_count: 166
   external_import_count: 80
 purpose:
   archetype:
@@ -2649,12 +2662,12 @@ purpose:
   - analytics-harness
   - scoring-engine+cognitivecontext
   archetype_scores:
-    scoring-engine: 59
+    scoring-engine: 60
     analytics-harness: 56
     agent-loop: 10
     analysis-tool: 8
     cli-tool: 6
-    scoring-engine+cognitivecontext: 59
+    scoring-engine+cognitivecontext: 60
   purpose_statement: tidewatch is a mathematical scoring, ranking, or pressure model + statistical analysis, benchmarking,
     or data science workbench, with capabilities including Cognitive Context, NumPy numerical computing, Obligation, Pressure
     Components, Pressure Result, communicating via grpc, http, stdin-stdout.
@@ -2676,8 +2689,8 @@ purpose:
   architectural_notes:
   - 'Repo also scores highly as: agent-loop, analysis-tool, cli-tool. This suggests a composite system spanning multiple architectural
     patterns.'
-  - Strong test presence (21/74 files).
-  - Critical hub file 'tidewatch/__init__.py' (score 123.0) has no corresponding test file.
+  - Strong test presence (21/92 files).
+  - Critical hub file 'tidewatch/__init__.py' (score 124.0) has no corresponding test file.
   declared_capabilities:
   - analytics-harness
   - library
@@ -2775,9 +2788,9 @@ assumptions:
         \ P1: Baseline integrity (F6, F15) — DONE\n  [P0][in_progress] P1: Speculative planner honest scoping (F8) — DONE\n\
         \  [P0][in_progress] P1: Bandwidth risk tiers — replace binary hard-floor (F5, F9)\n  [P1][open] tidewatch: repeated_pattern\
         \ — 4 finding(s) [low-confidence]\nRelated memories (10):\n  [event] Sentinel recent git commits:\nc783f23 2026-03-17\
-        \ fix: auto-detect WSL2 gateway IP for MSSQL connectio\n  [event] Sentinel recent git commits:\n812f408 2026-03-17\
-        \ fix: lint — sort imports in inference plugin and bud\n  [event] Sentinel recent git commits:\ne742135 2026-03-17\
-        \ feat: redesign autobot approval Telegram notificatio"
+        \ fix: auto-detect WSL2 gateway IP for MSSQL connectio\n  [event] Sentinel recent git commits:\ne742135 2026-03-17\
+        \ feat: redesign autobot approval Telegram notificatio\n  [event] Sentinel recent git commits:\n6acc5fa 2026-03-17\
+        \ feat: separate approval chat for Telegram, EVOLVE va"
       obligations_found: 8
       memories_found: 10
       scoring: raw_mssql
@@ -2888,42 +2901,44 @@ assumptions:
       scoring: raw_mssql
     domain: tidewatch
   - file: benchmarks/monte_carlo.py
-    line: 195
+    line: 242
     category: mapping_assumption
     severity: medium
     severity_rank: 1
-    code: "STRATEGIES: dict[str, str] = {\n    \"tidewatch\": \"Tidewatch pressure ranking\",\n    \"edf\": \"Earliest deadline\
-      \ first\",\n    \"fifo\": \"First-in first-out\",\n    \"random\": \"Random order (null hypothesis)\",\n    ..."
-    note: Mapping 'STRATEGIES' with 4 entries — assumes complete domain coverage
+    code: "STRATEGIES: dict[str, str] = {\n    \"tidewatch\": \"Tidewatch pressure ranking\",\n    \"tidewatch_bw_full\":\
+      \ \"Tidewatch + bandwidth (b=1.0)\",\n    \"tidewatch_bw_mid\": \"Tidewatch + bandwidth (b=0.5)\",\n    \"tidewatch_bw_low\"\
+      : \"Tidewatch + bandwidth (b=0.2)\",\n    ..."
+    note: Mapping 'STRATEGIES' with 8 entries — assumes complete domain coverage
     remediation_context:
       context_text: "Related obligations (8):\n  [P0][open] P2: Abstract rewrite + documentation (F10, F14, F15)\n  [P0][in_progress]\
         \ P1: Baseline integrity (F6, F15) — DONE\n  [P0][in_progress] P1: Speculative planner honest scoping (F8) — DONE\n\
         \  [P0][in_progress] P1: Bandwidth risk tiers — replace binary hard-floor (F5, F9)\n  [P1][open] tidewatch: repeated_pattern\
-        \ — 4 finding(s) [low-confidence]\nRelated memories (10):\n  [event] Sentinel recent git commits:\nc783f23 2026-03-17\
-        \ fix: auto-detect WSL2 gateway IP for MSSQL connectio\n  [event] Sentinel recent git commits:\n812f408 2026-03-17\
-        \ fix: lint — sort imports in inference plugin and bud\n  [event] Sentinel recent git commits:\ne742135 2026-03-17\
+        \ — 4 finding(s) [low-confidence]\nRelated memories (10):\n  [event] Sentinel recent git commits:\n812f408 2026-03-17\
+        \ fix: lint — sort imports in inference plugin and bud\n  [event] Sentinel recent git commits:\nc783f23 2026-03-17\
+        \ fix: auto-detect WSL2 gateway IP for MSSQL connectio\n  [event] Sentinel recent git commits:\ne742135 2026-03-17\
         \ feat: redesign autobot approval Telegram notificatio"
       obligations_found: 8
       memories_found: 10
       scoring: raw_mssql
     domain: tidewatch
   - file: benchmarks/monte_carlo.py
-    line: 204
+    line: 255
     category: mapping_assumption
     severity: medium
     severity_rank: 1
     code: "_STRATEGY_DISPATCH: dict[str, callable] = {\n    \"tidewatch\": lambda obs, now, rng: _tidewatch_order(obs, now),\n\
-      \    \"edf\": lambda obs, now, rng: _deadline_order(obs, now),\n    \"fifo\": lambda obs, now, rng: _fifo_order(obs,\
-      \ now),\n    \"random\": lambda obs, now, rng: _random_order(obs, now, rng),\n    ..."
-    note: Mapping '_STRATEGY_DISPATCH' with 4 entries — assumes complete domain coverage
+      \    \"tidewatch_bw_full\": lambda obs, now, rng: _tidewatch_bandwidth_order(obs, now, 1.0),\n    \"tidewatch_bw_mid\"\
+      : lambda obs, now, rng: _tidewatch_bandwidth_order(obs, now, 0.5),\n    \"tidewatch_bw_low\": lambda obs, now, rng:\
+      \ _tidewatch_bandwidth_order(obs, now, 0.2),\n    ..."
+    note: Mapping '_STRATEGY_DISPATCH' with 8 entries — assumes complete domain coverage
     remediation_context:
       context_text: "Related obligations (8):\n  [P0][open] P2: Abstract rewrite + documentation (F10, F14, F15)\n  [P0][in_progress]\
         \ P1: Baseline integrity (F6, F15) — DONE\n  [P0][in_progress] P1: Speculative planner honest scoping (F8) — DONE\n\
         \  [P0][in_progress] P1: Bandwidth risk tiers — replace binary hard-floor (F5, F9)\n  [P1][open] tidewatch: repeated_pattern\
-        \ — 4 finding(s) [low-confidence]\nRelated memories (10):\n  [event] Sentinel recent git commits:\nc783f23 2026-03-17\
-        \ fix: auto-detect WSL2 gateway IP for MSSQL connectio\n  [event] Sentinel recent git commits:\n812f408 2026-03-17\
+        \ — 4 finding(s) [low-confidence]\nRelated memories (10):\n  [event] Sentinel recent git commits:\n812f408 2026-03-17\
         \ fix: lint — sort imports in inference plugin and bud\n  [event] Sentinel recent git commits:\ne742135 2026-03-17\
-        \ feat: redesign autobot approval Telegram notificatio"
+        \ feat: redesign autobot approval Telegram notificatio\n  [event] Sentinel recent git commits:\nc783f23 2026-03-17\
+        \ fix: auto-detect WSL2 gateway IP for MSSQL connectio"
       obligations_found: 8
       memories_found: 10
       scoring: raw_mssql
@@ -2988,14 +3003,14 @@ viewpoints:
             \  [P0][in_progress] P1: Bandwidth risk tiers — replace binary hard-floor (F5, F9)\n  [P1][open] tidewatch: repeated_pattern\
             \ — 4 finding(s) [low-confidence]\nRelated memories (10):\n  [email] Email from msonlineservicesteam@microsoftonline.com:\
             \ Permian Resources account email verification co\n  [email] Email from Rigzone Daily News: Analysts Warn of Largest\
-            \ Oil Supply Disruption in History (2026-03-03\n  [email] Email from Rigzone Daily News: War Creating Most Severe\
-            \ Energy Disruption Since 1970s (2026-03-11 21"
+            \ Oil Supply Disruption in History (2026-03-03\n  [email] Email from Daily Beast: AM Digest: MAGA Melts Down Over\
+            \ Hours-Long Airport Lines (2026-03-09 07:12:5"
           obligations_found: 8
           memories_found: 10
           scoring: raw_mssql
         domain: sentinel
       - file: benchmarks/monte_carlo.py
-        line: 228
+        line: 283
         severity: medium
         observation: '_run_trial(): 70 lines'
         recommendation: Consider decomposing into smaller functions
@@ -3006,14 +3021,14 @@ viewpoints:
             \  [P0][in_progress] P1: Bandwidth risk tiers — replace binary hard-floor (F5, F9)\n  [P1][open] tidewatch: repeated_pattern\
             \ — 4 finding(s) [low-confidence]\nRelated memories (10):\n  [email] Email from msonlineservicesteam@microsoftonline.com:\
             \ Permian Resources account email verification co\n  [email] Email from Rigzone Daily News: Analysts Warn of Largest\
-            \ Oil Supply Disruption in History (2026-03-03\n  [email] Email from Daily Beast: AM Digest: MAGA Melts Down Over\
-            \ Hours-Long Airport Lines (2026-03-09 07:12:5"
+            \ Oil Supply Disruption in History (2026-03-03\n  [email] Email from Business Insider: The top stories you missed\
+            \ this week (2026-03-10 18:05:15). BI Catch up"
           obligations_found: 8
           memories_found: 10
           scoring: raw_mssql
         domain: tidewatch
       - file: benchmarks/monte_carlo.py
-        line: 300
+        line: 355
         severity: medium
         observation: 'run_monte_carlo(): 54 lines'
         recommendation: Consider decomposing into smaller functions
@@ -3031,7 +3046,7 @@ viewpoints:
           scoring: raw_mssql
         domain: tidewatch
       - file: benchmarks/monte_carlo.py
-        line: 482
+        line: 537
         severity: medium
         observation: 'run_des_simulation(): 81 lines'
         recommendation: Consider decomposing into smaller functions
@@ -3041,9 +3056,9 @@ viewpoints:
             \ P1: Baseline integrity (F6, F15) — DONE\n  [P0][in_progress] P1: Speculative planner honest scoping (F8) — DONE\n\
             \  [P0][in_progress] P1: Bandwidth risk tiers — replace binary hard-floor (F5, F9)\n  [P1][open] tidewatch: repeated_pattern\
             \ — 4 finding(s) [low-confidence]\nRelated memories (10):\n  [email] Email from msonlineservicesteam@microsoftonline.com:\
-            \ Permian Resources account email verification co\n  [email] Email from Rigzone Daily News: Analysts Warn of Largest\
-            \ Oil Supply Disruption in History (2026-03-03\n  [email] Email from Rigzone Daily News: War Creating Most Severe\
-            \ Energy Disruption Since 1970s (2026-03-11 21"
+            \ Permian Resources account email verification co\n  [email] Email from Rigzone Daily News: War Creating Most\
+            \ Severe Energy Disruption Since 1970s (2026-03-11 21\n  [email] Email from Business Insider: The top stories\
+            \ you missed this week (2026-03-10 18:05:15). BI Catch up"
           obligations_found: 8
           memories_found: 10
           scoring: raw_mssql
@@ -3077,9 +3092,9 @@ viewpoints:
             \ P1: Baseline integrity (F6, F15) — DONE\n  [P0][in_progress] P1: Speculative planner honest scoping (F8) — DONE\n\
             \  [P0][in_progress] P1: Bandwidth risk tiers — replace binary hard-floor (F5, F9)\n  [P1][open] tidewatch: repeated_pattern\
             \ — 4 finding(s) [low-confidence]\nRelated memories (10):\n  [email] Email from msonlineservicesteam@microsoftonline.com:\
-            \ Permian Resources account email verification co\n  [email] Email from Rigzone Daily News: Analysts Warn of Largest\
-            \ Oil Supply Disruption in History (2026-03-03\n  [email] Email from Daily Beast: AM Digest: MAGA Melts Down Over\
-            \ Hours-Long Airport Lines (2026-03-09 07:12:5"
+            \ Permian Resources account email verification co\n  [email] Email from Rigzone Daily News: War Creating Most\
+            \ Severe Energy Disruption Since 1970s (2026-03-11 21\n  [email] Email from Rigzone Daily News: Attention Shifting\
+            \ to Kharg Island (2026-03-09 21:18:48). RIGZONE DAI"
           obligations_found: 8
           memories_found: 10
           scoring: raw_mssql
@@ -3147,59 +3162,41 @@ viewpoints:
     test_adequacy:
       display_name: Test Adequacy
       viewpoint_type: hybrid
-      findings:
-      - file: tidewatch/components.py
-        line: 0
-        severity: medium
-        observation: 'No test file for ''tidewatch/components.py'' (hub score: 6.7)'
-        recommendation: Add test coverage, especially for structural hub files
-        viewpoint: test_adequacy
-        remediation_context:
-          context_text: "Related obligations (8):\n  [P0][open] P2: Abstract rewrite + documentation (F10, F14, F15)\n  [P0][in_progress]\
-            \ P1: Baseline integrity (F6, F15) — DONE\n  [P0][in_progress] P1: Speculative planner honest scoping (F8) — DONE\n\
-            \  [P0][in_progress] P1: Bandwidth risk tiers — replace binary hard-floor (F5, F9)\n  [P1][open] tidewatch: repeated_pattern\
-            \ — 4 finding(s) [low-confidence]\nRelated memories (10):\n  [email] Email from Semafor Flagship: \U0001F7E1 Testing\
-            \ trade ties (2025-08-27 09:48:18)\n  [event] Sentinel recent git commits:\n812f408 2026-03-17 fix: lint — sort\
-            \ imports in inference plugin and bud\n  [email] Email from There's An AI For That: Alert - Agents: 1 new AI (2026-01-26\
-            \ 17:21:00). Chatbots, Prompts"
-          obligations_found: 8
-          memories_found: 10
-          scoring: raw_mssql
-        domain: tidewatch
-      summary: 'Test Adequacy: 1 finding(s) (0 high, 1 medium, 0 low).'
+      findings: []
+      summary: No issues found from Test Adequacy perspective.
   viewpoints_loaded: 24
   analysis_completeness: *id001
   confidence: 0.41379310344827586
 timing:
-  total_s: 81.6419
+  total_s: 82.1989
   steps:
   - step: scan
-    elapsed_s: 0.0623
+    elapsed_s: 0.0653
   - step: llm_decision
-    elapsed_s: 0.0688
+    elapsed_s: 0.0609
   - step: sovereignty
-    elapsed_s: 0.0015
+    elapsed_s: 0.0014
   - step: graph
-    elapsed_s: 0.0009
+    elapsed_s: 0.0016
   - step: purpose
-    elapsed_s: 0.0499
+    elapsed_s: 0.0902
   - step: coherence
-    elapsed_s: 0.0003
+    elapsed_s: 0.0004
   - step: abstraction
-    elapsed_s: 0.0291
+    elapsed_s: 0.0332
   - step: assumptions
-    elapsed_s: 0.0492
+    elapsed_s: 0.0523
   - step: hubris
-    elapsed_s: 0.0368
+    elapsed_s: 0.0345
   - step: integration
-    elapsed_s: 0.0564
+    elapsed_s: 0.0664
   - step: viewpoints_load
-    elapsed_s: 0.0674
+    elapsed_s: 0.0021
   - step: viewpoints_ast
-    elapsed_s: 0.1583
+    elapsed_s: 0.1794
   - step: viewpoints_save
-    elapsed_s: 0.0097
+    elapsed_s: 0.0111
   - step: remediation_context
-    elapsed_s: 4.1512
+    elapsed_s: 4.2527
   - step: redteam
-    elapsed_s: 0.7654
+    elapsed_s: 1.0134

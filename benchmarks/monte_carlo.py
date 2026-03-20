@@ -235,6 +235,19 @@ def _tidewatch_bandwidth_order(
     return indices
 
 
+def _tidewatch_bandwidth_variable_order(
+    obligations: list[Obligation], now: datetime, rng: np.random.Generator,
+) -> list[int]:
+    """Order by tidewatch pressure with per-trial sampled bandwidth (#1188).
+
+    Bandwidth is sampled from Beta(2, 3) → mean ≈ 0.4, range [0, 1].
+    This models real cognitive degradation: bandwidth fluctuates per session
+    rather than being fixed across all trials.
+    """
+    bandwidth = float(rng.beta(2.0, 3.0))
+    return _tidewatch_bandwidth_order(obligations, now, bandwidth)
+
+
 def _weighted_sum_order(obligations: list[Obligation], now: datetime) -> list[int]:
     """Order by normalized weighted-sum of component space (MCDM baseline, #1185).
 
@@ -278,7 +291,8 @@ STRATEGIES: dict[str, str] = {
     "tidewatch_bw_full": "Tidewatch + bandwidth (b=1.0)",
     "tidewatch_bw_mid": "Tidewatch + bandwidth (b=0.5)",
     "tidewatch_bw_low": "Tidewatch + bandwidth (b=0.2)",
-    "weighted_sum": "Weighted-sum MCDM (equal weights)",
+    "tidewatch_bw_variable": "Tidewatch + variable bandwidth (Beta(2,3) per trial, #1188)",
+    "weighted_sum": "Weighted-sum MCDM (equal weights, normalized)",
     "edf": "Earliest deadline first",
     "fifo": "First-in first-out",
     "random": "Random order (null hypothesis)",
@@ -291,6 +305,7 @@ _STRATEGY_DISPATCH: dict[str, callable] = {
     "tidewatch_bw_full": lambda obs, now, rng: _tidewatch_bandwidth_order(obs, now, 1.0),
     "tidewatch_bw_mid": lambda obs, now, rng: _tidewatch_bandwidth_order(obs, now, 0.5),
     "tidewatch_bw_low": lambda obs, now, rng: _tidewatch_bandwidth_order(obs, now, 0.2),
+    "tidewatch_bw_variable": lambda obs, now, rng: _tidewatch_bandwidth_variable_order(obs, now, rng),
     "weighted_sum": lambda obs, now, rng: _weighted_sum_order(obs, now),
     "edf": lambda obs, now, rng: _deadline_order(obs, now),
     "fifo": lambda obs, now, rng: _fifo_order(obs, now),

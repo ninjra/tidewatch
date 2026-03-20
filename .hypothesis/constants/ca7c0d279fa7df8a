@@ -1,0 +1,4 @@
+# file: /home/justi/projects/tidewatch/benchmarks/monte_carlo.py
+# hypothesis_version: 6.151.9
+
+[0.0, 1e-10, 0.2, 0.3, 0.5, 0.6, 0.8, 1.0, 1.5, 2.0, 8.0, 3600.0, 200, 'First-in first-out', 'ProcessProfile', 'admin', 'attention_efficiency', 'completion_damp', 'dependency_amp', 'edf', 'engineering', 'fifo', 'financial', 'legal', 'materiality', 'mean', 'missed_deadline_rate', 'n_trials', 'ops', 'queue_inversion_rate', 'random', 'space', 'std', 'strategy', 'tidewatch', 'tidewatch_bw_full', 'tidewatch_bw_low', 'tidewatch_bw_mid', 'time_pressure', 'timing_amp', 'violation_amp', 'weighted_collapse', 'weighted_sum']

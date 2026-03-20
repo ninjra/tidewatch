@@ -1,0 +1,4 @@
+# file: /home/justi/projects/gravitas/gravitas/adapters.py
+# hypothesis_version: 6.151.9
+
+[0.0, 'access_count', 'attendees', 'body', 'calendar', 'category', 'confidence', 'content', 'created_at', 'date', 'desc', 'description', 'due_date', 'email', 'event', 'fact', 'from', 'id', 'interaction', 'interaction_count', 'labels', 'last_accessed', 'little', 'location', 'name', 'obligation', 'priority', 'read', 'repo', 'significance', 'snippet', 'source_ref', 'start', 'status', 'subject', 'summary', 'text', 'title', 'updated_at', 'utf-8']

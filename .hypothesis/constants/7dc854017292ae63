@@ -1,0 +1,4 @@
+# file: /home/justi/projects/gravitas/gravitas/io.py
+# hypothesis_version: 6.151.9
+
+['.tmp', 'checksum', 'payload', 'utf-8', 'w', 'wb']

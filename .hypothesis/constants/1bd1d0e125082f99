@@ -1,0 +1,4 @@
+# file: /home/justi/projects/gravitas/gravitas/obligation_ranker.py
+# hypothesis_version: 6.151.9
+
+[0.0, 0.1, 0.2, 0.35, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 100.0, 'automation', 'blocked', 'blocker_count', 'category', 'completion_pct', 'data_pipeline', 'dependency', 'documentation', 'domain', 'engineering', 'id', 'in_progress', 'infrastructure', 'integration', 'last_updated', 'monitoring', 'open', 'operations', 'pending_review', 'planned', 'priority', 'reference_data', 'repo', 'security', 'source_ref', 'status', 'title', 'updated_at', 'ux']

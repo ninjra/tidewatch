@@ -1,0 +1,4 @@
+# file: /home/justi/projects/statistics_harness/statistics_harness/src/statistic_harness/core/des_engine.py
+# hypothesis_version: 6.151.9
+
+[0.0, 0.01, 0.1, 1.0, 60.0, '1', 'true', 'unknown', 'yes']

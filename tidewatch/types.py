@@ -105,6 +105,8 @@ class Obligation:
     completion_source: str | None = None      # Who/what set completion_pct (e.g., "sentinel:autobot", "human:manual")
     completion_updated_at: datetime | None = None  # When completion_pct was last changed
     dependency_source: str | None = None      # How dependency_count was derived (e.g., "mssql:dep_chain", "manual")
+    # Dependency urgency propagation (#1180) — caller populates from dep chain
+    earliest_dependent_deadline: datetime | None = None  # Earliest deadline among this obligation's dependents
 
 
 # --- Pressure result ---
