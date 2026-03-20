@@ -45,7 +45,7 @@ def run_baseline(name: str, obligations_data: list[dict]) -> list[float]:
     ]
 
 
-def main():
+def main(now: datetime | None = None):
     parser = argparse.ArgumentParser(description="Run Tidewatch benchmarks")
     parser.add_argument("--suite", choices=["all", "pressure", "baselines"], default="all")
     parser.add_argument("--n", type=int, default=DEFAULT_N)
@@ -54,7 +54,8 @@ def main():
 
     print(f"Generating {args.n} obligations (seed={args.seed})...")
     data = generate(n=args.n, seed=args.seed)
-    now = datetime.now(UTC)
+    if now is None:
+        now = datetime.now(UTC)
 
     print("\n--- Tidewatch ---")
     tw_scores = run_tidewatch(data, now)

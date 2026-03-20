@@ -180,20 +180,24 @@ class SpeculativePlanner:
         self,
         plan_request: PlanRequest,
         plan_text: str,
+        now: datetime | None = None,
     ) -> PlanResult:
         """Wrap LLM output in a PlanResult.
 
         Inputs:
           plan_request: the PlanRequest that was sent to the LLM
           plan_text: the raw LLM output
+          now: timestamp for the plan (default: UTC now)
 
         Outputs:
           PlanResult with obligation metadata and plan text
         """
+        if now is None:
+            now = datetime.now(UTC)
         return PlanResult(
             obligation_id=plan_request.obligation.id,
             plan_text=plan_text,
             zone=plan_request.pressure_result.zone,
             pressure=plan_request.pressure_result.pressure,
-            created_at=datetime.now(UTC),
+            created_at=now,
         )

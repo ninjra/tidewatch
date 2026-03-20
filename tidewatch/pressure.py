@@ -267,12 +267,13 @@ def export_pressure_summary(results: list[PressureResult]) -> dict:
     }
 
 
-def _is_hard_floor(ob: Obligation) -> bool:
+def _is_hard_floor(ob: Obligation, now: datetime | None = None) -> bool:
     """Binding deadline: explicit flag OR domain heuristic."""
     if ob.hard_floor:
         return True
     if ob.domain and ob.domain.lower() in HARD_FLOOR_DOMAINS and ob.due_date is not None:
-        now = datetime.now(UTC)
+        if now is None:
+            now = datetime.now(UTC)
         days = _days_remaining(ob.due_date, now)
         if days <= HARD_FLOOR_DAYS_THRESHOLD:
             return True

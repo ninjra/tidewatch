@@ -174,8 +174,9 @@ DECOMP = DecompositionScenario()
 BW = BandwidthScenario()
 BASE = BaselineScenario()
 
-# Sensitivity k values (§4.2) — each mapped to a distinct zone color for visual clarity
+# Sensitivity k values (§4.2)
 SENSITIVITY_K_VALUES = [2, 3, 4, 5]
+# Each k mapped to a distinct zone color for visual clarity in the sensitivity figure
 SENSITIVITY_K_COLORS = [COLORS["green"], COLORS["blue"], COLORS["orange"], COLORS["red"]]
 
 

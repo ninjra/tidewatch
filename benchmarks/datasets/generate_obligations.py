@@ -57,6 +57,7 @@ def generate(
     n: int = 1000,
     seed: int = 42,
     config: SOBConfig | None = None,
+    now: datetime | None = None,
 ) -> list[dict]:
     """Generate n synthetic obligations.
 
@@ -64,6 +65,7 @@ def generate(
       n: number of obligations
       seed: random seed for reproducibility
       config: generation parameters (defaults if None)
+      now: reference time for due_date generation (default: UTC now)
 
     Outputs:
       list of obligation dicts with ground-truth optimal_attention_days
@@ -73,7 +75,8 @@ def generate(
 
     rng = random.Random(seed)
     obligations = []
-    now = datetime.now(UTC)
+    if now is None:
+        now = datetime.now(UTC)
 
     for i in range(n):
         domain = rng.choice(DOMAINS)
