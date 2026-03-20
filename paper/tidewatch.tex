@@ -78,7 +78,7 @@ wearable-derived physiological signals (sleep quality, pain level, HRV
 trend) to surface lower-demand tasks when operator bandwidth is
 reduced, governed by a three-tier risk classification that prevents
 binding deadlines from being suppressed.  We validate the framework
-with 540 deterministic and property-based tests---including 23
+with 541 deterministic and property-based tests---including 23
 Hypothesis-driven bounds-and-monotonicity checks---factor ablation,
 and Monte Carlo scheduling simulations against earliest-deadline-first
 (EDF), FIFO, and random baselines.  Across workload scales ($N{=}50$,
@@ -88,7 +88,7 @@ rates; against na\"{\i}ve baselines it reduces missed deadlines by
 $35$--$47\%$.  Under simulation, bandwidth reranking at reduced
 capacity ($b{=}0.5$) slightly improves deadline compliance, and
 product collapse outperforms weighted-sum MCDM by $23\%$ on
-missed deadlines.  The implementation comprises 1{,}599 lines of
+missed deadlines.  The implementation comprises 1{,}663 lines of
 pure-stdlib Python with zero runtime dependencies.  All scoring
 functions ship with golden-value regression tests verified to
 $\Delta < 10^{-10}$, establishing deterministic reproducibility as a
@@ -600,7 +600,7 @@ Tidewatch is implemented in Python~3.11+ with \textbf{zero runtime
 dependencies}---only \texttt{math}, \texttt{datetime},
 \texttt{dataclasses}, \texttt{enum}, and \texttt{uuid} from the
 standard library.
-The core library comprises 1{,}599 lines across seven modules:
+The core library comprises 1{,}663 lines across seven modules:
 
 \begin{table}[t]
 \centering
@@ -610,15 +610,15 @@ The core library comprises 1{,}599 lines across seven modules:
 \toprule
 \textbf{Module} & \textbf{Lines} \\
 \midrule
-\texttt{pressure.py}   & 499 \\
-\texttt{types.py}      & 279 \\
-\texttt{components.py} & 240 \\
+\texttt{pressure.py}   & 522 \\
+\texttt{types.py}      & 286 \\
+\texttt{components.py} & 242 \\
+\texttt{constants.py}  & 234 \\
 \texttt{planner.py}    & 219 \\
-\texttt{constants.py}  & 202 \\
 \texttt{triage.py}     & 114 \\
 \texttt{\_\_init\_\_.py} & 46 \\
 \midrule
-\textbf{Total}         & \textbf{1{,}599} \\
+\textbf{Total}         & \textbf{1{,}663} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -690,7 +690,7 @@ T_{\text{amp}} \times V_{\text{amp}})$ holds to $10^{-15}$ tolerance,
 confirming no hidden rounding between factor computation and final
 aggregation.
 
-The full test suite comprises 540 tests organized into 21
+The full test suite comprises 541 tests organized into 21
 deterministic gates covering the API surface, type construction,
 constant values, pressure computation, edge cases, input validation,
 zone classification, batch operations, planning, triage, and
@@ -948,7 +948,7 @@ ensures that the right task surfaces for the operator's current
 capacity---not just the most urgent one, but the most urgent one
 they can execute.
 
-At 1{,}599 lines with zero dependencies and 537 deterministic tests,
+At 1{,}663 lines with zero dependencies and 541 deterministic tests,
 Tidewatch demonstrates that useful prioritization infrastructure
 does not require complexity.
 It requires the right equation.
