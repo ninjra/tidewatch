@@ -146,14 +146,18 @@ def _temporal_gate(days_remaining: float) -> float:
     """Compute temporal gate for dependency fanout (§3.2).
 
     temporal_gate(t) = 1 - exp(-FANOUT_TEMPORAL_K / t)   for t > 0
-    temporal_gate(t) = 1.0                                for t <= 0 (overdue)
+    temporal_gate(t) = OVERDUE_PRESSURE                   for t <= 0 (overdue)
 
     Dependencies amplify pressure only when the deadline is close enough
     that cascading failure risk is material. When slack is large, the system
     can absorb dependency-chain delays. See constants.py for full derivation.
+
+    The overdue return (OVERDUE_PRESSURE = 1.0) is a domain ceiling:
+    once a deadline passes, dependency risk has fully materialized and the
+    gate must be at maximum. This is not an approximation.
     """
     if days_remaining <= 0:
-        return 1.0
+        return OVERDUE_PRESSURE
     return 1.0 - _exponential(-FANOUT_TEMPORAL_K / max(days_remaining, DIVISION_GUARD))
 
 

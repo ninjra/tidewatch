@@ -58,6 +58,7 @@ _DEFAULT_DURATION = (1.0, 0.5)
 HOURS_PER_DAY = 8.0           # Working hours per simulated day
 DEFAULT_TRIALS = 200          # Monte Carlo replications
 DEFAULT_SEED = 42
+SIGMA_FLOOR = 1e-10           # Guard against zero sigma in lognormal sampling
 
 
 # ── Data structures ──────────────────────────────────────────────────────────
@@ -166,6 +167,14 @@ STRATEGIES: dict[str, str] = {
     "random": "Random order (null hypothesis)",
 }
 
+# Strategy dispatch — data-driven, no conditional chain
+_STRATEGY_DISPATCH: dict[str, callable] = {
+    "tidewatch": lambda obs, now, rng: _tidewatch_order(obs, now),
+    "edf": lambda obs, now, rng: _deadline_order(obs, now),
+    "fifo": lambda obs, now, rng: _fifo_order(obs, now),
+    "random": lambda obs, now, rng: _random_order(obs, now, rng),
+}
+
 
 # ── Simulation engine ────────────────────────────────────────────────────────
 
@@ -178,7 +187,7 @@ def _sample_durations(
     for ob in obligations:
         domain = (ob.domain or "").lower()
         mu, sigma = _DOMAIN_DURATIONS.get(domain, _DEFAULT_DURATION)
-        duration = float(rng.lognormal(mu, max(sigma, 1e-10)))
+        duration = float(rng.lognormal(mu, max(sigma, SIGMA_FLOOR)))
         sim_obs.append(SimObligation(obligation=ob, duration_hours=duration))
     return sim_obs
 
@@ -288,14 +297,8 @@ def run_monte_carlo(
         trial_rng = np.random.default_rng(seed + trial_i)
         sim_obs = _sample_durations(obligations, trial_rng)
 
-        if strategy == "random":
-            order = _random_order(obligations, sim_start, trial_rng)
-        elif strategy == "edf":
-            order = _deadline_order(obligations, sim_start)
-        elif strategy == "fifo":
-            order = _fifo_order(obligations, sim_start)
-        else:
-            order = _tidewatch_order(obligations, sim_start)
+        dispatch = _STRATEGY_DISPATCH.get(strategy, _STRATEGY_DISPATCH["tidewatch"])
+        order = dispatch(obligations, sim_start, trial_rng)
 
         result = _run_trial(sim_obs, order, sim_start)
         trials.append(result)

@@ -177,7 +177,8 @@ class PressureComponents:
     @property
     def pressure(self) -> float:
         """Default collapse: product of all components, saturated to [0,1]."""
-        return min(1.0, max(0.0, self.space.collapsed))
+        from tidewatch.constants import saturate
+        return saturate(self.space.collapsed)
 
     @property
     def zone(self) -> str:
