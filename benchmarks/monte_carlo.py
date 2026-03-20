@@ -52,13 +52,31 @@ _DOMAIN_DURATIONS: dict[str, tuple[float, float]] = {
     "ops": (0.5, 0.3),         # ~1.6h median
     "admin": (0.3, 0.2),       # ~1.3h median
 }
-_DEFAULT_DURATION = (1.0, 0.5)
+# Default duration profile: (mu, sigma) for domains not in _DOMAIN_DURATIONS.
+# mu=1.0, sigma=0.5 gives ~2.7h median — midpoint of the engineering profile.
+_DEFAULT_DURATION: tuple[float, float] = (1.0, 0.5)
 
 # Simulation parameters
 HOURS_PER_DAY = 8.0           # Working hours per simulated day
+SECONDS_PER_HOUR = 3600.0     # Unit conversion factor
 DEFAULT_TRIALS = 200          # Monte Carlo replications
 DEFAULT_SEED = 42
 SIGMA_FLOOR = 1e-10           # Guard against zero sigma in lognormal sampling
+
+
+def _hours_to_seconds(hours: float) -> float:
+    """Convert hours to seconds."""
+    return hours * SECONDS_PER_HOUR
+
+
+def _seconds_to_hours(seconds: float) -> float:
+    """Convert seconds to hours."""
+    return seconds / SECONDS_PER_HOUR
+
+
+def _mu_hours_to_mu_seconds(mu_hours: float) -> float:
+    """Convert lognormal mu from hours to seconds domain."""
+    return mu_hours + math.log(SECONDS_PER_HOUR)
 
 
 # ── Data structures ──────────────────────────────────────────────────────────
@@ -425,24 +443,21 @@ def _build_profiles_from_obligations(
             continue
         seen_domains.add(domain)
         mu, sigma = _DOMAIN_DURATIONS.get(domain, _DEFAULT_DURATION)
-        # Convert hours to seconds for DES engine (which operates in seconds)
-        mu_sec = mu + math.log(3600.0)
         profiles[domain] = ProcessProfile(
             process_id=domain,
-            mu=mu_sec,
+            mu=_mu_hours_to_mu_seconds(mu),
             sigma=sigma,
             n_samples=0,
-            median_seconds=math.exp(mu) * 3600.0,
-            mean_seconds=math.exp(mu + sigma**2 / 2) * 3600.0,
+            median_seconds=_hours_to_seconds(math.exp(mu)),
+            mean_seconds=_hours_to_seconds(math.exp(mu + sigma**2 / 2)),
         )
 
     # Default profile for synthetic dependency nodes
     if "engineering" not in profiles:
         mu_e, sigma_e = _DOMAIN_DURATIONS["engineering"]
-        mu_sec = mu_e + math.log(3600.0)
         profiles["engineering"] = ProcessProfile(
             process_id="engineering",
-            mu=mu_sec,
+            mu=_mu_hours_to_mu_seconds(mu_e),
             sigma=sigma_e,
         )
 
@@ -488,7 +503,7 @@ def run_des_simulation(
         result = sim.replay(dag_edges, node_processes)
 
         # Determine deadline outcomes
-        total_hours = result.total_duration_seconds / 3600.0
+        total_hours = _seconds_to_hours(result.total_duration_seconds)
         completed_on_time = 0
         completed_late = 0
 
