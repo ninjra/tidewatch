@@ -67,6 +67,13 @@ from tidewatch.types import (
 )
 
 
+# Data-driven timing amplification — sorted descending by threshold (highest first)
+_TIMING_AMPLIFIERS: list[tuple[int, float]] = [
+    (TIMING_CRITICAL_DAYS, TIMING_CRITICAL_MULTIPLIER),
+    (TIMING_STALE_DAYS, TIMING_STALE_MULTIPLIER),
+]
+
+
 def _days_remaining(due_date: datetime, now: datetime) -> float:
     """Calculate days remaining until due_date from now.
 
@@ -172,12 +179,11 @@ def calculate_pressure(
         comp_damp = 1.0 - (completion_pct * COMPLETION_DAMPENING)
 
     # 5. Timing amplifier (#195) — stuck obligations get pressure boost
-    if obligation.days_in_status >= TIMING_CRITICAL_DAYS:
-        timing_amp = TIMING_CRITICAL_MULTIPLIER
-    elif obligation.days_in_status >= TIMING_STALE_DAYS:
-        timing_amp = TIMING_STALE_MULTIPLIER
-    else:
-        timing_amp = 1.0
+    timing_amp = 1.0
+    for threshold_days, multiplier in _TIMING_AMPLIFIERS:
+        if obligation.days_in_status >= threshold_days:
+            timing_amp = multiplier
+            break
 
     # 6. Violation amplifier (#99) — obligations with violations get pressure boost
     violation_amp = 1.0 + min(
@@ -200,6 +206,14 @@ def calculate_pressure(
     )
 
 
+# Data-driven zone mapping — sorted ascending by threshold
+_ZONE_THRESHOLDS: list[tuple[float, str]] = [
+    (ZONE_YELLOW, "green"),
+    (ZONE_ORANGE, "yellow"),
+    (ZONE_RED, "orange"),
+]
+
+
 def pressure_zone(pressure: float) -> str:
     """Map pressure float to zone label.
 
@@ -214,14 +228,10 @@ def pressure_zone(pressure: float) -> str:
     """
     if math.isnan(pressure) or math.isinf(pressure):
         raise ValueError(f"pressure must be finite, got {pressure}")
-    if pressure < ZONE_YELLOW:
-        return "green"
-    elif pressure < ZONE_ORANGE:
-        return "yellow"
-    elif pressure < ZONE_RED:
-        return "orange"
-    else:
-        return "red"
+    for threshold, zone_name in _ZONE_THRESHOLDS:
+        if pressure < threshold:
+            return zone_name
+    return "red"
 
 
 def recalculate_batch(

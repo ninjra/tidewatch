@@ -39,6 +39,16 @@ from tidewatch.constants import (
 OUTDIR = os.path.join(os.path.dirname(__file__), "..", "paper", "figures")
 os.makedirs(OUTDIR, exist_ok=True)
 
+# ── Figure-specific constants ────────────────────────────────────────────────
+
+# Minimum t (days) for sampling — avoids division by zero in P_time
+PRESSURE_CURVE_T_MIN = 0.1
+
+# Zone label y-positions for pressure curve annotation
+ZONE_LABEL_POSITIONS: dict[str, float] = {
+    "Green": 0.15, "Yellow": 0.45, "Orange": 0.70, "Red": 0.90,
+}
+
 
 # ── Plot configuration ───────────────────────────────────────────────────────
 
@@ -66,6 +76,7 @@ class PlotStyle:
     sample_points_normal: int = 300
     sample_points_coarse: int = 200
     sample_points_bandwidth: int = 100
+    sensitivity_zone_alpha_boost: float = 0.1
 
     def apply(self) -> None:
         """Apply style to matplotlib rcParams."""
@@ -174,7 +185,7 @@ def pressure_score(
 # ── Figure 1: Pressure Curve ─────────────────────────────────────────────────
 
 def fig_pressure_curve() -> None:
-    t = np.linspace(0.1, PRESSURE_CURVE_T_MAX, STYLE.sample_points_fine)
+    t = np.linspace(PRESSURE_CURVE_T_MIN, PRESSURE_CURVE_T_MAX, STYLE.sample_points_fine)
     p = [p_time(ti) for ti in t]
 
     fig, ax = plt.subplots()
@@ -191,10 +202,9 @@ def fig_pressure_curve() -> None:
     ax.set_ylim(0, PRESSURE_CURVE_Y_MAX)
     ax.invert_xaxis()
 
-    zone_label_positions = {"Green": 0.15, "Yellow": 0.45, "Orange": 0.70, "Red": 0.90}
     zone_label_colors = {"Green": COLORS["green"], "Yellow": COLORS["dark_yellow"],
                          "Orange": COLORS["orange"], "Red": COLORS["red"]}
-    for label, y in zone_label_positions.items():
+    for label, y in ZONE_LABEL_POSITIONS.items():
         ax.text(ZONE_LABEL_X, y, label, fontsize=STYLE.annotation_fontsize,
                 color=zone_label_colors[label], fontweight="bold")
 
@@ -257,7 +267,7 @@ def fig_sensitivity() -> None:
 
     for threshold in [ZONE_YELLOW, ZONE_ORANGE, ZONE_RED]:
         ax.axhline(threshold, color="gray", linestyle=":",
-                   linewidth=STYLE.zone_line_width, alpha=STYLE.zone_line_alpha + 0.1)
+                   linewidth=STYLE.zone_line_width, alpha=STYLE.zone_line_alpha + STYLE.sensitivity_zone_alpha_boost)
 
     ax.set_xlabel("Days until deadline ($t$)")
     ax.set_ylabel("Time pressure $P_{\\mathrm{time}}(t)$")

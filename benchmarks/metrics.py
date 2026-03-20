@@ -10,6 +10,9 @@ Metrics:
 
 from __future__ import annotations
 
+# Minimum sample size for rank correlation (Spearman undefined for n<2)
+MIN_RANKS_FOR_CORRELATION = 2
+
 
 def zone_transition_timeliness(
     first_alert_days: list[float],
@@ -61,7 +64,7 @@ def attention_allocation_efficiency(
       float -1.0 to 1.0 (higher is better)
     """
     n = len(predicted_ranks)
-    if n < 2:
+    if n < MIN_RANKS_FOR_CORRELATION:
         return 1.0
     d_squared = sum((p - a) ** 2 for p, a in zip(predicted_ranks, actual_ranks, strict=True))
     return 1.0 - (6.0 * d_squared) / (n * (n ** 2 - 1))

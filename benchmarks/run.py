@@ -9,7 +9,7 @@ import argparse
 from datetime import UTC, datetime
 
 from benchmarks.baselines import binary_deadline, eisenhower, linear_urgency
-from benchmarks.datasets.generate_obligations import generate
+from benchmarks.datasets.generate_obligations import DEFAULT_N, DEFAULT_SEED, generate
 from tidewatch import Obligation, recalculate_batch
 
 
@@ -53,8 +53,8 @@ def run_baseline(name: str, obligations_data: list[dict]) -> list[float]:
 def main():
     parser = argparse.ArgumentParser(description="Run Tidewatch benchmarks")
     parser.add_argument("--suite", choices=["all", "pressure", "baselines"], default="all")
-    parser.add_argument("--n", type=int, default=1000)
-    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--n", type=int, default=DEFAULT_N)
+    parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
     args = parser.parse_args()
 
     print(f"Generating {args.n} obligations (seed={args.seed})...")

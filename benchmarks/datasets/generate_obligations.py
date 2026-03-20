@@ -16,6 +16,12 @@ from datetime import UTC, datetime, timedelta
 
 DOMAINS = ["legal", "financial", "client_work", "personal_admin", "health"]
 
+# CLI defaults
+DEFAULT_N = 1000
+DEFAULT_SEED = 42
+DEFAULT_OUTPUT = "sob.json"
+JSON_INDENT = 2
+
 
 @dataclass
 class SOBConfig:
@@ -92,14 +98,14 @@ def generate(
 
 def main():
     parser = argparse.ArgumentParser(description="Generate SOB dataset")
-    parser.add_argument("--n", type=int, default=1000)
-    parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--output", type=str, default="sob.json")
+    parser.add_argument("--n", type=int, default=DEFAULT_N)
+    parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
+    parser.add_argument("--output", type=str, default=DEFAULT_OUTPUT)
     args = parser.parse_args()
 
     data = generate(n=args.n, seed=args.seed)
     with open(args.output, "w") as f:
-        json.dump(data, f, indent=2)
+        json.dump(data, f, indent=JSON_INDENT)
     print(f"Generated {len(data)} obligations -> {args.output}")
 
 
