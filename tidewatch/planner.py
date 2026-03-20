@@ -1,16 +1,24 @@
 # SPDX-License-Identifier: Apache-2.0 OR Commercial
-"""Speculative planner -- idle-time plan generation for high-pressure obligations.
+"""Plan stub generator — structured prompt templates for high-pressure obligations.
 
-Returns prompt templates. The caller provides the LLM.
-No inference calls, no database, no async. complete_plan() uses
-datetime.now(UTC) for timestamp — callers requiring reproducibility
-should set created_at on the returned PlanResult.
+This is a TEMPLATE ENGINE, not an NLP system. It:
+  1. Selects obligations that exceed pressure zone thresholds
+  2. Fills structured prompt templates with obligation metadata
+  3. Stages the result as a PlanRequest for the caller's LLM
+
+The caller provides the LLM. Tidewatch never invokes inference directly.
+When integrated with Sentinel, plan stubs can be enriched by Sentinel's
+LLM layer — that is a Sentinel capability, not a Tidewatch one.
+
+Runs synchronously after ranking. No daemon, no event loop, no concurrency.
+complete_plan() uses datetime.now(UTC) for timestamp — callers requiring
+reproducibility should pass an explicit `now` value.
 
 Usage:
-  planner = SpeculativePlanner()
+  planner = PlanStubGenerator()
   requests = planner.generate_plan_requests(pressure_results, obligations)
   for req in requests:
-      llm_output = my_llm(req.prompt)
+      llm_output = my_llm(req.prompt)  # caller's LLM, not ours
       result = planner.complete_plan(req, llm_output)
 """
 
@@ -48,12 +56,16 @@ _DEFAULT_SYSTEM_PROMPT = (
     "Be concise. No preamble."
 )
 
-class SpeculativePlanner:
-    """Generates plan requests for high-pressure obligations.
+class PlanStubGenerator:
+    """Generates structured prompt stubs for high-pressure obligations.
+
+    This is a template engine: it selects obligations by zone threshold,
+    fills prompt templates with obligation metadata, and stages results
+    for the caller's LLM. No inference, no NLP, no generation.
 
     Inputs (constructor):
-      min_zones: set of zone names that trigger planning
-      top_n: max obligations to plan per cycle
+      min_zones: set of zone names that trigger stub generation
+      top_n: max obligations to generate stubs for per cycle
       system_prompt: override default system prompt
       delivery_urgency_map: zone-to-urgency mapping (default from constants)
       default_delivery_urgency: fallback for unknown zones (default from constants)
@@ -201,3 +213,7 @@ class SpeculativePlanner:
             pressure=plan_request.pressure_result.pressure,
             created_at=now,
         )
+
+
+# Backward compatibility alias
+SpeculativePlanner = PlanStubGenerator

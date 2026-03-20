@@ -57,6 +57,7 @@ _EXPECTED_EXPORTS = [
     "recalculate_batch",
     "bandwidth_adjusted_sort",
     "export_pressure_summary",
+    "PlanStubGenerator",
     "SpeculativePlanner",
     "TriageQueue",
     "CognitiveContext",

@@ -226,8 +226,7 @@ scan:
         decorators: []
       decorators: []
     benchmarks/baselines/linear_urgency.py:
-      imports:
-      - tidewatch.constants
+      imports: []
       classes: []
       functions:
       - name: score
@@ -1491,8 +1490,6 @@ graph:
     - benchmarks/baselines/linear_urgency.py
   - - benchmarks/baselines/eisenhower.py
     - benchmarks/constants.py
-  - - benchmarks/baselines/linear_urgency.py
-    - tidewatch/constants.py
   - - benchmarks/datasets/generate_obligations.py
     - benchmarks/constants.py
   - - benchmarks/metrics.py
@@ -1803,110 +1800,110 @@ graph:
     tidewatch/__init__.py: 77
     benchmarks/metrics.py: 17
     benchmarks/datasets/generate_obligations.py: 14
-    tidewatch/constants.py: 11
+    tidewatch/constants.py: 10
     tidewatch/types.py: 9
     tidewatch/pressure.py: 5
     benchmarks/constants.py: 4
     benchmarks/baselines/linear_urgency.py: 3
-    benchmarks/baselines/binary_deadline.py: 3
     benchmarks/baselines/eisenhower.py: 3
+    benchmarks/baselines/binary_deadline.py: 3
     tidewatch/planner.py: 3
     benchmarks/baselines/__init__.py: 3
     tidewatch/triage.py: 2
     benchmarks/run.py: 2
-    scripts/generate_paper_figures.py: 1
     scripts/constants.py: 1
-    tests/test_golden_pipeline.py: 0
-    tests/test_baselines.py: 0
-    tests/test_binary_deadline.py: 0
+    scripts/generate_paper_figures.py: 1
+    tests/conftest.py: 0
+    tests/test_benchmarks.py: 0
+    tests/test_planner.py: 0
+    tests/test_constants.py: 0
+    tests/test_pressure.py: 0
+    tests/test_init.py: 0
+    tests/test_generate_paper_figures.py: 0
     tests/test_triage.py: 0
     tests/test_eisenhower.py: 0
-    tests/test_generate_obligations.py: 0
-    tests/test_run.py: 0
-    tests/test_constants.py: 0
-    tests/test_generate_paper_figures.py: 0
-    tests/conftest.py: 0
-    tests/test_init.py: 0
-    tests/test_integration.py: 0
-    tests/test_linear_urgency.py: 0
-    tests/test_planner.py: 0
-    tests/test_cognitive_bandwidth.py: 0
-    tests/test_types.py: 0
+    tests/test_golden_pipeline.py: 0
     tests/test_metrics.py: 0
-    tests/test_pressure.py: 0
-    tests/test_benchmarks.py: 0
+    tests/test_baselines.py: 0
+    tests/test_integration.py: 0
+    tests/test_types.py: 0
+    tests/test_generate_obligations.py: 0
+    tests/test_binary_deadline.py: 0
+    tests/test_linear_urgency.py: 0
+    tests/test_cognitive_bandwidth.py: 0
+    tests/test_run.py: 0
   out_degree:
     tests/test_golden_pipeline.py: 103
-    tidewatch/__init__.py: 4
-    tests/test_pressure.py: 4
     tests/test_benchmarks.py: 4
-    benchmarks/run.py: 3
+    tests/test_pressure.py: 4
+    tidewatch/__init__.py: 4
     tests/test_planner.py: 3
-    tidewatch/pressure.py: 3
     benchmarks/baselines/__init__.py: 3
+    benchmarks/run.py: 3
+    tidewatch/pressure.py: 3
+    tests/conftest.py: 2
+    tidewatch/types.py: 2
     tests/test_triage.py: 2
     tests/test_eisenhower.py: 2
     scripts/generate_paper_figures.py: 2
-    tests/test_run.py: 2
-    tests/conftest.py: 2
     tests/test_integration.py: 2
-    tidewatch/types.py: 2
     tidewatch/planner.py: 2
-    tests/test_baselines.py: 1
-    tests/test_binary_deadline.py: 1
-    tests/test_generate_obligations.py: 1
-    tidewatch/triage.py: 1
+    tests/test_run.py: 2
     tests/test_constants.py: 1
-    tests/test_generate_paper_figures.py: 1
-    benchmarks/baselines/linear_urgency.py: 1
     tests/test_init.py: 1
+    tests/test_generate_paper_figures.py: 1
+    tidewatch/triage.py: 1
+    benchmarks/baselines/eisenhower.py: 1
+    benchmarks/datasets/generate_obligations.py: 1
+    tests/test_metrics.py: 1
+    tests/test_baselines.py: 1
+    benchmarks/metrics.py: 1
+    tests/test_types.py: 1
+    tests/test_generate_obligations.py: 1
+    tests/test_binary_deadline.py: 1
     tests/test_linear_urgency.py: 1
     tests/test_cognitive_bandwidth.py: 1
-    benchmarks/baselines/eisenhower.py: 1
-    tests/test_types.py: 1
-    benchmarks/metrics.py: 1
-    tests/test_metrics.py: 1
-    benchmarks/datasets/generate_obligations.py: 1
-    tidewatch/constants.py: 0
-    benchmarks/baselines/binary_deadline.py: 0
+    benchmarks/baselines/linear_urgency.py: 0
     benchmarks/constants.py: 0
     scripts/constants.py: 0
+    tidewatch/constants.py: 0
+    benchmarks/baselines/binary_deadline.py: 0
   betweenness_centrality:
-    tidewatch/__init__.py: 32.666666666666664
-    benchmarks/baselines/__init__.py: 15.333333333333336
-    benchmarks/run.py: 15.0
-    tidewatch/types.py: 6.583333333333334
-    benchmarks/baselines/linear_urgency.py: 4.333333333333334
+    tidewatch/__init__.py: 34.0
+    benchmarks/run.py: 16.0
+    benchmarks/baselines/__init__.py: 13.0
+    tidewatch/types.py: 7.116666666666669
+    tidewatch/pressure.py: 3.9499999999999997
     benchmarks/datasets/generate_obligations.py: 3.8846153846153846
-    tidewatch/pressure.py: 3.4166666666666665
     benchmarks/metrics.py: 2.0769230769230766
     benchmarks/baselines/eisenhower.py: 2.0384615384615383
     scripts/generate_paper_figures.py: 2.0
-    tidewatch/planner.py: 1.6666666666666665
-    tests/test_golden_pipeline.py: 0.0
-    tests/test_baselines.py: 0.0
-    tests/test_binary_deadline.py: 0.0
-    tests/test_triage.py: 0.0
-    tests/test_eisenhower.py: 0.0
-    tests/test_generate_obligations.py: 0.0
-    tests/test_run.py: 0.0
-    tidewatch/triage.py: 0.0
-    tests/test_constants.py: 0.0
-    tidewatch/constants.py: 0.0
-    tests/test_generate_paper_figures.py: 0.0
-    tests/conftest.py: 0.0
-    benchmarks/baselines/binary_deadline.py: 0.0
-    tests/test_init.py: 0.0
-    tests/test_integration.py: 0.0
-    tests/test_linear_urgency.py: 0.0
-    tests/test_planner.py: 0.0
-    tests/test_cognitive_bandwidth.py: 0.0
-    tests/test_types.py: 0.0
+    tidewatch/planner.py: 1.9333333333333331
+    benchmarks/baselines/linear_urgency.py: 0.0
     benchmarks/constants.py: 0.0
-    tests/test_metrics.py: 0.0
-    tests/test_pressure.py: 0.0
     scripts/constants.py: 0.0
+    tests/conftest.py: 0.0
     tests/test_benchmarks.py: 0.0
+    tests/test_planner.py: 0.0
+    tests/test_constants.py: 0.0
+    tests/test_pressure.py: 0.0
+    tests/test_init.py: 0.0
+    tests/test_generate_paper_figures.py: 0.0
+    tests/test_triage.py: 0.0
+    tidewatch/triage.py: 0.0
+    tests/test_eisenhower.py: 0.0
+    tests/test_golden_pipeline.py: 0.0
+    tidewatch/constants.py: 0.0
+    benchmarks/baselines/binary_deadline.py: 0.0
+    tests/test_metrics.py: 0.0
+    tests/test_baselines.py: 0.0
+    tests/test_integration.py: 0.0
+    tests/test_types.py: 0.0
+    tests/test_generate_obligations.py: 0.0
+    tests/test_binary_deadline.py: 0.0
+    tests/test_linear_urgency.py: 0.0
+    tests/test_cognitive_bandwidth.py: 0.0
+    tests/test_run.py: 0.0
   orphans: []
   clusters:
   - - benchmarks/baselines/__init__.py
@@ -2014,7 +2011,6 @@ graph:
     tests/test_linear_urgency.py:
     - tests/test_linear_urgency.py
     - benchmarks/baselines/linear_urgency.py
-    - tidewatch/constants.py
     tests/test_metrics.py:
     - tests/test_metrics.py
     - benchmarks/metrics.py
@@ -2046,41 +2042,41 @@ graph:
     - tidewatch/types.py
     - tidewatch/constants.py
   hub_score:
-    tidewatch/__init__.py: 113.66666666666666
+    tidewatch/__init__.py: 115.0
     tests/test_golden_pipeline.py: 103.0
-    benchmarks/baselines/__init__.py: 21.333333333333336
+    benchmarks/run.py: 21.0
     benchmarks/metrics.py: 20.076923076923077
-    benchmarks/run.py: 20.0
+    benchmarks/baselines/__init__.py: 19.0
     benchmarks/datasets/generate_obligations.py: 18.884615384615383
-    tidewatch/types.py: 17.583333333333336
-    tidewatch/pressure.py: 11.416666666666666
-    tidewatch/constants.py: 11.0
-    benchmarks/baselines/linear_urgency.py: 8.333333333333334
-    tidewatch/planner.py: 6.666666666666666
+    tidewatch/types.py: 18.116666666666667
+    tidewatch/pressure.py: 11.95
+    tidewatch/constants.py: 10.0
+    tidewatch/planner.py: 6.933333333333334
     benchmarks/baselines/eisenhower.py: 6.038461538461538
     scripts/generate_paper_figures.py: 5.0
     benchmarks/constants.py: 4.0
-    tests/test_pressure.py: 4.0
     tests/test_benchmarks.py: 4.0
+    tests/test_pressure.py: 4.0
+    benchmarks/baselines/linear_urgency.py: 3.0
+    tests/test_planner.py: 3.0
     tidewatch/triage.py: 3.0
     benchmarks/baselines/binary_deadline.py: 3.0
-    tests/test_planner.py: 3.0
+    tests/conftest.py: 2.0
     tests/test_triage.py: 2.0
     tests/test_eisenhower.py: 2.0
-    tests/test_run.py: 2.0
-    tests/conftest.py: 2.0
     tests/test_integration.py: 2.0
-    tests/test_baselines.py: 1.0
-    tests/test_binary_deadline.py: 1.0
-    tests/test_generate_obligations.py: 1.0
+    tests/test_run.py: 2.0
+    scripts/constants.py: 1.0
     tests/test_constants.py: 1.0
-    tests/test_generate_paper_figures.py: 1.0
     tests/test_init.py: 1.0
+    tests/test_generate_paper_figures.py: 1.0
+    tests/test_metrics.py: 1.0
+    tests/test_baselines.py: 1.0
+    tests/test_types.py: 1.0
+    tests/test_generate_obligations.py: 1.0
+    tests/test_binary_deadline.py: 1.0
     tests/test_linear_urgency.py: 1.0
     tests/test_cognitive_bandwidth.py: 1.0
-    tests/test_types.py: 1.0
-    tests/test_metrics.py: 1.0
-    scripts/constants.py: 1.0
   external_imports:
     benchmarks/baselines/__init__.py:
     - __future__
@@ -2161,27 +2157,24 @@ graph:
     - enum
     - dataclasses
     - datetime
-  resolution_rate: 0.7348837209302326
-  resolved_import_count: 158
+  resolution_rate: 0.7336448598130841
+  resolved_import_count: 157
   external_import_count: 57
 purpose:
   archetype:
-  - scoring-engine+cognitivecontext+speculativeplanner
   - scoring-engine
   - analytics-harness
+  - scoring-engine+cognitivecontext+speculativeplanner
   archetype_scores:
-    scoring-engine+cognitivecontext+speculativeplanner: 119
     scoring-engine: 52
     analytics-harness: 51
     agent-loop: 10
     analysis-tool: 8
     cli-tool: 6
-    cli-tool+blockchain+quantumcomputing: 6
-    cli-tool+fastapiwebframework: 6
-  purpose_statement: 'tidewatch is a composite: scoring-engine, analytics-harness extended with Cognitive Context, Speculative
-    Planner + mathematical scoring, ranking, or pressure model + statistical analysis, benchmarking, or data science workbench,
-    with capabilities including Cognitive Context, NumPy numerical computing, Obligation, Pressure Result, Speculative Planner,
-    communicating via http, stdin-stdout.'
+    scoring-engine+cognitivecontext+speculativeplanner: 52
+  purpose_statement: tidewatch is a mathematical scoring, ranking, or pressure model + statistical analysis, benchmarking,
+    or data science workbench, with capabilities including Cognitive Context, NumPy numerical computing, Obligation, Pressure
+    Result, Speculative Planner, communicating via http, stdin-stdout.
   capabilities:
   - Cognitive Context
   - NumPy numerical computing
@@ -2196,38 +2189,118 @@ purpose:
   - stdin-stdout
   data_stores: []
   architectural_notes:
-  - 'Repo also scores highly as: agent-loop, analysis-tool, cli-tool, cli-tool+blockchain+quantumcomputing, cli-tool+fastapiwebframework.
-    This suggests a composite system spanning multiple architectural patterns.'
+  - 'Repo also scores highly as: agent-loop, analysis-tool, cli-tool. This suggests a composite system spanning multiple architectural
+    patterns.'
   - Strong test presence (19/67 files).
-  - Critical hub file 'tidewatch/__init__.py' (score 113.7) has no corresponding test file.
+  - Critical hub file 'tidewatch/__init__.py' (score 115.0) has no corresponding test file.
+  declared_capabilities:
+  - analytics-harness
+  - library
+  - scoring-engine
 coherence:
-  coherence_score: 0.947614799082642
-  drift_indicators:
-  - category: hub_test_gap
-    evidence: '2 structural hub(s) lack test coverage: tidewatch/__init__.py (113.7), benchmarks/baselines/__init__.py (21.3)'
-    implication: High-centrality files are the backbone of the codebase. Without tests, they are single points of failure.
-    files:
-    - tidewatch/__init__.py
-    - benchmarks/baselines/__init__.py
-    severity: 0.3333333333333333
-  orientation_summary: Moderate drift detected (1 indicator(s) across hub_test_gap). The codebase serves its purpose but structural
-    issues are accumulating.
+  coherence_score: 0.4465350380650583
+  drift_indicators: []
+  orientation_summary: No drift detected. The codebase is structurally aligned with its inferred purpose.
   purpose_validated: true
   component_scores:
-    capability_alignment: 1.0
+    capability_alignment: 0.6666666666666666
     structural_coherence: 0.990384019787941
-    archetype_consistency: 0.803921568627451
+    archetype_consistency: 1.0
+  confidence: 0.5172413793103449
+  analysis_completeness: &id001
+    ast_executed: 7
+    ast_total: 7
+    llm_executed: 8
+    llm_total: 22
+  raw_coherence_score: 0.863301073592446
+  degraded: true
 abstraction:
-  findings: []
+  findings:
+  - file: benchmarks/baselines/linear_urgency.py
+    line: 23
+    category: custom
+    severity: high
+    code: return 0.0
+    note: Hardcoded return value 0.0 represents a domain-specific threshold; should be abstracted as a parameter to allow
+      generic composition.
+    severity_rank: 0
+    llm_evaluated: true
+    remediation_context:
+      context_text: "  [OBLIGATION] [P2][in_progress] tidewatch: deferred_llm_analysis — LLM viewpoints pending\n  [EMAIL]\
+        \ Email from Justin Ram: Re: Court-Ordered Mediation — Case 26C160 — Earliest Available Date (2026-03-13 09:17:35).\
+        \ Ruslan Dautkhanov Tatiana Dautkhanov\n  [EMAIL] Email from TAAFT - There's An AI For That: \U0001F9BE Dying Robot\
+        \ Mental Breakdown (2025-11-01 23:10:14). ----------\r\nHey, Justin!\r\n\r\n**Welcome back to the wor\n  [EMAIL] Email\
+        \ from Justin Ram: Re: R and d credit (2026-03-13 17:24:02). Ok excellent,\r\nthank you for letting me know.\r\n\r\
+        \nWhat do you need from me to get the \n  [EMAIL] Email from Rowan @ The Rundown: Could I get your feedback? (2026-03-14\
+        \ 14:26:06). View image: (https://media.beehiiv.com/cdn-cgi/image/fit=scale-down,\n  [EMAIL] Email from Paka: Help\
+        \ Shape the Future of PAKA & Receive a $25 Gift Card (2026-03-08 15:46:20). Hola Narayan,\r\n\r\nAt PAKA, we=E2=80=99re\
+        \ always looking\n  [EMAIL] Email from Tech Eco from Tech Economics: Is Palantir a Mediocre Product Sold at an Insane\
+        \ Price? (2026-03-13 14:57:43). View this post on the web at h\n  [EMAIL] Email from Morgan O'Brien: Re: Court-Ordered\
+        \ Mediation — Case 26C160 — Earliest Available Date (2026-03-13 17:26:10). Hello Justin,\r\n\r\nYes, I mediate "
+      items_scored: 11
+      items_selected: 8
+      source_breakdown:
+        obligations: 1
+        memories: 7
+      scoring: gravitas_unified
+      assembly_ms: 1.6810189990792423
+  - file: benchmarks/baselines/linear_urgency.py
+    line: 26
+    category: custom
+    severity: high
+    code: return 1.0
+    note: Hardcoded return value 1.0 similarly lacks abstraction; should be parameterized for generic use.
+    severity_rank: 0
+    llm_evaluated: true
+    remediation_context:
+      context_text: "  [EMAIL] Email from TAAFT - There's An AI For That: \U0001F9BE Dying Robot Mental Breakdown (2025-11-01\
+        \ 23:10:14). ----------\r\nHey, Justin!\r\n\r\n**Welcome back to the wor\n  [EMAIL] Email from Semafor Media: \U0001F7E1\
+        \ Sentimental value (2026-03-08 23:00:44)\n  [EMAIL] Email from Andrea L.S. Jones: Additional information needed for\
+        \ your tax return - Shri Ram (2026-03-12 17:59:08). We have reviewed all previously prov\n  [EMAIL] Email from Tech\
+        \ Eco from Tech Economics: Is Palantir a Mediocre Product Sold at an Insane Price? (2026-03-13 14:57:43). View this\
+        \ post on the web at h\n  [EMAIL] Email from Rowan @ The Rundown: Could I get your feedback? (2026-03-14 14:26:06).\
+        \ View image: (https://media.beehiiv.com/cdn-cgi/image/fit=scale-down,"
+      items_scored: 11
+      items_selected: 5
+      source_breakdown:
+        memories: 5
+      scoring: gravitas_unified
+      assembly_ms: 1.0067449911730364
+  - file: benchmarks/baselines/linear_urgency.py
+    line: 28
+    category: math_clamp
+    severity: high
+    severity_rank: 0
+    code: return max(0.0, min(1.0, raw))
+    note: hardcoded bounds on mathematical output violate abstraction; parameterize bounds
+    llm_evaluated: true
+    remediation_context:
+      context_text: "  [EVENT] Sentinel recent git commits:\ne742135 2026-03-17 feat: redesign autobot approval Telegram notifications\n\
+        89f01f1 2026-03-17 fix: hook decorator supports\n  [EMAIL] Email from Oil & Gas Journal: Chevron eyeing 7-10% output\
+        \ growth, more efficiency gains in 2026 (2026-01-30 14:04:34)\n  [EMAIL] Email from Rigzone Daily News: WoodMac Sees\
+        \ USA Tight Oil Output Shrinking in 2026 (2026-01-12 21:18:48). RIGZONE DAILY NEWS -- MONDAY, JANUARY 12, 20"
+      items_scored: 11
+      items_selected: 3
+      source_breakdown:
+        memories: 3
+      scoring: gravitas_unified
+      assembly_ms: 1.0212409979430959
   summary:
-    total: 0
-    by_category: {}
+    total: 3
+    by_category:
+      custom: 2
+      math_clamp: 1
     by_severity:
-      high: 0
+      high: 3
       medium: 0
       low: 0
-    hotspots: {}
+    hotspots:
+      benchmarks/baselines/linear_urgency.py: 3
   files_analyzed: 14
+  llm_refinement:
+    evaluations: 1
+    additions: 2
+    dropped: 0
 assumptions:
   findings: []
   summary:
@@ -2237,20 +2310,92 @@ assumptions:
     hotspots: {}
   files_analyzed: 14
 hubris:
-  findings: []
+  findings:
+  - file: benchmarks/baselines/linear_urgency.py
+    line: 25
+    category: vacuous_truth
+    severity: high
+    severity_rank: 0
+    code: "    if days_remaining <= 0:\n        return 1.0"
+    note: score() returns 1.0 when comparison to 0 — caller cannot distinguish 'perfect' from 'unmeasured'
+    remediation_context:
+      context_text: "  [EMAIL] Email from Paka: Woven Together: The Women Who Connect Us (2026-03-08 15:00:10). [The Women\
+        \ Behind PAKA](https://www.pakaapparel.com/blogs/basecamp/wo\n  [EMAIL] Email from Credit Karma: Narayan, has your\
+        \ loan checkup changed? (2025-09-05 15:59:02). Hey Narayan's,\r\n\r\nHave you visited your My Loans page lately? \n\
+        \  [EMAIL] Email from Microsoft account team: Microsoft account security alert (2024-04-23 15:07:20). We think that\
+        \ someone else might have accessed the Microsof\n  [EMAIL] Email from Jaime Harrison: The Pipeline Is The Strategy\
+        \ (2026-03-09 00:35:39). View this post on the web at https://jaimeharrison.substack.com/p/the-p\n  [EMAIL] Email\
+        \ from Justin Ram: Re: Aiora (2026-02-28 12:48:53). I sent the wire.\r\n3/2/26 was the earliest allowed.\r\n\r\nPlease\
+        \ let me know when/if you receive i\n  [EMAIL] Email from Brian Bengs from Brian Bengs: Monopolies are Bad: The Paramount\
+        \ Merger (2026-03-05 00:55:31). View this post on the web at https://bengsfor\n  [EMAIL] Email from Artificial Intelligence\
+        \ Weekly: AI News Weekly - Issue #468: AI would nuke us 95% of the time (2026-03-03 14:01:13). AI News Weekly\nIssue\
+        \ #"
+      items_scored: 11
+      items_selected: 7
+      source_breakdown:
+        memories: 7
+      scoring: gravitas_unified
+      assembly_ms: 1.1847309942822903
+  - file: benchmarks/baselines/linear_urgency.py
+    line: 26
+    category: unfalsifiable_default
+    severity: medium
+    severity_rank: 1
+    code: return 1.0
+    note: score() has 1 perfect-score return(s) alongside 2 computed return(s) — some paths bypass measurement
+    remediation_context:
+      context_text: "  [OBLIGATION] [P2][in_progress] tidewatch: deferred_llm_analysis — LLM viewpoints pending\n  [EMAIL]\
+        \ Email from Serenity Massage + Wellness & Recovery LLC: Fourth of July Special: $85 Relaxation and Therapeutic Massages\
+        \ + Complimentary CBD Massage! (2\n  [EMAIL] Email from Future Blueprint: ⚙️ Shopify CEO makes AI mandatory for employees\
+        \ (2025-04-08 17:30:42). Hi AI Futurists,\r\n\r\nShopify is shifting how it bui\n  [EMAIL] Email from Rigzone Daily\
+        \ News: Harris Skips Over Climate Change Even as Party Touts Green Wins (2024-08-23 21:18:49). RIGZONE DAILY NEWS\
+        \ -- FRIDAY, AU\n  [EMAIL] Email from Oil & Gas Journal: ExxonMobil’s annual earnings decrease alongside increased\
+        \ production (2025-01-31 15:03:41)\n  [EMAIL] Email from The Frontier by Product Hunt: \U0001F9E0 Is the AI bubble\
+        \ gonna go pop? (2025-03-25 22:01:18). ### WELCOME\r\n\r\nHappy Tuesday, legends. Welcome back t"
+      items_scored: 11
+      items_selected: 6
+      source_breakdown:
+        obligations: 1
+        memories: 5
+      scoring: gravitas_unified
+      assembly_ms: 0.9636930044507608
   summary:
-    total: 0
-    by_category: {}
-    by_severity: {}
-    hotspots: {}
+    total: 2
+    by_category:
+      vacuous_truth: 1
+      unfalsifiable_default: 1
+    by_severity:
+      high: 1
+      medium: 1
+    hotspots:
+      benchmarks/baselines/linear_urgency.py: 2
   files_analyzed: 14
 viewpoints:
   results:
     complexity_hotspots:
       display_name: Complexity Hotspots
       viewpoint_type: ast
-      findings: []
-      summary: No issues found from Complexity Hotspots perspective.
+      findings:
+      - file: benchmarks/datasets/generate_obligations.py
+        line: 56
+        severity: medium
+        observation: 'generate(): 53 lines'
+        recommendation: Consider decomposing into smaller functions
+        viewpoint: complexity_hotspots
+        remediation_context:
+          context_text: "  [EMAIL] Email from Rigzone Daily News: Market Spinning After 'Most Epic Price Reversal in Oil History'\
+            \ (2026-03-10 21:18:41). RIGZONE DAILY NEWS -- TUESDAY, M\n  [EMAIL] Email from Rigzone Daily News: Analysts Warn\
+            \ of Largest Oil Supply Disruption in History (2026-03-03 21:19:45). RIGZONE DAILY NEWS -- TUESDAY, MARCH 3\n\
+            \  [EMAIL] Email from msonlineservicesteam@microsoftonline.com: Permian Resources account email verification code\
+            \ (2024-07-22 13:28:39)\n  [EMAIL] Email from Particle: Spring break travel is about to get ugly (2026-03-10 22:21:26).\
+            \ ----------\r\n# The Highlight Reel\r\n\r\nMarch 10, 2026\r\n\r\n\r\n---------"
+          items_scored: 11
+          items_selected: 4
+          source_breakdown:
+            memories: 4
+          scoring: gravitas_unified
+          assembly_ms: 0.8916469960240647
+      summary: 'Complexity Hotspots: 1 finding(s) (0 high, 1 medium, 0 low).'
     import_hygiene:
       display_name: Import Hygiene
       viewpoint_type: ast
@@ -2281,111 +2426,122 @@ viewpoints:
       viewpoint_type: hybrid
       findings: []
       summary: No issues found from Test Adequacy perspective.
-    resilience_patterns:
-      display_name: Resilience Patterns
+    config_shaman:
+      display_name: The Ops Engineer at 4am
       viewpoint_type: llm
       findings: []
-      summary: From the Resilience Patterns perspective, no specific resilience issues could be identified because the provided
-        repository context does not include the actual source code of the tidewatch modules. Without concrete code excerpts
-        to verify, it is not possible to confirm the presence or absence of timeouts, circuit breakers, retry logic, or other
-        resilience mechanisms, so no targeted findings can be reported.
+      summary: No config-code mismatches were observed in the provided source listings; all referenced configuration accesses
+        appear to be absent, so no specific missing keys or undocumented environment variables could be identified.
+      model: Nemotron-3-Nano-30B-A3B-IQ4_XS.gguf
+      source: local
+    failure_analyst:
+      display_name: Failure Modes
+      viewpoint_type: llm
+      findings: []
+      summary: From a failure‑mode SRE lens, the tidewatch codebase appears to isolate all math and scoring logic from I/O,
+        which limits blast radius, but the lack of explicit error handling and resource cleanup in the core engine could lead
+        to unhandled exceptions propagating from scoring functions, silent data corruption if pressure calculations overflow
+        or produce NaNs, and partial state updates when batch recalculation is interrupted. Because the system is pure‑math
+        with no async or external dependencies, resource leaks are unlikely, yet any integration point that invokes the planner
+        or speculative planner without proper timeout/retry handling could become a bottleneck. Overall, the architecture
+        mitigates many failure modes but requires careful validation of edge‑case numerical inputs and proper exception propagation
+        at the public API boundaries.
       model: Nemotron-3-Nano-30B-A3B-IQ4_XS.gguf
       source: local
     archaeologist:
       display_name: Code Archaeologist
       viewpoint_type: llm
       findings: []
-      summary: The codebase reveals a pattern of historical layering where early prototypes were never fully refactored, leading
-        to modules that now serve purposes distinct from their original intent — such as baseline scoring classes that were
-        once experimental but now form the core logic, and naming conventions (e.g., binary_deadline.py) that hint at a former
-        isolated deadline model but are now reused across multiple concerns. These artifacts illustrate accidental complexity
-        accumulated through successive rewrites rather than deliberate architectural decisions, making the system's structure
-        a patchwork of copy‑paste adaptations rather than a cohesive, intentionally designed architecture.
-      model: Nemotron-3-Nano-30B-A3B-IQ4_XS.gguf
-      source: local
-    future_regret:
-      display_name: Future Regret
-      viewpoint_type: llm
-      findings: []
-      summary: No specific temporary decisions identified that will cause regret within 6 months based on the provided codebase.
+      summary: 'From the Code Archaeologist perspective, the tidewatch repository shows signs of evolutionary layering rather
+        than clean intentional design: many modules (e.g., baselines, cognitive bandwidth, speculative planner) share similar
+        naming schemes but diverge in internal structure, indicating copy‑paste adaptations over time. The presence of multiple
+        baseline implementations with overlapping responsibilities, duplicated constant definitions across scripts and benchmarks,
+        and inconsistent handling of edge cases (such as zero‑division guards only in a few places) suggests that later rewrites
+        patched specific failures without unifying the underlying abstractions. This historical accident pattern is evident
+        in the way several functions accept parameters that were originally meant for a different scoring model but were repurposed,
+        leaving legacy code that still works but bears the imprint of incremental, reactive changes rather than a cohesive,
+        forward‑looking architecture.'
       model: Nemotron-3-Nano-30B-A3B-IQ4_XS.gguf
       source: local
   viewpoints_loaded: 24
+  analysis_completeness: *id001
+  confidence: 0.5172413793103449
 timing:
-  total_s: 20.0408
+  total_s: 32.9728
   steps:
   - step: scan
-    elapsed_s: 0.0449
+    elapsed_s: 0.0362
   - step: llm_decision
-    elapsed_s: 0.0818
+    elapsed_s: 0.0648
   - step: graph
-    elapsed_s: 0.0011
+    elapsed_s: 0.0007
   - step: purpose
-    elapsed_s: 0.0696
+    elapsed_s: 0.0436
   - step: coherence
     elapsed_s: 0.0003
   - step: abstraction
-    elapsed_s: 0.0352
+    elapsed_s: 0.0314
+  - step: abstraction_llm_refine
+    elapsed_s: 6.6171
   - step: assumptions
-    elapsed_s: 0.0393
+    elapsed_s: 0.0346
   - step: hubris
-    elapsed_s: 0.0344
+    elapsed_s: 0.0302
   - step: integration
-    elapsed_s: 0.0558
+    elapsed_s: 0.0522
   - step: viewpoints_load
-    elapsed_s: 0.0023
+    elapsed_s: 0.0692
   - step: viewpoints_ast
-    elapsed_s: 0.1767
+    elapsed_s: 0.1348
   - step: viewpoints_llm
-    elapsed_s: 11.0924
+    elapsed_s: 9.8923
   - step: viewpoints_save
-    elapsed_s: 0.0154
+    elapsed_s: 0.0314
   - step: remediation_context
-    elapsed_s: 0.041
+    elapsed_s: 1.6783
   - step: llm_reasoning
-    elapsed_s: 8.014
+    elapsed_s: 8.4566
 llm_analysis:
-  identity_assessment: The repository is a research prototype that implements a task‑pressure and obligation modeling engine.
-    It combines a mathematical scoring engine, cognitive‑context reasoning, and a speculative planner to compute pressure
-    fields for deadlines, generate and rank obligations, and produce proactive idle‑time plans. The system is exposed via
-    a CLI, HTTP endpoints, and stdin/stdout, and is primarily used for benchmarking, data‑science analysis, and generating
-    paper figures.
-  orientation_assessment: 'The codebase is structurally oriented toward that purpose. Supporting files include: tidewatch/planner.py,
-    tidewatch/pressure.py, tidewatch/types.py, benchmarks/run.py, benchmarks/datasets/generate_obligations.py, scripts/generate_paper_figures.py,
-    and the test suite (e.g., tests/test_baselines.py, tests/test_benchmarks.py). These modules implement scoring, pressure
-    calculation, obligation handling, and planning logic. Contradictory elements are minimal but include the presence of archetype
-    tags like ''cli-tool+blockchain+quantumcomputing'' and ''analysis-tool'' that are mentioned only in passing and are not
-    central to the core pressure‑modeling functionality.'
-  coherence_judgment: High coherence. The dependency graph forms a single connected cluster (0 orphaned files) with all deep
-    chains converging on core modules (e.g., benchmarks/run.py → tidewatch/__init__.py → tidewatch/planner.py → tidewatch/types.py
-    → tidewatch/constants.py). The hub file tidewatch/__init__.py has the highest structural score and is the focal point
-    of imports, while the extensive test suite validates each component, indicating a unified directional focus.
+  identity_assessment: The repository is a research‑grade engine that computes a hydraulic‑style pressure field from deadline
+    obligations, ranks and plans tasks, and wraps that logic in a benchmarking and statistical analysis framework. It is not
+    a generic scheduler but a mathematical model of obligation pressure with speculative planning, exposed via a Python library,
+    command‑line scripts, and HTTP/STDIO interfaces for integration with external LLMs or data pipelines.
+  orientation_assessment: 'The codebase is structurally oriented toward this purpose: core modeling lives in tidewatch/__init__.py,
+    tidewatch/planner.py, tidewatch/pressure.py, tidewatch/types.py, and tidewatch/constants.py; benchmark scripts (benchmarks/run.py,
+    benchmarks/datasets/generate_obligations.py) instantiate obligations and invoke pressure calculations; scripts/generate_paper_figures.py
+    consumes the engine to produce figures; the extensive test suite (tests/*) validates each component; however, the speculative
+    planner API is only referenced in a few places, and some core modules (e.g., tidewatch/types.py) lack dedicated test files,
+    indicating partial orientation toward the full envisioned capability.'
+  coherence_judgment: 'Overall coherence is high: a single dependency cluster centered on the tidewatch package connects all
+    entry points, there are no orphaned files, and the hub file tidewatch/__init__.py (score 115.0) dominates the graph. The
+    deep dependency chains (e.g., benchmarks/run.py → tidewatch/__init__.py → tidewatch/planner.py → tidewatch/types.py →
+    tidewatch/constants.py, depth 5‑6) show a clear, unidirectional flow toward the pressure‑scoring core, despite the presence
+    of multiple archetype labels suggesting functional breadth.'
   drift_observations:
-  - area: Archetype expansion
-    evidence: The repository is described as also scoring highly as 'cli-tool+blockchain+quantumcomputing' and 'analysis-tool',
-      and the archetype list includes 'agent-loop' and 'cli-tool+fastapiwebframework'.
-    interpretation: These tags suggest an aspirational or future expansion beyond the core pressure‑modeling engine, indicating
-      potential identity drift toward broader system integration or experimental domains.
-  - area: Test coverage gap
-    evidence: The critical hub file 'tidewatch/__init__.py' (score 113.7) has no corresponding test file, while 19 of 67 files
-      are tests.
-    interpretation: The lack of direct testing for the central entry point introduces a structural vulnerability and may reflect
-      an oversight, hinting at a partial misalignment between implementation and testing strategy.
-  - area: Speculative Planner experimental nature
-    evidence: The 'Speculative Planner' capability is listed among the core capabilities, but its implementation resides in
-      a separate module (tidewatch/planner.py) with limited usage depth in the dependency chain.
-    interpretation: The planner appears to be an exploratory feature that may evolve independently, contributing to a subtle
-      drift toward a more modular, possibly research‑oriented architecture.
+  - area: Architectural pattern diffusion
+    evidence: Archetype scores list agent-loop, analysis-tool, cli-tool, and scoring-engine+cognitivecontext+speculativeplanner,
+      indicating the code touches multiple design patterns without a single dominant one.
+    interpretation: The repo's identity drifts toward being a multi‑purpose toolkit rather than a tightly focused pressure
+      model, which may dilute a unified purpose.
+  - area: Missing test coverage for core hub
+    evidence: tidewatch/__init__.py, the highest‑scoring hub (115.0), has no corresponding test file, while most other modules
+      have dedicated tests.
+    interpretation: Potential blind spot in validation; the core modeling logic may be under‑tested, creating uncertainty
+      about correctness of the pressure computation.
+  - area: Specification vs implementation gap
+    evidence: README and paper describe proactive idle‑time planning and hydraulic pressure, yet only a thin wrapper (SpeculativePlanner)
+      is implemented and referenced in few files; most code focuses on obligation scoring and benchmarking.
+    interpretation: The speculative planning capability appears only partially realized, suggesting the repository may be
+      evolving toward a research prototype rather than a complete system.
   risk_factors:
-  - 'Single point of failure: tidewatch/__init__.py lacks dedicated tests, increasing fragility.'
-  - Deep dependency chain length 6 (benchmarks/run.py → ... → tidewatch/constants.py) may be brittle under refactoring.
-  - SpeculativePlanner module is not extensively tested, raising reliability concerns.
-  - Experimental archetype references (blockchain, quantum computing) may introduce unrelated complexity and dilute the core
-    purpose.
-  confidence: 0.92
+  - High centrality of tidewatch/__init__.py with no test file
+  - Deep dependency chain length up to 6 increases coupling risk
+  - Limited test coverage of speculative planner and pressure modules
+  - Absence of tests for core hub may hide structural defects
+  confidence: 0.88
   token_usage:
-    completion_tokens: 1444
-    prompt_tokens: 1805
-    total_tokens: 3249
+    completion_tokens: 1637
+    prompt_tokens: 1748
+    total_tokens: 3385
   source: local
   model: claude-sonnet-4-6

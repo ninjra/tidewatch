@@ -85,7 +85,7 @@ action plans for high-pressure obligations, and a \emph{triage queue}
 stages candidate obligations from external scanners with deduplication.
 We validate the model against 11 pre-computed known-value scenarios
 ($|{\Delta}| < 10^{-10}$), compare against EDF, linear, and
-Eisenhower-matrix baselines via a formal \texttt{BaselineScorer}
+Eisenhower-matrix baselines via a shared \texttt{BaselineScorer}
 protocol, and present a sensitivity analysis of the rate constant.
 The implementation is 1{,}132 lines of pure Python with zero runtime
 dependencies, an explicit reproducibility contract on all time-dependent
