@@ -158,11 +158,16 @@ class CognitiveContext:
         Returns 0.0-1.0 where 1.0 = full capacity. If no signals
         available, returns 1.0 (assume full capacity — fail-open).
         """
-        from tidewatch.constants import BANDWIDTH_HOURS_GOOD, BANDWIDTH_NORMALIZATION_RANGE
+        from tidewatch.constants import (
+            BANDWIDTH_HOURS_GOOD,
+            BANDWIDTH_NO_DATA,
+            BANDWIDTH_NORMALIZATION_RANGE,
+            clamp_unit,
+            normalize_hours,
+        )
 
-        # Domain: bandwidth in [0, 1] where 1.0 = full capacity
         if self.bandwidth_score is not None:
-            return max(0.0, min(1.0, self.bandwidth_score))
+            return clamp_unit(self.bandwidth_score)
 
         signals: list[float] = []
         if self.sleep_quality is not None:
@@ -172,9 +177,9 @@ class CognitiveContext:
         if self.pain_level is not None:
             signals.append(self.pain_level)
         if self.hours_since_sleep is not None:
-            # Domain: normalize hours to [0, 1] — 8h=1.0, 16h=0.0
-            normalized = max(0.0, 1.0 - max(0.0, self.hours_since_sleep - BANDWIDTH_HOURS_GOOD) / BANDWIDTH_NORMALIZATION_RANGE)
-            signals.append(normalized)
+            signals.append(normalize_hours(
+                self.hours_since_sleep, BANDWIDTH_HOURS_GOOD, BANDWIDTH_NORMALIZATION_RANGE,
+            ))
         if self.violation_rate is not None:
             signals.append(1.0 - self.violation_rate)
         if self.constraint_pressure is not None:
@@ -183,7 +188,7 @@ class CognitiveContext:
             signals.append(1.0 - self.session_load)
 
         if not signals:
-            return 1.0  # Fail-open: no data = assume full capacity
+            return BANDWIDTH_NO_DATA
         return sum(signals) / len(signals)
 
 
@@ -212,6 +217,7 @@ def estimate_task_demand(obligation: Obligation) -> TaskDemand:
         MATERIAL_DECISION_BOOST,
         TASK_DEMAND_DEFAULT,
         TASK_DEMAND_PROFILES,
+        clamp_unit,
     )
 
     domain = (obligation.domain or "").lower()
@@ -220,10 +226,9 @@ def estimate_task_demand(obligation: Obligation) -> TaskDemand:
     decision_weight = profile["decision_weight"]
     novelty = profile["novelty"]
 
-    # Domain: demand dimensions in [0, 1]
     if obligation.materiality == "material":
-        complexity = min(1.0, complexity + MATERIAL_COMPLEXITY_BOOST)
-        decision_weight = min(1.0, decision_weight + MATERIAL_DECISION_BOOST)
+        complexity = clamp_unit(complexity + MATERIAL_COMPLEXITY_BOOST)
+        decision_weight = clamp_unit(decision_weight + MATERIAL_DECISION_BOOST)
 
     return TaskDemand(
         complexity=complexity,

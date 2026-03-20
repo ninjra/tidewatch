@@ -11,56 +11,69 @@ Usage:
 import argparse
 import json
 import random
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
 DOMAINS = ["legal", "financial", "client_work", "personal_admin", "health"]
-MATERIALITY_DIST = {"material": 0.3, "routine": 0.7}
-
-# --- SOB generation parameters ---
-MATERIAL_PROBABILITY = 0.3       # Fraction of obligations that are "material"
-OVERDUE_PROBABILITY = 0.1        # Fraction of obligations that are overdue
-OVERDUE_MAX_DAYS = 14            # Max days overdue for generated obligations
-DEADLINE_HORIZON_DAYS = 90       # Max days out for non-overdue obligations
-MAX_DEPENDENCY_COUNT = 10        # Cap on power-law dependency generation
-DEPENDENCY_PARETO_ALPHA = 1.5    # Shape parameter for dependency count distribution
-OPTIMAL_ATTENTION_FRACTION = 0.3 # Start work at this fraction of remaining time
-MIN_ATTENTION_DAYS = 2           # Minimum attention window (days)
 
 
-def generate(n: int = 1000, seed: int = 42) -> list[dict]:
+@dataclass
+class SOBConfig:
+    """Tunable parameters for SOB generation."""
+
+    material_probability: float = 0.3
+    overdue_probability: float = 0.1
+    overdue_max_days: int = 14
+    deadline_horizon_days: int = 90
+    max_dependency_count: int = 10
+    dependency_pareto_alpha: float = 1.5
+    optimal_attention_fraction: float = 0.3
+    min_attention_days: float = 2.0
+
+
+def generate(
+    n: int = 1000,
+    seed: int = 42,
+    config: SOBConfig | None = None,
+) -> list[dict]:
     """Generate n synthetic obligations.
 
     Inputs:
       n: number of obligations
       seed: random seed for reproducibility
+      config: generation parameters (defaults if None)
 
     Outputs:
       list of obligation dicts with ground-truth optimal_attention_days
     """
+    if config is None:
+        config = SOBConfig()
+
     rng = random.Random(seed)
     obligations = []
     now = datetime.now(UTC)
 
     for i in range(n):
         domain = rng.choice(DOMAINS)
-        materiality = "material" if rng.random() < MATERIAL_PROBABILITY else "routine"
+        materiality = "material" if rng.random() < config.material_probability else "routine"
 
-        # Deadline: uniform 1-DEADLINE_HORIZON days, with OVERDUE_PROBABILITY overdue
-        if rng.random() < OVERDUE_PROBABILITY:
-            days_out = -rng.randint(1, OVERDUE_MAX_DAYS)
+        if rng.random() < config.overdue_probability:
+            days_out = -rng.randint(1, config.overdue_max_days)
         else:
-            days_out = rng.randint(1, DEADLINE_HORIZON_DAYS)
+            days_out = rng.randint(1, config.deadline_horizon_days)
 
         due_date = (now + timedelta(days=days_out)).isoformat()
 
-        # Dependencies: power-law, capped
-        dep_count = min(int(rng.paretovariate(DEPENDENCY_PARETO_ALPHA)), MAX_DEPENDENCY_COUNT)
+        raw_dep = int(rng.paretovariate(config.dependency_pareto_alpha))
+        dep_count = raw_dep if raw_dep <= config.max_dependency_count else config.max_dependency_count
 
-        # Completion: random progress
-        completion = round(rng.random() * rng.random(), 2)  # skewed toward 0
+        completion = round(rng.random() * rng.random(), 2)
 
-        # Ground truth: optimal attention time
-        optimal_attention_days = max(days_out * OPTIMAL_ATTENTION_FRACTION, MIN_ATTENTION_DAYS) if days_out > 0 else 0
+        if days_out > 0:
+            raw_attention = days_out * config.optimal_attention_fraction
+            optimal_attention_days = raw_attention if raw_attention >= config.min_attention_days else config.min_attention_days
+        else:
+            optimal_attention_days = 0.0
 
         obligations.append({
             "id": i + 1,

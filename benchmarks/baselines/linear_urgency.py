@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: Apache-2.0 OR Commercial
-"""Linear urgency baseline: urgency = max(0, 1 - days_remaining / horizon)."""
+"""Linear urgency baseline: urgency = clamp_unit(1 - days_remaining / horizon)."""
 
-DEFAULT_HORIZON = 90
+from tidewatch.constants import OVERDUE_PRESSURE, clamp_unit
 
 
 def score(
     days_remaining: float | None,
-    horizon: float = DEFAULT_HORIZON,
+    horizon: float = 90.0,
     **kwargs,
 ) -> float:
     """Linear urgency score.
@@ -16,14 +16,10 @@ def score(
       horizon: max planning horizon in days
 
     Outputs:
-      float 0.0-1.0
-
-    Notes:
-      Returns 1.0 for overdue — this is max urgency by definition,
-      not a missing measurement.
+      float 0.0-1.0. Returns OVERDUE_PRESSURE for overdue items.
     """
     if days_remaining is None:
         return 0.0
     if days_remaining <= 0:
-        return 1.0
-    return max(0.0, 1.0 - days_remaining / horizon)
+        return OVERDUE_PRESSURE
+    return clamp_unit(1.0 - days_remaining / horizon)

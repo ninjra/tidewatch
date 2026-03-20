@@ -8,8 +8,6 @@ Urgent/Important matrix:
   Q4 (not urgent + not important) = 0.0
 """
 
-URGENT_THRESHOLD_DAYS = 7
-
 # Eisenhower quadrant scores — fixed by definition of the matrix
 QUADRANT_SCORES: dict[tuple[bool, bool], float] = {
     (True, True): 1.0,    # Q1: urgent + important
@@ -22,6 +20,7 @@ QUADRANT_SCORES: dict[tuple[bool, bool], float] = {
 def score(
     days_remaining: float | None,
     materiality: str = "routine",
+    urgent_threshold_days: float = 7.0,
     **kwargs,
 ) -> float:
     """Eisenhower urgency score.
@@ -29,6 +28,7 @@ def score(
     Inputs:
       days_remaining: days until deadline
       materiality: "material" (important) or "routine" (not important)
+      urgent_threshold_days: days within which an obligation is "urgent"
 
     Outputs:
       float score based on quadrant
@@ -36,6 +36,6 @@ def score(
     if days_remaining is None:
         return 0.0
 
-    urgent = days_remaining <= URGENT_THRESHOLD_DAYS
+    urgent = days_remaining <= urgent_threshold_days
     important = materiality == "material"
     return QUADRANT_SCORES[(urgent, important)]

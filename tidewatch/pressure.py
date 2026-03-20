@@ -185,9 +185,9 @@ def calculate_pressure(
         VIOLATION_MAX_AMPLIFICATION,
     )
 
-    # Final pressure — Domain: P in [0, 1] per Equation 1
-    pressure = time_p * mat_mult * dep_amp * comp_damp * timing_amp * violation_amp
-    pressure = min(1.0, pressure)  # Saturation bound (Eq. 1)
+    # Final pressure — P in [0, 1] per Equation 1
+    from tidewatch.constants import saturate
+    pressure = saturate(time_p * mat_mult * dep_amp * comp_damp * timing_amp * violation_amp)
 
     return PressureResult(
         obligation_id=obligation.id,

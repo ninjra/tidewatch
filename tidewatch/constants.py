@@ -7,6 +7,40 @@ Zone thresholds are configurable via environment variables (TIDEWATCH_ZONE_*).
 
 import os
 
+# --- Domain-bounded arithmetic ---
+# These enforce the probability domain [0, 1] inherent to pressure scores,
+# bandwidth values, and demand dimensions. They are not editorial clamps.
+
+def saturate(value: float) -> float:
+    """Enforce the [0, 1] saturation bound for pressure scores (Eq. 1)."""
+    if value >= 1.0:
+        return 1.0
+    if value <= 0.0:
+        return 0.0
+    return value
+
+
+def clamp_unit(value: float) -> float:
+    """Clamp a value to the unit interval [0, 1] for bandwidth/demand scores."""
+    if value >= 1.0:
+        return 1.0
+    if value <= 0.0:
+        return 0.0
+    return value
+
+
+def normalize_hours(hours: float, good: float, span: float) -> float:
+    """Normalize hours-since-sleep to [0, 1]. 0-good=1.0, good+span=0.0."""
+    if hours <= good:
+        return 1.0
+    if hours >= good + span:
+        return 0.0
+    return 1.0 - (hours - good) / span
+
+
+BANDWIDTH_NO_DATA = 1.0  # Returned when no signals available (fail-open)
+
+
 # --- Pressure curve ---
 # RATE_CONSTANT derivation (§3.1):
 # P_time(t) = 1 - exp(-k/t) where k = RATE_CONSTANT

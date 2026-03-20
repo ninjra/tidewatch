@@ -25,10 +25,13 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from tidewatch.constants import (
     COMPLETION_DAMPENING,
     MATERIALITY_WEIGHTS,
+    OVERDUE_PRESSURE,
     RATE_CONSTANT,
     ZONE_ORANGE,
     ZONE_RED,
     ZONE_YELLOW,
+    clamp_unit,
+    saturate,
 )
 
 OUTDIR = os.path.join(os.path.dirname(__file__), "..", "paper", "figures")
@@ -61,7 +64,7 @@ COLORS = {
 def p_time(t, k=RATE_CONSTANT):
     """Time pressure component."""
     if t <= 0:
-        return 1.0
+        return OVERDUE_PRESSURE
     return 1.0 - math.exp(-k / t)
 
 
@@ -71,7 +74,7 @@ def pressure(t, deps=0, material=False, completion=0.0, k=RATE_CONSTANT):
     m = MATERIALITY_WEIGHTS["material"] if material else MATERIALITY_WEIGHTS["routine"]
     a = 1.0 + deps * 0.1
     d = 1.0 - completion * COMPLETION_DAMPENING
-    return min(1.0, pt * m * a * d)
+    return saturate(pt * m * a * d)
 
 
 def zone_color(p):
@@ -205,7 +208,7 @@ def fig_baselines():
 
     # Linear decay: P = 1 - t/t_max
     t_max = 30
-    linear = [max(0, 1.0 - ti / t_max) for ti in t]
+    linear = [clamp_unit(1.0 - ti / t_max) for ti in t]
 
     # Step function: binary at 7 days
     step = [1.0 if ti <= 7 else 0.0 for ti in t]
