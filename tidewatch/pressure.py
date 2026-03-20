@@ -117,88 +117,54 @@ def _completion_dampening(completion_pct: float) -> float:
     return 1.0 - (completion_pct * COMPLETION_DAMPENING)
 
 
+def _no_deadline_result(obligation_id: int | str) -> PressureResult:
+    """Return zero-pressure result for obligations without deadlines."""
+    return PressureResult(
+        obligation_id=obligation_id, pressure=0.0, zone=pressure_zone(0.0),
+        time_pressure=0.0, materiality_mult=1.0, dependency_amp=1.0, completion_damp=1.0,
+    )
+
+
+def _timing_amplifier(days_in_status: int) -> float:
+    """Compute timing amplification for stuck obligations (#195)."""
+    for threshold_days, multiplier in _TIMING_AMPLIFIERS:
+        if days_in_status >= threshold_days:
+            return multiplier
+    return 1.0
+
+
+def _violation_amplifier(violation_count: int) -> float:
+    """Compute violation-based pressure amplification (#99)."""
+    return 1.0 + min(violation_count * VIOLATION_AMPLIFICATION, VIOLATION_MAX_AMPLIFICATION)
+
+
 def calculate_pressure(
     obligation: Obligation,
     now: datetime | None = None,
 ) -> PressureResult:
-    """Compute pressure for a single obligation.
-
-    Pure function. No side effects. No DB. No LLM.
-
-    Inputs:
-      obligation: Obligation dataclass
-      now: current datetime (default: utcnow)
-
-    Logic:
-      1. No deadline -> pressure = 0.0
-      2. Time pressure: exponential approach as deadline nears
-      3. Materiality: material items get 1.5x weight
-      4. Dependencies: each adds 10% amplification
-      5. Completion: progress dampens pressure (max 60%)
-      6. Final pressure saturates at 1.0 (equation-defined bound, not editorial)
-
-    Outputs:
-      PressureResult with full factor decomposition
-
-    Notes:
-      This function is the ONLY place pressure is computed.
-      Implements Section 3.1 of the Tidewatch paper.
-    """
+    """Compute pressure for a single obligation (§3.1)."""
     if now is None:
         now = datetime.now(UTC)
-
-    # No deadline = no pressure
     if obligation.due_date is None:
-        return PressureResult(
-            obligation_id=obligation.id,
-            pressure=0.0,
-            zone=pressure_zone(0.0),
-            time_pressure=0.0,
-            materiality_mult=1.0,
-            dependency_amp=1.0,
-            completion_damp=1.0,
-        )
+        return _no_deadline_result(obligation.id)
 
     days_rem = _days_remaining(obligation.due_date, now)
     _validate_obligation_inputs(obligation)
 
-    # 1. Time pressure
     time_p = OVERDUE_PRESSURE if days_rem <= 0 else 1.0 - _exponential(-RATE_CONSTANT / max(days_rem, DIVISION_GUARD))
-
-    # 2. Materiality multiplier
     mat_mult = MATERIALITY_WEIGHTS.get(obligation.materiality, 1.0)
-
-    # 3. Dependency amplifier
     dep_amp = 1.0 + (obligation.dependency_count * DEPENDENCY_AMPLIFICATION)
-
-    # 4. Completion dampener
     comp_damp = _completion_dampening(obligation.completion_pct)
+    timing_amp = _timing_amplifier(obligation.days_in_status)
+    violation_amp = _violation_amplifier(obligation.violation_count)
 
-    # 5. Timing amplifier (#195) — stuck obligations get pressure boost
-    timing_amp = 1.0
-    for threshold_days, multiplier in _TIMING_AMPLIFIERS:
-        if obligation.days_in_status >= threshold_days:
-            timing_amp = multiplier
-            break
-
-    # 6. Violation amplifier (#99) — obligations with violations get pressure boost
-    violation_amp = 1.0 + min(
-        obligation.violation_count * VIOLATION_AMPLIFICATION,
-        VIOLATION_MAX_AMPLIFICATION,
-    )
-
-    # Final pressure — P in [0, 1] per Equation 1
     from tidewatch.constants import saturate
     pressure = saturate(time_p * mat_mult * dep_amp * comp_damp * timing_amp * violation_amp)
 
     return PressureResult(
-        obligation_id=obligation.id,
-        pressure=pressure,
-        zone=pressure_zone(pressure),
-        time_pressure=time_p,
-        materiality_mult=mat_mult,
-        dependency_amp=dep_amp,
-        completion_damp=comp_damp,
+        obligation_id=obligation.id, pressure=pressure, zone=pressure_zone(pressure),
+        time_pressure=time_p, materiality_mult=mat_mult,
+        dependency_amp=dep_amp, completion_damp=comp_damp,
     )
 
 

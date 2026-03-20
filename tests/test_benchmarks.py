@@ -201,56 +201,49 @@ class TestRoundTrip:
             assert len(scores) == 50
             assert all(isinstance(s, float) for s in scores)
 
-    def test_full_pipeline_generate_score_evaluate(self) -> None:
-        """Generate -> score -> compute metrics pipeline."""
+    def _score_pipeline_data(self):
+        """Generate and score a dataset for metric tests."""
         data = generate(n=100, seed=42)
         now = datetime.now(UTC)
-
-        # Score with tidewatch
         tw_scores = run_tidewatch(data, now)
+        return data, tw_scores
 
-        # Compute metrics on tidewatch results
-        # Build simulated alert/attention data from scores
-        first_alert_days = []
-        optimal_attention_days = []
-        alerted_48h_prior = []
-        alerted_high = []
-        completed_early = []
-
+    @staticmethod
+    def _build_alert_signals(data, tw_scores):
+        """Build simulated alert/attention signals from scores."""
+        first_alert_days, optimal_attention_days = [], []
+        alerted_48h, alerted_high, completed_early = [], [], []
         for d, score in zip(data, tw_scores, strict=True):
             days_out = d["days_out"]
-            # Simulate: alert when score > 0.3 (yellow+)
-            if score > 0.3:
-                first_alert_days.append(days_out if days_out > 0 else 0)
-            else:
-                first_alert_days.append(0)
-
+            first_alert_days.append(days_out if score > 0.3 and days_out > 0 else 0)
             optimal_attention_days.append(d["optimal_attention_days"])
-            alerted_48h_prior.append(score > 0.3 and days_out >= 2)
+            alerted_48h.append(score > 0.3 and days_out >= 2)
             alerted_high.append(score >= 0.6)
             completed_early.append(d["completion_pct"] > 0.8 and days_out > 7)
+        return first_alert_days, optimal_attention_days, alerted_48h, alerted_high, completed_early
 
-        # All metrics compute without error
-        ztt = zone_transition_timeliness(first_alert_days, optimal_attention_days)
-        assert isinstance(ztt, float)
+    def test_pipeline_zone_transition_timeliness(self) -> None:
+        data, tw_scores = self._score_pipeline_data()
+        first_alert, optimal = self._build_alert_signals(data, tw_scores)[:2]
+        assert isinstance(zone_transition_timeliness(first_alert, optimal), float)
 
-        mdr = missed_deadline_rate(alerted_48h_prior)
-        assert 0.0 <= mdr <= 1.0
+    def test_pipeline_missed_deadline_rate(self) -> None:
+        data, tw_scores = self._score_pipeline_data()
+        alerted_48h = self._build_alert_signals(data, tw_scores)[2]
+        assert 0.0 <= missed_deadline_rate(alerted_48h) <= 1.0
 
-        # Build ranks for attention allocation
-        ranked_by_score = sorted(range(len(tw_scores)), key=lambda i: tw_scores[i], reverse=True)
-        predicted_ranks = [0] * len(tw_scores)
-        for rank, idx in enumerate(ranked_by_score):
-            predicted_ranks[idx] = rank
-
+    def test_pipeline_attention_allocation(self) -> None:
+        data, tw_scores = self._score_pipeline_data()
+        predicted = [0] * len(tw_scores)
+        for rank, idx in enumerate(sorted(range(len(tw_scores)), key=lambda i: tw_scores[i], reverse=True)):
+            predicted[idx] = rank
         linear_scores = run_baseline("linear", data)
-        ranked_by_linear = sorted(range(len(linear_scores)), key=lambda i: linear_scores[i], reverse=True)
-        actual_ranks = [0] * len(linear_scores)
-        for rank, idx in enumerate(ranked_by_linear):
-            actual_ranks[idx] = rank
+        actual = [0] * len(linear_scores)
+        for rank, idx in enumerate(sorted(range(len(linear_scores)), key=lambda i: linear_scores[i], reverse=True)):
+            actual[idx] = rank
+        assert -1.0 <= attention_allocation_efficiency(predicted, actual) <= 1.0
 
-        aae = attention_allocation_efficiency(predicted_ranks, actual_ranks)
-        assert -1.0 <= aae <= 1.0
-
-        far = false_alarm_rate(alerted_high, completed_early)
-        assert 0.0 <= far <= 1.0
+    def test_pipeline_false_alarm_rate(self) -> None:
+        data, tw_scores = self._score_pipeline_data()
+        _, _, _, alerted_high, completed_early = self._build_alert_signals(data, tw_scores)
+        assert 0.0 <= false_alarm_rate(alerted_high, completed_early) <= 1.0

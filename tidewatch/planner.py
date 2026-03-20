@@ -130,23 +130,7 @@ class SpeculativePlanner:
         obligations: list[Obligation] | None = None,
         obligation_map: dict[int | str, Obligation] | None = None,
     ) -> list[PlanRequest]:
-        """Generate plan requests for high-pressure obligations.
-
-        Inputs:
-          pressure_results: list of PressureResult (typically from recalculate_batch)
-          obligations: optional list of Obligation (builds map internally)
-          obligation_map: optional pre-built {id: Obligation} map
-
-        Logic:
-          1. Filter to results in min_zones
-          2. Sort by pressure descending
-          3. Take top_n
-          4. Build prompt for each
-          5. Determine delivery urgency by zone
-
-        Outputs:
-          list[PlanRequest] for caller to send to LLM
-        """
+        """Generate plan requests for high-pressure obligations."""
         # Build obligation lookup
         ob_map: dict[int | str, Obligation] = {}
         if obligation_map is not None:
