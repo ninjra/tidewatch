@@ -1,79 +1,99 @@
-## A. THREAD
+## A
 
-**THREAD:** current
-**CHAT_ID:** unavailable
-**Artifact:** [tidewatch.pdf](sandbox:/mnt/data/tidewatch.pdf)
-**D0 / TS:** 2026-03-20
+THREAD: redteam
+CHAT_ID: not exposed
+Source: uploaded PDF
 
-## B. Red-team verdict
+## B
 
-**Do not ship this as a validation paper yet.** Ship it, at most, as an engineering design note with narrower claims. The document shows strong implementation discipline, but the empirical case is not yet strong enough to support the paper's broader conclusions.
+* **Verdict:** not ready as an empirical-superiority paper. It is closer to a deterministic systems/design note. The paper itself says Tidewatch does not beat EDF on raw deadline compliance and lists material limitations.
+* **Primary attack:** the inversion headline is endogenous. Tidewatch sorts by pressure descending, and the discussion says zero inversions are a structural consequence of that ordering. That makes inversion reduction weak as independent validation.
+* **External-validity gap:** the evidence is simulation-only, constants were tuned for one operator, demand estimation is heuristic, and intra-trial capacity variation is deferred to future work.
+* **Consistency bug:** Eq. 10 is linear in bandwidth, but the rendered Figure 2 in the uploaded PDF shows a step near `b≈0.5`. As written, the paper does not explain that discontinuity.
+* **Baseline weakness:** the collapse-method comparison is mostly against equal-weight weighted sum; Pareto ranking is presented as core, but not directly validated in the outcome results shown.
+* **Safety gap:** physiological reranking is central to the pitch, but the paper shows no consent, audit, override, gaming, or harm analysis.
 
-1. **Validation is mostly self-consistency, not external validity.** The "537 deterministic and property-based tests" and known-value checks show that the code matches the stated equations. They do **not** show that the ranking is correct, useful, or superior in real workflows. There is **no evidence** here of a field study, user study, external dataset, or out-of-sample calibration.
+## C
 
-2. **The strongest headline metric is circular.** Queue inversion is defined against Tidewatch's own pressure ordering. A method that sorts by its own pressure score will, by design, have zero inversions under that definition. That makes the "0.0% inversions" result largely tautological rather than validating.
+**Key claim 1**
+QUOTE: *"eliminates queue inversions entirely"*. CITE:
+MEASURED: Table 6 shows Tidewatch at `0.000 ± 0.000` inversions versus EDF at `0.134 ± 0.000` for the displayed `N=50` results, and the discussion frames that as a structural consequence of pressure ordering.
+INFERENCE: this is not a strong outcome win; it is mostly a property of the ranking rule.
+NO EVIDENCE: the paper does not show that lower inversion rate predicts deadline success, operator value, or user satisfaction.
 
-3. **Saturation destroys discrimination where it matters most.**
-   **MEASURED** from the published equations and constants:
+**Key claim 2**
+QUOTE: *"trails by 9% at N=200"*. CITE:
+MEASURED: the displayed table is labeled `N=50`, while the `N=200` result appears only in prose.
+INFERENCE: the abstract's comparable-missed-deadline framing is weaker than it first appears because the paper does not show a full `N=200` table alongside the claim.
+NO EVIDENCE: no visible `N=200` table, interval, or per-strategy breakdown is provided in the paper pages I inspected.
 
-   * material, 0% complete, due in 2 days, 0 deps -> `P = 1.0`
-   * routine, 0% complete, due in 1 day, 1 dep -> `P = 1.0`
-   * routine, 100% complete, due now -> `P ≈ 0.41`
-     This means many urgent cases collapse to the same ceiling, while some overdue-complete items remain only mid-priority. That is a defensible design choice only if the paper reports saturation rate and tie behavior; it does not.
+**Key claim 3**
+QUOTE: none. CITE:
+MEASURED: Eq. 10 implies linear dependence on bandwidth. Using the figure's own labels, the stated formula gives legal-brief fit scores of `0.10, 0.55, 1.00` and config-update scores of `0.624, 0.702, 0.78` at `b = 0, 0.5, 1.0`. The rendered Figure 2 shows a visible step near `b≈0.5` instead of a continuous line.
+INFERENCE: either Figure 2 is wrong, Eq. 10 is incomplete, or an unstated piecewise rule exists.
+NO EVIDENCE: Sec. 3.5 and the constants table do not state such a rule.
 
-4. **The score is blind to effort and slack.** The model uses deadline proximity, materiality, fanout, completion, status age, and violations, but not estimated effort, remaining work, or slack. The simulation itself includes processing durations, so the paper evaluates against a variable the scoring rule does not consume. Long-duration obligations can surface too late.
+**Key claim 4**
+QUOTE: none. CITE:
+MEASURED: weighted-sum is reported at `0.082` missed deadlines versus `0.067` for product collapse, but the additive baseline uses equal weights only; Pareto-layered ranking is described yet not shown in the outcome table.
+INFERENCE: the baseline suite is too weak to justify a broad claim that product collapse is the right reduction method.
+NO EVIDENCE: there is no tuned weighted-sum baseline, learned weights, utility-based baseline, or direct Pareto-outcome comparison.
 
-5. **The baseline story is underpowered and partly unfair.** The weighted-sum comparator uses equal weights over raw components with different scales and semantics, so its underperformance does not prove product collapse is intrinsically better. The paper also treats EDF as theoretically optimal in discussion while earlier scoping its assumptions much more narrowly.
+**Key claim 5**
+QUOTE: *"541 deterministic and property-based tests"*. CITE:
+MEASURED: the paper documents deterministic tests, property tests, and golden-value tolerances below `1e-10`.
+INFERENCE: this is strong evidence of implementation correctness and reproducibility. It is not evidence of real-world prioritization quality.
+NO EVIDENCE: no field trial, external task-trace evaluation, or human-subject study is presented.
 
-6. **The bandwidth result is confounded.** Demand profiles and simulated task durations are both domain-driven. Promoting "low-demand" tasks may therefore act as a proxy for shorter jobs, which can improve deadline metrics even without any real physiological validity. Also, missing signals fail open to full bandwidth, which is a risky default in high-stakes workflows.
+**Key claim 6**
+QUOTE: *"three-tier risk classification"*. CITE:
+MEASURED: the reranker can use sleep quality, HRV trend, pain level, medication window, violation rate, constraint pressure, and session load, with fail-open behavior when no signals are present.
+INFERENCE: the deployment risk is not just model quality; it is also safety, privacy, adversarial manipulation, and governance of overrides.
+NO EVIDENCE: the paper provides no consent model, override audit design, false-negative analysis, or harm-case analysis.
 
-7. **There are manuscript-level reproducibility gaps.** The abstract and discussion refer to both `N=50` and `N=200`, but Table 6 reports only `N=50`; the meaning of `±` is not defined; "bandwidth full threshold" and "hard-floor days" appear in the constants table without a clear operational definition in the text; and factor ablation is promised as evaluation but not quantitatively reported.
+## D
 
-8. **The system is easy to game and hard to govern.** Materiality, completion %, dependency count, and status age are all leverage points with obvious incentives. A user can inflate fanout, mark work "material," or churn status to move items. The paper gives **no evidence** of immutable provenance, role-based edits, anomaly checks, or policy controls. The physiological-input path also creates privacy/compliance risk outside a purely self-operated setting.
+**R1**
+improved: replace inversion as the headline metric with an external objective such as deadline loss, weighted lateness, regret, human choice agreement, or downstream utility.
+risked: the current headline advantage may shrink or disappear.
+enforcement_location: Abstract, Table 6, Sec. 5.3, Discussion.
+regression_detection: if a headline metric can be guaranteed by construction under Tidewatch's own ordering rule, DO NOT SHIP that framing.
 
-## C. Key claims under attack
+**R2**
+improved: show full `N=200` results, multiple random seeds, and uncertainty for every strategy.
+risked: exposes variance and possibly weaker performance.
+enforcement_location: Table 6, Sec. 5.3, appendix.
+regression_detection: if `N=200` remains prose-only or single-seed-only, DO NOT SHIP the across-workload-scale claim.
 
-**QUOTE:** "537 deterministic and property-based tests."
-**CITE:**
-**INFERENCE:** strong implementation QA.
-**NO EVIDENCE:** that the ranking rule matches human judgment, improves outcomes in production, or generalizes beyond the author's calibration.
+**R3**
+improved: reconcile Eq. 10, the constants table, and Figure 2 so one deterministic implementation reproduces the plotted curves.
+risked: the bandwidth narrative or thresholds may need to change.
+enforcement_location: Sec. 3.5, Table 1, Figure 2.
+regression_detection: recompute the plotted anchor points from the published formula; if the figure disagrees, DO NOT SHIP.
 
-**QUOTE:** "by construction."
-**CITE:**
-**INFERENCE:** the inversion result is structurally guaranteed once inversion is defined relative to Tidewatch pressure.
-**NO EVIDENCE:** that zero inversion corresponds to better real-world prioritization.
+**R4**
+improved: directly evaluate Pareto layering and stronger baselines, including tuned additive collapse and utility-based alternatives.
+risked: the novelty story around Late Collapse may narrow.
+enforcement_location: Sec. 3.2, Sec. 5.3, Conclusion.
+regression_detection: if Late Collapse stays a core contribution without outcome evidence, DO NOT SHIP that claim.
 
-**QUOTE:** "not a scheduler."
-**CITE:**
-**INFERENCE:** the paper positions Tidewatch as a ranking signal, not a scheduling optimizer.
-**NO EVIDENCE:** that scheduling-style deadline metrics are the right primary validation target for a non-scheduler.
+**R5**
+improved: add a deployment-safety section for physiological reranking: consent, override precedence, audit logging, calibration drift, and misuse/failure modes.
+risked: may constrain where the system can be safely deployed.
+enforcement_location: Sec. 3.5, Limitations, Conclusion.
+regression_detection: absent opt-in, override, and failure analysis, DO NOT SHIP any production-readiness framing.
 
-**QUOTE:** "N=50, 200 trials."
-**CITE:**
-**INFERENCE:** only one workload table is fully shown.
-**NO EVIDENCE:** in the manuscript body for the claimed `N=200` table-level results.
+ANY_REGRESS => DO NOT SHIP.
 
-## D. Recommendations
+## E
 
-**Any regression on the controls below: do not ship.**
+DETERMINISM: PARTIAL(scoped).
+VERIFIED: the paper's stated formulas, constants, displayed `N=50` table, and deterministic-test counts are internally inspectable and reproducible from the document.
+PARTIAL(scoped): the `N=200` performance claim is asserted in prose but not fully displayed, so the across-scale conclusion is only partially substantiated in the paper itself.
+FAILED: external efficacy and safe physiological deployment are not validated by the current evidence package.
 
-| Recommendation                                                                                                                           | improved                  | risked                                   | enforcement_location                   | regression_detection                                                             |
-| ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ---------------------------------------- | -------------------------------------- | -------------------------------------------------------------------------------- |
-| Replace circular metrics with exogenous ones: real task logs, blinded human pairwise judgments, and publish full `N=50` + `N=200` tables | validity                  | headline numbers may weaken              | eval harness + paper                   | CI check that manuscript tables are regenerated from fixed seeds and source data |
-| Add effort/slack or compare against slack-aware baselines                                                                                | scheduling relevance      | Tidewatch may lose to simpler heuristics | scoring layer + simulator              | challenge suite with long-duration / long-lead tasks                             |
-| Report saturation rate, tie rate, and explicit deterministic tie-break rules                                                             | inspectability            | exposes ceiling collapse problem         | sorter + results section               | stable-order tests on equal-score batches                                        |
-| Normalize additive baselines and disclose baseline tuning                                                                                | fairness of comparisons   | product-collapse advantage may shrink    | components backend + evaluation config | baseline-config snapshot tests                                                   |
-| Put mutable inputs behind provenance controls                                                                                            | anti-gaming, auditability | more user friction                       | ingestion layer + audit log            | tamper tests for fanout/materiality/status edits                                 |
-| Make bandwidth fail-safe under missing/low-confidence health signals                                                                     | safety/compliance         | fewer reranking wins                     | policy layer                           | missing-signal and noisy-signal simulation tests                                 |
+## F
 
-## E. DETERMINISM
+TS: 2026-03-20
 
-**PARTIAL (scoped).** The equation-derived counterexamples above are reproducible from the published constants and formulas.
-
-**FAILED.** The manuscript alone does not let a reviewer verify external superiority, `N=200` results, statistical meaning of `±`, anti-gaming robustness, or safe physiological-signal deployment.
-
-## F. TS
-
-**TS:** 2026-03-20
-**THREAD:** current
-**CHAT_ID:** unavailable
+THREAD=redteam | CHAT_ID=not exposed | TS=2026-03-20
