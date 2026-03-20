@@ -208,7 +208,8 @@ class TestStrategyComparison:
         obs = _make_obligations(3)
         results = compare_strategies(obs, n_trials=5, seed=42, sim_start=NOW)
         assert set(results.keys()) == {
-            "tidewatch", "tidewatch_bw_full", "tidewatch_bw_mid",
+            "tidewatch", "tidewatch_unclamped",
+            "tidewatch_bw_full", "tidewatch_bw_mid",
             "tidewatch_bw_low", "tidewatch_bw_variable",
             "weighted_sum", "weighted_edf", "edf", "fifo", "random",
         }

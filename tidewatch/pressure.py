@@ -129,8 +129,11 @@ def _no_deadline_result(obligation_id: int | str) -> PressureResult:
     )
 
 
-def _timing_amplifier(days_in_status: float) -> float:
-    """Compute timing amplification for stuck obligations (#195, #1179).
+def _timing_amplifier(
+    days_in_status: float,
+    days_since_status_change: float | None = None,
+) -> float:
+    """Compute timing amplification for stuck obligations (#195, #1179, #1261).
 
     Uses a logistic ramp instead of step function for internal consistency
     with the continuous-framework thesis. The ramp is centered at TIMING_MID_DAYS
@@ -138,22 +141,39 @@ def _timing_amplifier(days_in_status: float) -> float:
 
     T_amp(d) = 1.0 + boost / (1 + exp(-k * (d - mid)))
     where boost = TIMING_MAX_MULTIPLIER - 1.0
+
+    Anti-exploit (#1261): uses max(days_in_status, days_since_status_change) when
+    status_changed_at is available, preventing status-toggle resets from zeroing
+    the timing amplifier. Falls back to days_in_status when the field is None.
     """
+    effective_days = days_in_status
+    if days_since_status_change is not None:
+        effective_days = max(days_in_status, days_since_status_change)
     boost = TIMING_MAX_MULTIPLIER - 1.0
-    return 1.0 + boost / (1.0 + _exponential(-TIMING_LOGISTIC_K * (days_in_status - TIMING_MID_DAYS)))
+    return 1.0 + boost / (1.0 + _exponential(-TIMING_LOGISTIC_K * (effective_days - TIMING_MID_DAYS)))
 
 
-def _violation_amplifier(violation_count: int, days_in_status: float = 0.0) -> float:
-    """Compute violation-based pressure amplification (#99, #1184).
+def _violation_amplifier(
+    violation_count: int,
+    days_in_status: float = 0.0,
+    days_since_violation: float | None = None,
+) -> float:
+    """Compute violation-based pressure amplification (#99, #1184, #1261).
 
     Violations decay over time to prevent perverse feedback loops where
     a missed deadline permanently amplifies an already-difficult obligation.
     Decay uses exponential half-life: effective_count = count * 2^(-d/halflife).
+
+    Anti-exploit (#1261): when violation_first_at is available (passed as
+    days_since_violation), decay is anchored to the first violation event
+    rather than the status age. This prevents status-toggle resets from
+    restarting the decay clock. Falls back to days_in_status when None.
     """
     from tidewatch.constants import VIOLATION_DECAY_HALFLIFE_DAYS
     if violation_count <= 0:
         return 1.0
-    decay = 2.0 ** (-days_in_status / VIOLATION_DECAY_HALFLIFE_DAYS)
+    effective_decay_days = days_since_violation if days_since_violation is not None else days_in_status
+    decay = 2.0 ** (-effective_decay_days / VIOLATION_DECAY_HALFLIFE_DAYS)
     effective = violation_count * decay
     return 1.0 + min(effective * VIOLATION_AMPLIFICATION, VIOLATION_MAX_AMPLIFICATION)
 
@@ -219,8 +239,21 @@ def calculate_pressure(
     effective_deps = min(obligation.dependency_count, DEPENDENCY_COUNT_CAP)
     dep_amp = 1.0 + (effective_deps * DEPENDENCY_AMPLIFICATION * t_gate)
     comp_damp = _completion_dampening(obligation.completion_pct)
-    timing_amp = _timing_amplifier(obligation.days_in_status)
-    violation_amp = _violation_amplifier(obligation.violation_count, obligation.days_in_status)
+    # Anti-exploit (#1261): compute days_since_status_change from status_changed_at
+    days_since_status_change: float | None = None
+    if obligation.status_changed_at is not None:
+        days_since_status_change = _days_remaining(now, obligation.status_changed_at)
+        # _days_remaining returns (first - second) / SECONDS_PER_DAY, so
+        # now - status_changed_at gives positive days since the change
+        days_since_status_change = max(0.0, days_since_status_change)
+    timing_amp = _timing_amplifier(obligation.days_in_status, days_since_status_change)
+
+    # Anti-exploit (#1261): compute days_since_violation from violation_first_at
+    days_since_violation: float | None = None
+    if obligation.violation_first_at is not None:
+        days_since_violation = _days_remaining(now, obligation.violation_first_at)
+        days_since_violation = max(0.0, days_since_violation)
+    violation_amp = _violation_amplifier(obligation.violation_count, obligation.days_in_status, days_since_violation)
 
     # Apply ablation: neutralize specified components to their identity value (1.0)
     from tidewatch.components import (

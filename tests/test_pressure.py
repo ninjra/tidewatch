@@ -343,3 +343,37 @@ class TestNanInfGuards:
         """NaN pressure raises ValueError in pressure_zone."""
         with pytest.raises(ValueError, match="finite"):
             pressure_zone(float("nan"))
+
+
+class TestStatusToggleExploit:
+    """Anti-exploit: status-toggle cannot reset violation decay (#1261, #1267)."""
+
+    def test_status_toggle_cannot_reset_violation_decay(self):
+        """Violation decay anchored to violation_first_at, not days_in_status.
+
+        Creates two obligations with violation_count=3:
+        - ob_reset: days_in_status=0 (simulating a status toggle), no violation_first_at
+        - ob_anchored: days_in_status=0, but violation_first_at=14 days ago
+
+        The anchored obligation should have LOWER violation amplification because
+        its decay is computed from the actual violation event (14 days ago), not
+        from the reset status age (0 days).
+        """
+        from tidewatch.pressure import _violation_amplifier
+
+        # Simulated status reset: days_in_status=0, no event anchor
+        # Decay = 2^(-0/14) = 1.0 → full violation amplification
+        amp_reset = _violation_amplifier(violation_count=3, days_in_status=0)
+
+        # With violation_first_at anchored to 14 days ago:
+        # Decay = 2^(-14/14) = 0.5 → half the violation amplification
+        amp_anchored = _violation_amplifier(
+            violation_count=3, days_in_status=0, days_since_violation=14.0,
+        )
+
+        # The anchored version must have lower amplification — proving that
+        # the decay is event-based (not status-based) when the field is populated
+        assert amp_anchored < amp_reset
+        # Both should be > 1.0 (violations still have some effect)
+        assert amp_anchored > 1.0
+        assert amp_reset > 1.0

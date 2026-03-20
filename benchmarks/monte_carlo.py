@@ -278,6 +278,24 @@ def _weighted_edf_order(obligations: list[Obligation], now: datetime) -> list[in
     return indices
 
 
+def _tidewatch_unclamped_order(obligations: list[Obligation], now: datetime) -> list[int]:
+    """Order by raw component-space product (unclamped, not saturated to [0,1]).
+
+    Uses the raw product of all six pressure components before saturation.
+    This preserves the full dynamic range for ranking — obligations whose
+    raw product exceeds 1.0 are not collapsed to the same ceiling value,
+    eliminating the saturation-induced tie problem (#1263).
+    """
+    results = recalculate_batch(obligations, now=now)
+    scored: list[tuple[int, float]] = []
+    for i, r in enumerate(results):
+        cs = r.component_space
+        raw = cs.space.collapsed if hasattr(cs, 'space') and hasattr(cs.space, 'collapsed') else r.pressure
+        scored.append((i, raw))
+    scored.sort(key=lambda x: x[1], reverse=True)
+    return [idx for idx, _ in scored]
+
+
 def _weighted_sum_order(obligations: list[Obligation], now: datetime) -> list[int]:
     """Order by normalized weighted-sum of component space (MCDM baseline, #1185).
 
@@ -318,6 +336,7 @@ def _weighted_sum_order(obligations: list[Obligation], now: datetime) -> list[in
 # Adding a strategy requires both a STRATEGIES entry and a _STRATEGY_DISPATCH lambda.
 STRATEGIES: dict[str, str] = {
     "tidewatch": "Tidewatch pressure ranking",
+    "tidewatch_unclamped": "Tidewatch unclamped product ranking (#1263)",
     "tidewatch_bw_full": "Tidewatch + bandwidth (b=1.0)",
     "tidewatch_bw_mid": "Tidewatch + bandwidth (b=0.5)",
     "tidewatch_bw_low": "Tidewatch + bandwidth (b=0.2)",
@@ -333,6 +352,7 @@ STRATEGIES: dict[str, str] = {
 # Keys must match STRATEGIES exactly.
 _STRATEGY_DISPATCH: dict[str, callable] = {
     "tidewatch": lambda obs, now, rng: _tidewatch_order(obs, now),
+    "tidewatch_unclamped": lambda obs, now, rng: _tidewatch_unclamped_order(obs, now),
     "tidewatch_bw_full": lambda obs, now, rng: _tidewatch_bandwidth_order(obs, now, 1.0),
     "tidewatch_bw_mid": lambda obs, now, rng: _tidewatch_bandwidth_order(obs, now, 0.5),
     "tidewatch_bw_low": lambda obs, now, rng: _tidewatch_bandwidth_order(obs, now, 0.2),
@@ -560,6 +580,57 @@ def compare_strategies_multi_seed(
         }
 
     return output
+
+
+def run_kf_sensitivity(
+    obligations: list[Obligation],
+    kf_values: list[float] | None = None,
+    n_trials: int = DEFAULT_TRIALS,
+    seed: int = DEFAULT_SEED,
+    sim_start: datetime | None = None,
+) -> dict[float, MonteCarloResult]:
+    """Run kf (FANOUT_TEMPORAL_K) sensitivity analysis (#1264).
+
+    Temporarily patches tidewatch.constants.FANOUT_TEMPORAL_K to each value,
+    runs a full Monte Carlo simulation under the tidewatch strategy, then
+    restores the original constant. This measures how dependency temporal
+    gating sensitivity affects scheduling outcomes.
+
+    Args:
+        obligations: obligations to schedule
+        kf_values: list of FANOUT_TEMPORAL_K values to test (default: [1.0, 2.0, 3.0, 4.0])
+        n_trials: MC replications per kf value
+        seed: RNG seed for reproducibility
+        sim_start: simulation reference time
+
+    Returns:
+        dict mapping kf value to MonteCarloResult
+    """
+    import tidewatch.constants as _constants
+    import tidewatch.pressure as _pressure
+
+    if kf_values is None:
+        kf_values = [1.0, 2.0, 3.0, 4.0]
+
+    original_const = _constants.FANOUT_TEMPORAL_K
+    original_pressure = _pressure.FANOUT_TEMPORAL_K
+    results: dict[float, MonteCarloResult] = {}
+
+    try:
+        for kf in kf_values:
+            # Patch both the constants module and the pressure module's imported copy
+            _constants.FANOUT_TEMPORAL_K = kf
+            _pressure.FANOUT_TEMPORAL_K = kf
+            results[kf] = run_monte_carlo(
+                obligations, strategy="tidewatch", n_trials=n_trials,
+                seed=seed, sim_start=sim_start,
+            )
+    finally:
+        # Always restore originals
+        _constants.FANOUT_TEMPORAL_K = original_const
+        _pressure.FANOUT_TEMPORAL_K = original_pressure
+
+    return results
 
 
 def run_ablation_study(
