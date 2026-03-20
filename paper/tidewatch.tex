@@ -62,34 +62,36 @@
 % ABSTRACT
 % ======================================================================
 \begin{abstract}
-Conventional obligation trackers model deadlines as binary events:
-an item is either overdue or not.
-This discrete framing discards information about the
-\emph{rate} at which urgency accumulates and offers no mechanism
-for adapting task presentation to the operator's current cognitive
-capacity.
-We present \textbf{Tidewatch}, a deterministic scoring engine that
-assigns each tracked obligation a continuous pressure score in $[0, 1]$
-via an exponential-decay time model modulated by six multiplicative
-factors: materiality weighting, dependency fanout, completion dampening
-(logistic sigmoid), timing amplification for stuck obligations,
-violation-count amplification, and a saturation bound.
-Tidewatch additionally provides a \emph{cognitive bandwidth} modulator:
-normalized physiological signals (sleep quality, pain level, HRV trend)
-re-rank the obligation queue so that low-demand tasks surface when
-operator capacity is reduced, without altering underlying pressure scores.
-A hard-floor override ensures binding deadlines (court filings, tax
-payments) bypass bandwidth adjustment when they fall within 24 hours.
-A \emph{speculative planner} uses idle cycles to pre-generate
-action plans for high-pressure obligations, and a \emph{triage queue}
-stages candidate obligations from external scanners with deduplication.
-We validate the model against 11 pre-computed known-value scenarios
-($|{\Delta}| < 10^{-10}$), compare against EDF, linear, and
-Eisenhower-matrix baselines via a shared \texttt{BaselineScorer}
-protocol, and present a sensitivity analysis of the rate constant.
-The implementation is 1{,}132 lines of pure Python with zero runtime
+Task management systems typically reduce deadline urgency to a binary
+signal---overdue or not---discarding the continuous accumulation of
+risk and ignoring the operator's capacity to act on what the system
+surfaces.
+Tidewatch computes a continuous pressure score $P \in [0,1]$ from six
+multiplicative factors preserved as named dimensions in a Late Collapse
+component space: exponential time-decay
+$P_{\text{time}}(t) = 1 - e^{-k/t}$, materiality weighting, temporally
+gated dependency fanout
+$A = 1 + n \cdot \alpha \cdot (1 - e^{-k_f/t})$, logistic completion
+dampening, timing amplification, and violation amplification.
+Factors are never collapsed to a scalar until a consumer requires one;
+Pareto-layered ranking over the full component space is available as an
+alternative to product collapse.
+A cognitive bandwidth modulator re-ranks the pressure-sorted queue using
+physiological signals (sleep quality, pain level, HRV trend) so that
+low-demand tasks surface when operator capacity is reduced, governed by a
+three-tier risk classification (never-demotable, floor-bounded,
+fully-demotable) that prevents binding deadlines from being suppressed.
+Factor ablation ($\S$3.3) isolates each component's marginal
+contribution by setting it to its multiplicative identity.
+We validate against 11 known-value scenarios ($|\Delta| < 10^{-10}$),
+23 property-based tests (bounds, monotonicity, anti-clamping via
+Hypothesis), a Monte Carlo scheduling simulation comparing four
+strategies across three outcome metrics (missed-deadline rate,
+queue-inversion rate, attention efficiency), and EDF / linear /
+Eisenhower baselines.
+The implementation is 1{,}599 lines of pure Python with zero runtime
 dependencies, an explicit reproducibility contract on all time-dependent
-functions, and 483 deterministic tests.
+functions, and 537 deterministic tests.
 \end{abstract}
 
 % ======================================================================
