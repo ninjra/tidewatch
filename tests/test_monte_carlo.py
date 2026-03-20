@@ -13,14 +13,18 @@ import numpy as np
 import pytest
 
 from benchmarks.monte_carlo import (
+    DESResult,
     MonteCarloResult,
     TrialResult,
+    _build_obligation_dag,
+    _build_profiles_from_obligations,
     _deadline_order,
     _fifo_order,
     _run_trial,
     _sample_durations,
     _tidewatch_order,
     compare_strategies,
+    run_des_simulation,
     run_monte_carlo,
 )
 from tidewatch.types import Obligation
@@ -212,3 +216,63 @@ class TestStrategyComparison:
         for name, result in results.items():
             assert result.n_trials == 5
             assert isinstance(result, MonteCarloResult)
+
+
+class TestDESIntegration:
+    """DES engine integration with statistics_harness CloseSimulation."""
+
+    def test_build_dag_no_deps(self):
+        """Obligations with no dependencies produce no edges."""
+        obs = [Obligation(id=1, title="A", due_date=NOW + timedelta(days=7))]
+        edges, procs = _build_obligation_dag(obs)
+        assert len(edges) == 0
+        assert "1" in procs
+
+    def test_build_dag_with_deps(self):
+        """dependency_count creates synthetic predecessor nodes."""
+        obs = [
+            Obligation(id=1, title="A", due_date=NOW + timedelta(days=7),
+                       dependency_count=3, domain="legal"),
+        ]
+        edges, procs = _build_obligation_dag(obs)
+        assert len(edges) == 3
+        # All edges point to the obligation node
+        assert all(tgt == "1" for _, tgt in edges)
+        assert procs["1"] == "legal"
+
+    def test_build_profiles(self):
+        obs = [
+            Obligation(id=1, title="A", domain="legal"),
+            Obligation(id=2, title="B", domain="admin"),
+        ]
+        profiles = _build_profiles_from_obligations(obs)
+        assert "legal" in profiles
+        assert "admin" in profiles
+        assert profiles["legal"].mu > profiles["admin"].mu  # legal takes longer
+
+    def test_des_simulation_runs(self):
+        """DES simulation completes and returns valid results."""
+        obs = _make_obligations(3)
+        result = run_des_simulation(obs, n_trials=5, seed=42, sim_start=NOW)
+        assert isinstance(result, DESResult)
+        assert result.n_trials == 5
+        assert len(result.trial_results) == 5
+
+    def test_des_metrics_bounded(self):
+        obs = _make_obligations()
+        result = run_des_simulation(obs, n_trials=10, seed=42, sim_start=NOW)
+        assert 0.0 <= result.missed_deadline_rate_mean <= 1.0
+        assert result.mean_total_duration_hours > 0
+
+    def test_des_deterministic(self):
+        obs = _make_obligations(3)
+        r1 = run_des_simulation(obs, n_trials=5, seed=42, sim_start=NOW)
+        r2 = run_des_simulation(obs, n_trials=5, seed=42, sim_start=NOW)
+        assert r1.missed_deadline_rate_mean == r2.missed_deadline_rate_mean
+
+    def test_des_to_dict(self):
+        obs = _make_obligations(3)
+        result = run_des_simulation(obs, n_trials=3, seed=42, sim_start=NOW)
+        d = result.to_dict()
+        assert "missed_deadline_rate" in d
+        assert "mean_total_duration_hours" in d

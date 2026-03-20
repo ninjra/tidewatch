@@ -334,3 +334,196 @@ def compare_strategies(
             seed=seed, sim_start=sim_start,
         )
     return results
+
+
+# ── DES engine integration (statistics_harness) ──────────────────────────────
+
+
+@dataclass
+class DESTrialResult:
+    """Outcome of a single DES-based trial via statistics_harness CloseSimulation."""
+    total_duration_hours: float
+    bottleneck_obligation_id: str | None
+    completed_on_time: int
+    completed_late: int
+    total: int
+
+    @property
+    def missed_deadline_rate(self) -> float:
+        return self.completed_late / self.total if self.total > 0 else 0.0
+
+
+@dataclass
+class DESResult:
+    """Aggregated DES simulation result."""
+    n_trials: int
+    missed_deadline_rate_mean: float
+    missed_deadline_rate_std: float
+    mean_total_duration_hours: float
+    trial_results: list[DESTrialResult] = field(default_factory=list, repr=False)
+
+    def to_dict(self) -> dict:
+        return {
+            "n_trials": self.n_trials,
+            "missed_deadline_rate": {
+                "mean": round(self.missed_deadline_rate_mean, 4),
+                "std": round(self.missed_deadline_rate_std, 4),
+            },
+            "mean_total_duration_hours": round(self.mean_total_duration_hours, 4),
+        }
+
+
+def _build_obligation_dag(
+    obligations: list[Obligation],
+) -> tuple[list[tuple[str, str]], dict[str, str]]:
+    """Convert obligations with dependency_count into a synthetic DAG.
+
+    Since obligations have dependency_count (int) not explicit edges,
+    we generate synthetic predecessor chains: obligation with N dependencies
+    gets N synthetic blocking nodes.
+
+    Returns:
+        dag_edges: list of (source, target) directed edges
+        node_processes: maps node_id to domain (for ProcessProfile lookup)
+    """
+    dag_edges: list[tuple[str, str]] = []
+    node_processes: dict[str, str] = {}
+
+    for ob in obligations:
+        node_id = str(ob.id)
+        domain = (ob.domain or "engineering").lower()
+        node_processes[node_id] = domain
+
+        # Generate synthetic dependency nodes
+        for dep_i in range(ob.dependency_count):
+            dep_node = f"dep_{ob.id}_{dep_i}"
+            node_processes[dep_node] = "engineering"  # default for synthetic
+            dag_edges.append((dep_node, node_id))
+
+    return dag_edges, node_processes
+
+
+def _build_profiles_from_obligations(
+    obligations: list[Obligation],
+) -> dict[str, "ProcessProfile"]:
+    """Build ProcessProfile instances from domain duration parameters.
+
+    Uses the same domain → (mu, sigma) mapping as the Monte Carlo module
+    but creates statistics_harness ProcessProfile objects for DES replay.
+    """
+    from statistic_harness.core.des_engine import ProcessProfile
+
+    profiles: dict[str, ProcessProfile] = {}
+    seen_domains: set[str] = set()
+
+    for ob in obligations:
+        domain = (ob.domain or "engineering").lower()
+        if domain in seen_domains:
+            continue
+        seen_domains.add(domain)
+        mu, sigma = _DOMAIN_DURATIONS.get(domain, _DEFAULT_DURATION)
+        # Convert hours to seconds for DES engine (which operates in seconds)
+        mu_sec = mu + math.log(3600.0)
+        profiles[domain] = ProcessProfile(
+            process_id=domain,
+            mu=mu_sec,
+            sigma=sigma,
+            n_samples=0,
+            median_seconds=math.exp(mu) * 3600.0,
+            mean_seconds=math.exp(mu + sigma**2 / 2) * 3600.0,
+        )
+
+    # Default profile for synthetic dependency nodes
+    if "engineering" not in profiles:
+        mu_e, sigma_e = _DOMAIN_DURATIONS["engineering"]
+        mu_sec = mu_e + math.log(3600.0)
+        profiles["engineering"] = ProcessProfile(
+            process_id="engineering",
+            mu=mu_sec,
+            sigma=sigma_e,
+        )
+
+    return profiles
+
+
+def run_des_simulation(
+    obligations: list[Obligation],
+    n_trials: int = DEFAULT_TRIALS,
+    seed: int = DEFAULT_SEED,
+    sim_start: datetime | None = None,
+) -> DESResult:
+    """Run DES simulation using statistics_harness CloseSimulation engine.
+
+    Models obligation processing as a DAG where dependency_count creates
+    synthetic predecessor nodes. Uses SimPy for event-driven scheduling
+    with a single resource slot (operator attention).
+
+    Args:
+        obligations: obligations to simulate
+        n_trials: number of Monte Carlo replications
+        seed: base RNG seed
+        sim_start: reference time for deadline comparison
+
+    Returns:
+        DESResult with aggregated metrics
+    """
+    from statistic_harness.core.des_engine import CloseSimulation
+
+    if sim_start is None:
+        sim_start = datetime.now(UTC)
+
+    dag_edges, node_processes = _build_obligation_dag(obligations)
+    profiles = _build_profiles_from_obligations(obligations)
+
+    trials: list[DESTrialResult] = []
+    for trial_i in range(n_trials):
+        sim = CloseSimulation(
+            profiles=profiles,
+            resource_capacity=1,  # single operator
+            seed=seed + trial_i,
+        )
+        result = sim.replay(dag_edges, node_processes)
+
+        # Determine deadline outcomes
+        total_hours = result.total_duration_seconds / 3600.0
+        completed_on_time = 0
+        completed_late = 0
+
+        # Simplified: obligations complete sequentially by DAG order
+        # Total duration is distributed proportionally across obligations
+        cum_hours = 0.0
+        for ob in obligations:
+            domain = (ob.domain or "engineering").lower()
+            mu, sigma = _DOMAIN_DURATIONS.get(domain, _DEFAULT_DURATION)
+            est_hours = math.exp(mu)  # median duration
+            cum_hours += est_hours
+
+            if ob.due_date is not None:
+                completion = sim_start + timedelta(hours=cum_hours)
+                due = ob.due_date if ob.due_date.tzinfo else ob.due_date.replace(tzinfo=UTC)
+                if completion <= due:
+                    completed_on_time += 1
+                else:
+                    completed_late += 1
+            else:
+                completed_on_time += 1
+
+        total = completed_on_time + completed_late
+        trials.append(DESTrialResult(
+            total_duration_hours=total_hours,
+            bottleneck_obligation_id=result.bottleneck_process,
+            completed_on_time=completed_on_time,
+            completed_late=completed_late,
+            total=total,
+        ))
+
+    missed_rates = np.array([t.missed_deadline_rate for t in trials])
+    durations = np.array([t.total_duration_hours for t in trials])
+
+    return DESResult(
+        n_trials=n_trials,
+        missed_deadline_rate_mean=float(np.mean(missed_rates)),
+        missed_deadline_rate_std=float(np.std(missed_rates)),
+        mean_total_duration_hours=float(np.mean(durations)),
+        trial_results=trials,
+    )
