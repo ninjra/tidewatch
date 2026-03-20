@@ -362,6 +362,49 @@ class TestGate05_PressureKnownValues:
 # Gate 06 — Pressure Edge Cases
 # ════════════════════════════════════════════════════════════════════
 
+# Pre-computed from 6-factor equation §3.1 with active timing_amp and violation_amp
+# P = min(1.0, P_time × M × A × D × T_amp × V_amp)
+_PRESSURE_CASES_6FACTOR = [
+    # (days_out, materiality, deps, completion, days_stuck, violations, expected_P, expected_zone, label)
+    (5,  "routine",  0, 0.0, 10, 3, 0.5645938673389965, "yellow", "stuck_10d_3viol"),
+    (7,  "material", 2, 0.2, 14, 5, 0.7970688701611751, "orange", "critical_stuck"),
+    (14, "routine",  0, 0.0,  8, 1, 0.220374832263452,  "green",  "mildly_stuck"),
+]
+
+
+class TestGate05b_Pressure6FactorKnownValues:
+    """Pressure with active timing_amp and violation_amp factors."""
+
+    @pytest.mark.parametrize(
+        "days_out,materiality,deps,completion,days_stuck,violations,"
+        "expected_p,expected_zone,label",
+        _PRESSURE_CASES_6FACTOR,
+        ids=[c[8] for c in _PRESSURE_CASES_6FACTOR],
+    )
+    def test_pressure_6factor(
+        self, days_out: int, materiality: str, deps: int, completion: float,
+        days_stuck: int, violations: int,
+        expected_p: float, expected_zone: str, label: str,
+    ) -> None:
+        from tidewatch import Obligation, calculate_pressure
+        due = NOW + timedelta(days=days_out)
+        ob = Obligation(
+            id=label, title=f"Test {label}",
+            due_date=due, materiality=materiality,
+            dependency_count=deps, completion_pct=completion,
+            days_in_status=days_stuck, violation_count=violations,
+        )
+        result = calculate_pressure(ob, now=NOW)
+        assert result.pressure == pytest.approx(expected_p, abs=1e-10), (
+            f"{label}: expected P={expected_p}, got P={result.pressure}"
+        )
+        assert result.zone == expected_zone
+
+
+# ════════════════════════════════════════════════════════════════════
+# Gate 06 — Pressure Edge Cases
+# ════════════════════════════════════════════════════════════════════
+
 class TestGate06_PressureEdgeCases:
     """Edge conditions: no deadline, overdue, timezone handling."""
 

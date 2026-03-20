@@ -190,10 +190,61 @@ def _random_order(obligations: list[Obligation], now: datetime, rng: np.random.G
     return indices
 
 
+def _tidewatch_bandwidth_order(
+    obligations: list[Obligation], now: datetime, bandwidth: float,
+) -> list[int]:
+    """Order by tidewatch pressure with bandwidth-adjusted reranking."""
+    from tidewatch.pressure import bandwidth_adjusted_sort
+    from tidewatch.types import CognitiveContext
+    results = recalculate_batch(obligations, now=now)
+    ctx = CognitiveContext(bandwidth_score=bandwidth)
+    reranked = bandwidth_adjusted_sort(results, obligations, ctx)
+    id_to_rank = {r.obligation_id: i for i, r in enumerate(reranked)}
+    indices = list(range(len(obligations)))
+    indices.sort(key=lambda i: id_to_rank.get(obligations[i].id, i))
+    return indices
+
+
+def _weighted_sum_order(obligations: list[Obligation], now: datetime) -> list[int]:
+    """Order by weighted-sum collapse of component space (MCDM baseline).
+
+    Uses equal weights across all six factors. This is the standard
+    weighted-sum MCDM approach — a direct comparison to Tidewatch's
+    product collapse and Pareto-layered ranking.
+    """
+    results = recalculate_batch(obligations, now=now)
+    equal_weights = {
+        "time_pressure": 1.0 / 6,
+        "materiality": 1.0 / 6,
+        "dependency_amp": 1.0 / 6,
+        "completion_damp": 1.0 / 6,
+        "timing_amp": 1.0 / 6,
+        "violation_amp": 1.0 / 6,
+    }
+    scored = []
+    for r in results:
+        cs = r.component_space
+        if hasattr(cs, 'space') and hasattr(cs.space, 'weighted_collapse'):
+            ws = cs.space.weighted_collapse(equal_weights)
+        else:
+            # Fallback: use pressure (product collapse) if weighted not available
+            ws = r.pressure
+        scored.append((r.obligation_id, ws))
+    scored.sort(key=lambda x: x[1], reverse=True)
+    id_to_rank = {oid: i for i, (oid, _) in enumerate(scored)}
+    indices = list(range(len(obligations)))
+    indices.sort(key=lambda i: id_to_rank.get(obligations[i].id, i))
+    return indices
+
+
 # Exhaustive strategy registry — every entry has a matching dispatch function.
 # Adding a strategy requires both a STRATEGIES entry and a _STRATEGY_DISPATCH lambda.
 STRATEGIES: dict[str, str] = {
     "tidewatch": "Tidewatch pressure ranking",
+    "tidewatch_bw_full": "Tidewatch + bandwidth (b=1.0)",
+    "tidewatch_bw_mid": "Tidewatch + bandwidth (b=0.5)",
+    "tidewatch_bw_low": "Tidewatch + bandwidth (b=0.2)",
+    "weighted_sum": "Weighted-sum MCDM (equal weights)",
     "edf": "Earliest deadline first",
     "fifo": "First-in first-out",
     "random": "Random order (null hypothesis)",
@@ -203,6 +254,10 @@ STRATEGIES: dict[str, str] = {
 # Keys must match STRATEGIES exactly.
 _STRATEGY_DISPATCH: dict[str, callable] = {
     "tidewatch": lambda obs, now, rng: _tidewatch_order(obs, now),
+    "tidewatch_bw_full": lambda obs, now, rng: _tidewatch_bandwidth_order(obs, now, 1.0),
+    "tidewatch_bw_mid": lambda obs, now, rng: _tidewatch_bandwidth_order(obs, now, 0.5),
+    "tidewatch_bw_low": lambda obs, now, rng: _tidewatch_bandwidth_order(obs, now, 0.2),
+    "weighted_sum": lambda obs, now, rng: _weighted_sum_order(obs, now),
     "edf": lambda obs, now, rng: _deadline_order(obs, now),
     "fifo": lambda obs, now, rng: _fifo_order(obs, now),
     "random": lambda obs, now, rng: _random_order(obs, now, rng),
