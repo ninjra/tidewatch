@@ -54,13 +54,13 @@ def generate(n: int = 1000, seed: int = 42) -> list[dict]:
         due_date = (now + timedelta(days=days_out)).isoformat()
 
         # Dependencies: power-law, capped
-        dep_count = min(int(rng.paretovariate(DEPENDENCY_PARETO_ALPHA)), MAX_DEPENDENCY_COUNT)  # MATH_GUARD: cap on power-law tail
+        dep_count = min(int(rng.paretovariate(DEPENDENCY_PARETO_ALPHA)), MAX_DEPENDENCY_COUNT)
 
         # Completion: random progress
         completion = round(rng.random() * rng.random(), 2)  # skewed toward 0
 
         # Ground truth: optimal attention time
-        optimal_attention_days = max(days_out * OPTIMAL_ATTENTION_FRACTION, MIN_ATTENTION_DAYS) if days_out > 0 else 0  # MATH_GUARD: floor on attention window
+        optimal_attention_days = max(days_out * OPTIMAL_ATTENTION_FRACTION, MIN_ATTENTION_DAYS) if days_out > 0 else 0
 
         obligations.append({
             "id": i + 1,

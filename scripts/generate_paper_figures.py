@@ -16,9 +16,9 @@ import os
 import sys
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -168,12 +168,12 @@ def fig_sensitivity():
 
     fig, ax = plt.subplots()
 
-    for k, c in zip(k_values, colors):
+    for k, c in zip(k_values, colors, strict=True):
         p = [p_time(ti, k=k) for ti in t]
         ax.plot(t, p, label=f"$k = {k}$", color=c, linewidth=1.5)
 
     # Zone thresholds
-    for threshold, label in [(ZONE_YELLOW, "Yellow"), (ZONE_ORANGE, "Orange"), (ZONE_RED, "Red")]:
+    for threshold, _label in [(ZONE_YELLOW, "Yellow"), (ZONE_ORANGE, "Orange"), (ZONE_RED, "Red")]:
         ax.axhline(threshold, color="gray", linestyle=":", linewidth=0.5, alpha=0.6)
 
     ax.set_xlabel("Days until deadline ($t$)")

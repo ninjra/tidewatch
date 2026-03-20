@@ -1,0 +1,2647 @@
+repo: /home/justi/projects/tidewatch
+repo_name: tidewatch
+date: '2026-03-19'
+scan:
+  repo_path: /home/justi/projects/tidewatch
+  repo_name: tidewatch
+  stats:
+    total_files: 46
+    languages:
+    - Python
+    - Markdown
+    - YAML
+    - TOML
+    - Shell
+    language_counts:
+      YAML: 2
+      Markdown: 7
+      Python: 24
+      TOML: 1
+      Shell: 1
+  tree:
+  - .github/workflows/remediation-gates.yml
+  - CLAUDE.md
+  - GENERIC_FIRST_REMEDIATION.md
+  - IMPLEMENTATION.md
+  - LICENSE
+  - NEXT_SESSION.md
+  - README.md
+  - REDTEAM.md
+  - TIDEWATCH-BOOTSTRAP.md
+  - analyses/tidewatch-2026-03-19.yaml
+  - benchmarks/__init__.py
+  - benchmarks/baselines/__init__.py
+  - benchmarks/baselines/binary_deadline.py
+  - benchmarks/baselines/eisenhower.py
+  - benchmarks/baselines/linear_urgency.py
+  - benchmarks/datasets/__init__.py
+  - benchmarks/datasets/generate_obligations.py
+  - benchmarks/metrics.py
+  - benchmarks/run.py
+  - paper/references.bib
+  - paper/tidewatch.aux
+  - paper/tidewatch.bbl
+  - paper/tidewatch.blg
+  - paper/tidewatch.fdb_latexmk
+  - paper/tidewatch.fls
+  - paper/tidewatch.log
+  - paper/tidewatch.out
+  - paper/tidewatch.pdf
+  - paper/tidewatch.tex
+  - pyproject.toml
+  - scripts/golden_pipeline.sh
+  - tests/__init__.py
+  - tests/conftest.py
+  - tests/test_benchmarks.py
+  - tests/test_cognitive_bandwidth.py
+  - tests/test_golden_pipeline.py
+  - tests/test_integration.py
+  - tests/test_planner.py
+  - tests/test_pressure.py
+  - tests/test_triage.py
+  - tidewatch/__init__.py
+  - tidewatch/constants.py
+  - tidewatch/planner.py
+  - tidewatch/pressure.py
+  - tidewatch/triage.py
+  - tidewatch/types.py
+  key_files:
+    CLAUDE.md: '# CLAUDE.md -- Tidewatch
+
+
+      ## What This Repo Is
+
+
+      Tidewatch is a standalone Python library + SSRN paper that extracts and
+
+      formalizes the obligation pressure engine and speculative planning system
+
+      from Sentinel. It models deadline urgency as a continuous pressure field
+
+      rather than a binary overdue/not-overdue flag, and uses idle compute cycles
+
+      to proactively generate action plans for high-pressure obligations.
+
+
+      ## Build Commands
+
+
+      ```bash
+
+      pip install -e ".[dev]"
+
+      pytest tests/ -v
+
+      python -m benchmarks.run --suite all
+
+      ```
+
+
+      ## Code Standards
+
+
+      - Python 3.11+, type hints on all public functions
+
+      - Pure math in core -- no database, no LLM, no async in the pressure engine
+
+      - Speculative planner returns prompt templates -- caller provides the LLM
+
+      - Zero runtime dependencies. stdlib math only.
+
+
+      ## Key Equations
+
+
+      P = min(1.0, P_time * M * A * D)
+
+
+      - P_time(t) = 1 - exp(-3 / max(t, 0.01)) for t > 0; 1.0 for t <= 0
+
+      - M = 1.5 (material) or 1.0 (routine)
+
+      - A = 1.0 + (dependency_count * 0.1)
+
+      - D = 1.0 - (completion_pct * 0.6)
+
+
+      Zones: green < 0.30, yellow < 0.60, orange < 0.80, red >= 0.80
+
+
+      ## Testing
+
+
+      Run before every commit: `python -m pytest tests/ -v`
+
+
+      ## Sentinel Integration
+
+
+      This repo is part of the Sentinel ecosystem. Use `sentinel_query.py` for all cross-repo
+
+      coordination. The tool lives at `~/projects/Sentinel/scripts/sentinel_query.py`.
+
+
+      ### Session Lifecycle
+
+
+      At the start of every Claude Code session in this repo:
+
+      ```bash
+
+      python3 ~/projects/Sentinel/scripts/sentinel_query.py session-start tidewatch "<brief task description>"
+
+      ```
+
+
+      At the end of every session:
+
+      ```bash
+
+      python3 ~/projects/Sentinel/scripts/sentinel_query.py session-complete "<summary>"
+
+      ```
+
+
+      ### Check Obligations
+
+
+      Before starting work, check what''s owed:
+
+      ```bash
+
+      python3 ~/projects/Sentinel/scripts/sentinel_query.py obligations --repo tidewatch
+
+      ```
+
+
+      ### Cross-Repo Awareness
+
+
+      See what other Claude sessions are doing right now:
+
+      ```bash
+
+      python3 ~/projects/Sentinel/scripts/sentinel_query.py sessions
+
+      ```
+
+
+      ### Memory
+
+
+      Read/write persistent memories that survive across sessions:
+
+      ```bash
+
+      python3 ~/projects/Sentinel/scripts/sentinel_query.py memory-read "<name>"
+
+      python3 ~/projects/Sentinel/scripts/sentinel_query.py memory-save "<name>" "<type>" "<description>" "<content>"
+
+      python3 ~/projects/Sentinel/scripts/sentinel_query.py memory --search "<search term>"
+
+      ```
+
+
+      ### Important
+
+
+      - **Do NOT use session_log.py** — it is deprecated. sentinel_query.py is the replacement.
+
+      - **Do NOT write to flat .md/.json memory files** — all memory goes to MSSQL via sentinel_query.py.
+
+      - **Do NOT skip session-start/session-complete** — obligation tracking and cross-repo awareness depend on it.
+
+      '
+    README.md: "# Tidewatch\n\n**Continuous obligation pressure with proactive idle-time planning.**\n\nTidewatch models deadline\
+      \ urgency as a hydraulic pressure field.\nObligations build pressure exponentially as deadlines approach.\nMaterial\
+      \ obligations carry more. Dependencies amplify. Progress\ndampens. The system plans before you ask.\n\n## Install\n\n\
+      ```bash\npip install tidewatch\n```\n\n## Quick Start\n\n```python\nfrom datetime import datetime, timezone, timedelta\n\
+      from tidewatch import (\n    Obligation, calculate_pressure, pressure_zone,\n    SpeculativePlanner, recalculate_batch,\n\
+      )\n\n# Create obligations\nobligations = [\n    Obligation(\n        id=1, title=\"File Q1 taxes\",\n        due_date=datetime.now(timezone.utc)\
+      \ + timedelta(days=3),\n        materiality=\"material\", dependency_count=2,\n        completion_pct=0.1,\n    ),\n\
+      \    Obligation(\n        id=2, title=\"Update project README\",\n        due_date=datetime.now(timezone.utc) + timedelta(days=14),\n\
+      \        materiality=\"routine\", dependency_count=0,\n        completion_pct=0.0,\n    ),\n]\n\n# Calculate pressure\n\
+      results = recalculate_batch(obligations)\nfor r in results:\n    print(f\"{r.obligation_id}: P={r.pressure:.2f} [{r.zone}]\"\
+      )\n\n# Generate speculative plans for high-pressure items\nplanner = SpeculativePlanner()\nplan_requests = planner.generate_plan_requests(results,\
+      \ obligations=obligations)\nfor req in plan_requests:\n    print(f\"Plan needed: {req.obligation.title}\")\n    print(f\"\
+      Prompt: {req.prompt[:100]}...\")\n    # Send req.prompt to your LLM, then:\n    # result = planner.complete_plan(req,\
+      \ llm_output)\n```\n\n## Paper\n\n> **Tidewatch: Continuous Obligation Pressure with Proactive Idle-Time\n> Planning\
+      \ for Intelligent Task Management**\n> Justin Ram, Infoil LLC (2026)\n> [SSRN link pending]\n\n## License\n\nMIT\n"
+    pyproject.toml: "[build-system]\nrequires = [\"setuptools>=68.0\", \"wheel\"]\nbuild-backend = \"setuptools.build_meta\"\
+      \n\n[project]\nname = \"tidewatch\"\nversion = \"0.1.0\"\ndescription = \"Continuous obligation pressure with proactive\
+      \ idle-time planning\"\nreadme = \"README.md\"\nlicense = \"Apache-2.0 OR LicenseRef-Commercial\"\nrequires-python =\
+      \ \">=3.11\"\nauthors = [\n    {name = \"Justin Ram\", email = \"justin.ram@gmail.com\"},\n]\nkeywords = [\n    \"task\
+      \ management\", \"deadline\", \"urgency\", \"pressure\",\n    \"proactive planning\", \"AI agents\", \"obligation tracking\"\
+      ,\n]\ndependencies = []\n\n[project.optional-dependencies]\ndev = [\n    \"pytest>=7.0\",\n    \"pytest-cov\",\n   \
+      \ \"ruff\",\n    \"mypy\",\n]\nbenchmarks = [\n    \"matplotlib>=3.7\",\n    \"pandas>=2.0\",\n    \"numpy>=1.24\",\n\
+      ]\ntelemetry = [\n    \"sentinel-sdk\",\n]\n\n[tool.setuptools.packages.find]\ninclude = [\"tidewatch*\"]\n\n[tool.pytest.ini_options]\n\
+      testpaths = [\"tests\"]\n\n[tool.ruff]\ntarget-version = \"py312\"\nline-length = 120\n\n[tool.ruff.lint]\nselect =\
+      \ [\"E\", \"F\", \"W\", \"I\", \"UP\", \"B\", \"SIM\"]\nignore = [\"E501\"]\n"
+  entry_points:
+  - benchmarks/datasets/generate_obligations.py
+  - benchmarks/run.py
+  - tests/test_benchmarks.py
+  - tests/test_cognitive_bandwidth.py
+  - tests/test_golden_pipeline.py
+  - tests/test_integration.py
+  - tests/test_planner.py
+  - tests/test_pressure.py
+  - tests/test_triage.py
+  config_files: []
+  plugin_dirs: []
+  test_files:
+  - tests/conftest.py
+  - tests/test_benchmarks.py
+  - tests/test_cognitive_bandwidth.py
+  - tests/test_golden_pipeline.py
+  - tests/test_integration.py
+  - tests/test_planner.py
+  - tests/test_pressure.py
+  - tests/test_triage.py
+  ci_configs:
+  - .github/workflows/remediation-gates.yml
+  source_signatures:
+    benchmarks/baselines/binary_deadline.py:
+      imports: []
+      classes: []
+      functions:
+      - name: score
+        decorators: []
+      decorators: []
+    benchmarks/baselines/eisenhower.py:
+      imports: []
+      classes: []
+      functions:
+      - name: score
+        decorators: []
+      decorators: []
+    benchmarks/baselines/linear_urgency.py:
+      imports: []
+      classes: []
+      functions:
+      - name: score
+        decorators: []
+      decorators: []
+    benchmarks/datasets/generate_obligations.py:
+      imports:
+      - argparse
+      - json
+      - random
+      - datetime
+      classes: []
+      functions:
+      - name: generate
+        decorators: []
+      - name: main
+        decorators: []
+      decorators: []
+    benchmarks/metrics.py:
+      imports:
+      - __future__
+      classes: []
+      functions:
+      - name: zone_transition_timeliness
+        decorators: []
+      - name: missed_deadline_rate
+        decorators: []
+      - name: attention_allocation_efficiency
+        decorators: []
+      - name: false_alarm_rate
+        decorators: []
+      decorators: []
+    benchmarks/run.py:
+      imports:
+      - argparse
+      - json
+      - sys
+      - datetime
+      - pathlib
+      - tidewatch
+      - benchmarks.baselines
+      - benchmarks.datasets.generate_obligations
+      - benchmarks.metrics
+      classes: []
+      functions:
+      - name: run_tidewatch
+        decorators: []
+      - name: run_baseline
+        decorators: []
+      - name: main
+        decorators: []
+      decorators: []
+    tests/conftest.py:
+      imports:
+      - datetime
+      - pytest
+      - tidewatch.planner
+      - tidewatch.types
+      classes: []
+      functions:
+      - name: standard_obligation
+        decorators:
+        - fixture
+      - name: mixed_zone_obligations
+        decorators:
+        - fixture
+      - name: default_planner
+        decorators:
+        - fixture
+      decorators:
+      - fixture
+    tests/test_benchmarks.py:
+      imports:
+      - datetime
+      - benchmarks.baselines
+      - benchmarks.datasets.generate_obligations
+      - benchmarks.metrics
+      - benchmarks.run
+      classes:
+      - name: TestBinaryDeadline
+        bases: []
+        decorators: []
+      - name: TestLinearUrgency
+        bases: []
+        decorators: []
+      - name: TestEisenhower
+        bases: []
+        decorators: []
+      - name: TestMetrics
+        bases: []
+        decorators: []
+      - name: TestSOBGenerator
+        bases: []
+        decorators: []
+      - name: TestRoundTrip
+        bases: []
+        decorators: []
+      functions:
+      - name: test_overdue_scores_one
+        decorators: []
+      - name: test_future_scores_zero
+        decorators: []
+      - name: test_exactly_due_scores_one
+        decorators: []
+      - name: test_no_deadline_scores_zero
+        decorators: []
+      - name: test_overdue_scores_one
+        decorators: []
+      - name: test_at_horizon_scores_zero
+        decorators: []
+      - name: test_halfway_scores_half
+        decorators: []
+      - name: test_no_deadline_scores_zero
+        decorators: []
+      - name: test_beyond_horizon_scores_zero
+        decorators: []
+      - name: test_q1_urgent_important
+        decorators: []
+      - name: test_q2_not_urgent_important
+        decorators: []
+      - name: test_q3_urgent_not_important
+        decorators: []
+      - name: test_q4_not_urgent_not_important
+        decorators: []
+      - name: test_no_deadline_scores_zero
+        decorators: []
+      - name: test_zone_transition_timeliness_perfect
+        decorators: []
+      - name: test_zone_transition_timeliness_gap
+        decorators: []
+      - name: test_zone_transition_timeliness_empty
+        decorators: []
+      - name: test_missed_deadline_rate_none_missed
+        decorators: []
+      - name: test_missed_deadline_rate_all_missed
+        decorators: []
+      - name: test_missed_deadline_rate_partial
+        decorators: []
+      - name: test_missed_deadline_rate_empty
+        decorators: []
+      - name: test_attention_allocation_perfect
+        decorators: []
+      - name: test_attention_allocation_reversed
+        decorators: []
+      - name: test_attention_allocation_single
+        decorators: []
+      - name: test_false_alarm_rate_no_false_alarms
+        decorators: []
+      - name: test_false_alarm_rate_all_false_alarms
+        decorators: []
+      - name: test_false_alarm_rate_no_high_alerts
+        decorators: []
+      - name: test_generates_correct_count
+        decorators: []
+      - name: test_default_generates_1000
+        decorators: []
+      - name: test_deterministic_with_seed
+        decorators: []
+      - name: test_has_required_fields
+        decorators: []
+      - name: test_materiality_distribution
+        decorators: []
+      - name: test_domain_coverage
+        decorators: []
+      - name: test_includes_overdue
+        decorators: []
+      - name: test_completion_pct_valid
+        decorators: []
+      - name: test_run_tidewatch_returns_scores
+        decorators: []
+      - name: test_run_baselines_return_scores
+        decorators: []
+      - name: test_full_pipeline_generate_score_evaluate
+        decorators: []
+      decorators: []
+    tests/test_cognitive_bandwidth.py:
+      imports:
+      - datetime
+      - pytest
+      - tidewatch
+      classes:
+      - name: TestCognitiveContext
+        bases: []
+        decorators: []
+      - name: TestTaskDemand
+        bases: []
+        decorators: []
+      - name: TestHardFloor
+        bases: []
+        decorators: []
+      - name: TestBandwidthAdjustedSort
+        bases: []
+        decorators: []
+      functions:
+      - name: _make_obligation
+        decorators: []
+      - name: test_full_bandwidth_no_signals
+        decorators: []
+      - name: test_explicit_bandwidth_score
+        decorators: []
+      - name: test_explicit_overrides_signals
+        decorators: []
+      - name: test_single_signal
+        decorators: []
+      - name: test_multiple_signals_averaged
+        decorators: []
+      - name: test_hours_since_sleep_normalization
+        decorators: []
+      - name: test_bandwidth_clamped
+        decorators: []
+      - name: test_legal_high_demand
+        decorators: []
+      - name: test_ops_low_demand
+        decorators: []
+      - name: test_material_higher_complexity
+        decorators: []
+      - name: test_explicit_hard_floor_sorts_first
+        decorators: []
+      - name: test_auto_hard_floor_legal_within_24h
+        decorators: []
+      - name: test_no_auto_hard_floor_legal_far_deadline
+        decorators: []
+      - name: test_hard_floor_financial
+        decorators: []
+      - name: test_full_bandwidth_preserves_order
+        decorators: []
+      - name: test_low_bandwidth_promotes_easy_tasks
+        decorators: []
+      - name: test_no_context_defaults_to_full
+        decorators: []
+      - name: test_medium_bandwidth_partial_reorder
+        decorators: []
+      decorators: []
+    tests/test_golden_pipeline.py:
+      imports:
+      - __future__
+      - datetime
+      - pytest
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch.constants
+      - tidewatch.constants
+      - tidewatch.constants
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch.constants
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - tidewatch
+      - inspect
+      - tidewatch
+      - benchmarks.datasets.generate_obligations
+      - benchmarks.datasets.generate_obligations
+      - benchmarks.datasets.generate_obligations
+      - benchmarks.datasets.generate_obligations
+      - benchmarks.datasets.generate_obligations
+      - benchmarks.datasets.generate_obligations
+      - benchmarks.datasets.generate_obligations
+      - benchmarks.datasets.generate_obligations
+      - benchmarks.datasets.generate_obligations
+      - benchmarks.datasets.generate_obligations
+      - benchmarks.baselines.binary_deadline
+      - benchmarks.baselines.linear_urgency
+      - benchmarks.baselines.eisenhower
+      - benchmarks.metrics
+      - benchmarks.metrics
+      - benchmarks.metrics
+      - benchmarks.metrics
+      - benchmarks.metrics
+      - benchmarks.metrics
+      - benchmarks.metrics
+      - benchmarks.metrics
+      - benchmarks.metrics
+      - benchmarks.metrics
+      - benchmarks.metrics
+      - benchmarks.metrics
+      - benchmarks.metrics
+      - benchmarks.metrics
+      - benchmarks.metrics
+      - benchmarks.run
+      - benchmarks.run
+      - benchmarks.run
+      - benchmarks.run
+      classes:
+      - name: TestGate01_PackageAPISurface
+        bases: []
+        decorators: []
+      - name: TestGate02_TypeConstruction
+        bases: []
+        decorators: []
+      - name: TestGate03_ZoneOrdering
+        bases: []
+        decorators: []
+      - name: TestGate04_Constants
+        bases: []
+        decorators: []
+      - name: TestGate05_PressureKnownValues
+        bases: []
+        decorators: []
+      - name: TestGate06_PressureEdgeCases
+        bases: []
+        decorators: []
+      - name: TestGate07_InputValidation
+        bases: []
+        decorators: []
+      - name: TestGate08_ZoneClassification
+        bases: []
+        decorators: []
+      - name: TestGate09_BatchRecalculation
+        bases: []
+        decorators: []
+      - name: TestGate10_PlannerInit
+        bases: []
+        decorators: []
+      - name: TestGate11_PlanRequestGeneration
+        bases: []
+        decorators: []
+      - name: TestGate12_PlanCompletion
+        bases: []
+        decorators: []
+      - name: TestGate13_TriageStageList
+        bases: []
+        decorators: []
+      - name: TestGate14_TriageAcceptReject
+        bases: []
+        decorators: []
+      - name: TestGate15_FullPipeline
+        bases: []
+        decorators: []
+      - name: TestGate16_SentinelGraceful
+        bases: []
+        decorators: []
+      - name: TestGate17_SOBGenerator
+        bases: []
+        decorators: []
+      - name: TestGate18_Baselines
+        bases: []
+        decorators: []
+      - name: TestGate19_Metrics
+        bases: []
+        decorators: []
+      - name: TestGate20_BenchmarkRunner
+        bases: []
+        decorators: []
+      functions:
+      - name: test_export_accessible
+        decorators:
+        - parametrize
+      - name: test_all_matches_expected
+        decorators: []
+      - name: test_version_present
+        decorators: []
+      - name: test_obligation
+        decorators: []
+      - name: test_obligation_defaults
+        decorators: []
+      - name: test_pressure_result
+        decorators: []
+      - name: test_plan_request
+        decorators: []
+      - name: test_plan_result
+        decorators: []
+      - name: test_triage_candidate
+        decorators: []
+      - name: test_zone_enum_values
+        decorators: []
+      - name: test_less_than
+        decorators:
+        - parametrize
+      - name: test_greater_than
+        decorators:
+        - parametrize
+      - name: test_le_self
+        decorators:
+        - parametrize
+      - name: test_ge_self
+        decorators:
+        - parametrize
+      - name: test_not_lt_self
+        decorators:
+        - parametrize
+      - name: test_not_gt_self
+        decorators:
+        - parametrize
+      - name: test_not_implemented_for_non_zone
+        decorators: []
+      - name: test_constant_value
+        decorators:
+        - parametrize
+      - name: test_materiality_weights
+        decorators: []
+      - name: test_delivery_urgency_map
+        decorators: []
+      - name: test_planner_min_zones
+        decorators: []
+      - name: test_pressure_value
+        decorators:
+        - parametrize
+      - name: test_factor_decomposition
+        decorators:
+        - parametrize
+      - name: test_no_deadline_zero_pressure
+        decorators: []
+      - name: test_overdue_maxes_time_pressure
+        decorators: []
+      - name: test_naive_datetime_treated_as_utc
+        decorators: []
+      - name: test_full_completion_dampens_pressure
+        decorators: []
+      - name: test_many_dependencies_amplify
+        decorators: []
+      - name: test_unknown_materiality_defaults_to_one
+        decorators: []
+      - name: test_invalid_completion_pct
+        decorators:
+        - parametrize
+      - name: test_invalid_dependency_count
+        decorators:
+        - parametrize
+      - name: test_zone_boundary
+        decorators:
+        - parametrize
+      - name: test_batch_sorted_descending
+        decorators: []
+      - name: test_batch_highest_is_nearest_deadline
+        decorators: []
+      - name: test_batch_consistent_with_single
+        decorators: []
+      - name: test_empty_batch
+        decorators: []
+      - name: test_batch_with_no_deadlines
+        decorators: []
+      - name: test_defaults
+        decorators: []
+      - name: test_custom_min_zones
+        decorators: []
+      - name: test_custom_top_n
+        decorators: []
+      - name: test_custom_system_prompt
+        decorators: []
+      - name: test_custom_urgency_map
+        decorators: []
+      - name: test_custom_default_urgency
+        decorators: []
+      - name: _make_obligations
+        decorators: []
+      - name: test_filters_green_zone
+        decorators: []
+      - name: test_includes_yellow_orange_red
+        decorators: []
+      - name: test_respects_top_n
+        decorators: []
+      - name: test_urgency_mapping
+        decorators: []
+      - name: test_prompt_contains_obligation_title
+        decorators: []
+      - name: test_obligation_map_parameter
+        decorators: []
+      - name: test_sorted_by_pressure_descending
+        decorators: []
+      - name: test_custom_min_zones_red_only
+        decorators: []
+      - name: test_complete_plan_fields
+        decorators: []
+      - name: test_empty_plan_text
+        decorators: []
+      - name: test_stage_returns_uuid
+        decorators: []
+      - name: test_duplicate_returns_none
+        decorators: []
+      - name: test_case_insensitive_dedup
+        decorators: []
+      - name: test_different_source_not_duplicate
+        decorators: []
+      - name: test_list_pending_returns_all
+        decorators: []
+      - name: test_list_pending_empty_queue
+        decorators: []
+      - name: test_list_pending_tuple_structure
+        decorators: []
+      - name: test_accept_returns_obligation
+        decorators: []
+      - name: test_accept_removes_from_pending
+        decorators: []
+      - name: test_accept_nonexistent_returns_none
+        decorators: []
+      - name: test_reject_returns_true
+        decorators: []
+      - name: test_reject_removes_from_pending
+        decorators: []
+      - name: test_reject_nonexistent_returns_false
+        decorators: []
+      - name: test_double_accept_returns_none
+        decorators: []
+      - name: test_triage_to_plan
+        decorators: []
+      - name: test_mixed_accept_reject
+        decorators: []
+      - name: test_single_obligation_pipeline
+        decorators: []
+      - name: test_batch_without_sentinel_sdk
+        decorators: []
+      - name: test_telemetry_code_path_exists
+        decorators: []
+      - name: test_deterministic_output
+        decorators: []
+      - name: test_different_seeds_differ
+        decorators: []
+      - name: test_correct_count
+        decorators: []
+      - name: test_required_fields
+        decorators: []
+      - name: test_valid_domains
+        decorators: []
+      - name: test_valid_materiality
+        decorators: []
+      - name: test_completion_bounds
+        decorators: []
+      - name: test_dependency_bounds
+        decorators: []
+      - name: test_ids_sequential
+        decorators: []
+      - name: test_some_overdue
+        decorators: []
+      - name: test_binary
+        decorators:
+        - parametrize
+      - name: test_linear
+        decorators:
+        - parametrize
+      - name: test_eisenhower
+        decorators:
+        - parametrize
+      - name: test_zone_transition_timeliness_known
+        decorators: []
+      - name: test_zone_transition_timeliness_perfect
+        decorators: []
+      - name: test_zone_transition_timeliness_empty
+        decorators: []
+      - name: test_missed_deadline_rate_known
+        decorators: []
+      - name: test_missed_deadline_rate_none_missed
+        decorators: []
+      - name: test_missed_deadline_rate_all_missed
+        decorators: []
+      - name: test_missed_deadline_rate_empty
+        decorators: []
+      - name: test_attention_efficiency_perfect
+        decorators: []
+      - name: test_attention_efficiency_worst
+        decorators: []
+      - name: test_attention_efficiency_partial
+        decorators: []
+      - name: test_attention_efficiency_single
+        decorators: []
+      - name: test_false_alarm_rate_known
+        decorators: []
+      - name: test_false_alarm_rate_no_alerts
+        decorators: []
+      - name: test_false_alarm_rate_no_false_alarms
+        decorators: []
+      - name: test_false_alarm_rate_all_false_alarms
+        decorators: []
+      - name: _make_data
+        decorators: []
+      - name: test_run_tidewatch_returns_scores
+        decorators: []
+      - name: test_run_tidewatch_overdue_is_max
+        decorators: []
+      - name: test_run_tidewatch_order_matches_input
+        decorators: []
+      - name: test_run_baseline
+        decorators:
+        - parametrize
+      decorators:
+      - parametrize
+    tests/test_integration.py:
+      imports:
+      - datetime
+      - tidewatch
+      classes:
+      - name: TestFullPipeline
+        bases: []
+        decorators: []
+      functions:
+      - name: _now
+        decorators: []
+      - name: test_full_pipeline
+        decorators: []
+      - name: test_pressure_drives_planning
+        decorators: []
+      - name: test_zone_transition_detection
+        decorators: []
+      decorators: []
+    tests/test_planner.py:
+      imports:
+      - datetime
+      - tidewatch.planner
+      - tidewatch.pressure
+      - tidewatch.types
+      classes:
+      - name: TestPlannerFiltering
+        bases: []
+        decorators: []
+      - name: TestPlannerLimits
+        bases: []
+        decorators: []
+      - name: TestPromptContent
+        bases: []
+        decorators: []
+      - name: TestDeliveryUrgency
+        bases: []
+        decorators: []
+      - name: TestPlanCompletion
+        bases: []
+        decorators: []
+      functions:
+      - name: _now
+        decorators: []
+      - name: _make_ob
+        decorators: []
+      - name: test_green_not_planned
+        decorators: []
+      - name: test_orange_triggers_plan
+        decorators: []
+      - name: test_red_triggers_plan
+        decorators: []
+      - name: test_top_n_limit
+        decorators: []
+      - name: test_prompt_contains_obligation_data
+        decorators: []
+      - name: test_delivery_urgency_by_zone
+        decorators: []
+      - name: test_complete_plan_wraps_result
+        decorators: []
+      - name: test_custom_system_prompt
+        decorators: []
+      decorators: []
+    tests/test_pressure.py:
+      imports:
+      - math
+      - datetime
+      - pytest
+      - tidewatch.pressure
+      - tidewatch.types
+      classes:
+      - name: TestTimePressure
+        bases: []
+        decorators: []
+      - name: TestMateriality
+        bases: []
+        decorators: []
+      - name: TestDependencies
+        bases: []
+        decorators: []
+      - name: TestCompletion
+        bases: []
+        decorators: []
+      - name: TestCombined
+        bases: []
+        decorators: []
+      - name: TestZones
+        bases: []
+        decorators: []
+      - name: TestBatch
+        bases: []
+        decorators: []
+      - name: TestNanInfGuards
+        bases: []
+        decorators: []
+      functions:
+      - name: _make_obligation
+        decorators: []
+      - name: test_no_deadline_returns_zero
+        decorators: []
+      - name: test_overdue_returns_one
+        decorators: []
+      - name: test_14_days_out
+        decorators: []
+      - name: test_7_days_out
+        decorators: []
+      - name: test_3_days_out
+        decorators: []
+      - name: test_1_day_out
+        decorators: []
+      - name: test_materiality_multiplier
+        decorators: []
+      - name: test_dependency_amplification
+        decorators: []
+      - name: test_completion_dampening
+        decorators: []
+      - name: test_combined_factors_multiply
+        decorators: []
+      - name: test_pressure_clamped_to_one
+        decorators: []
+      - name: test_zone_boundaries
+        decorators: []
+      - name: test_zone_green
+        decorators: []
+      - name: test_zone_yellow
+        decorators: []
+      - name: test_zone_orange
+        decorators: []
+      - name: test_zone_red
+        decorators: []
+      - name: test_batch_recalculate_sorted
+        decorators: []
+      - name: test_pressure_result_decomposition
+        decorators: []
+      - name: test_nan_completion_pct_raises
+        decorators: []
+      - name: test_inf_completion_pct_raises
+        decorators: []
+      - name: test_nan_pressure_zone_raises
+        decorators: []
+      decorators: []
+    tests/test_triage.py:
+      imports:
+      - datetime
+      - tidewatch.triage
+      - tidewatch.types
+      classes:
+      - name: TestTriageQueue
+        bases: []
+        decorators: []
+      functions:
+      - name: test_stage_and_list
+        decorators: []
+      - name: test_accept_creates_obligation
+        decorators: []
+      - name: test_reject_removes_candidate
+        decorators: []
+      - name: test_dedup_by_title_source_date
+        decorators: []
+      - name: test_empty_queue
+        decorators: []
+      decorators: []
+    tidewatch/__init__.py:
+      imports:
+      - tidewatch.planner
+      - tidewatch.pressure
+      - tidewatch.triage
+      - tidewatch.types
+      classes: []
+      functions: []
+      decorators: []
+    tidewatch/planner.py:
+      imports:
+      - logging
+      - datetime
+      - tidewatch.constants
+      - tidewatch.types
+      classes:
+      - name: SpeculativePlanner
+        bases: []
+        decorators: []
+      functions:
+      - name: __init__
+        decorators: []
+      - name: _build_prompt
+        decorators: []
+      - name: generate_plan_requests
+        decorators: []
+      - name: complete_plan
+        decorators: []
+      decorators: []
+    tidewatch/pressure.py:
+      imports:
+      - math
+      - datetime
+      - tidewatch.constants
+      - tidewatch.types
+      - time
+      - sentinel_sdk.metrics
+      classes: []
+      functions:
+      - name: _days_remaining
+        decorators: []
+      - name: calculate_pressure
+        decorators: []
+      - name: pressure_zone
+        decorators: []
+      - name: recalculate_batch
+        decorators: []
+      - name: bandwidth_adjusted_sort
+        decorators: []
+      - name: _is_hard_floor
+        decorators: []
+      - name: fit_score
+        decorators: []
+      decorators: []
+    tidewatch/triage.py:
+      imports:
+      - uuid
+      - datetime
+      - tidewatch.types
+      classes:
+      - name: TriageQueue
+        bases: []
+        decorators: []
+      functions:
+      - name: __init__
+        decorators: []
+      - name: _dedup_key
+        decorators: []
+      - name: stage
+        decorators: []
+      - name: list_pending
+        decorators: []
+      - name: accept
+        decorators: []
+      - name: reject
+        decorators: []
+      decorators: []
+    tidewatch/types.py:
+      imports:
+      - __future__
+      - enum
+      - dataclasses
+      - datetime
+      - tidewatch.constants
+      - tidewatch.constants
+      classes:
+      - name: Zone
+        bases:
+        - Enum
+        decorators: []
+      - name: Obligation
+        bases: []
+        decorators:
+        - dataclass
+      - name: PressureResult
+        bases: []
+        decorators:
+        - dataclass
+      - name: PlanRequest
+        bases: []
+        decorators:
+        - dataclass
+      - name: PlanResult
+        bases: []
+        decorators:
+        - dataclass
+      - name: CognitiveContext
+        bases: []
+        decorators:
+        - dataclass
+      - name: TaskDemand
+        bases: []
+        decorators:
+        - dataclass
+      - name: TriageCandidate
+        bases: []
+        decorators:
+        - dataclass
+      functions:
+      - name: estimate_task_demand
+        decorators: []
+      - name: __lt__
+        decorators: []
+      - name: __le__
+        decorators: []
+      - name: __gt__
+        decorators: []
+      - name: __ge__
+        decorators: []
+      - name: effective_bandwidth
+        decorators: []
+      decorators:
+      - dataclass
+graph:
+  nodes:
+  - benchmarks/baselines/__init__.py
+  - benchmarks/baselines/binary_deadline.py
+  - benchmarks/baselines/eisenhower.py
+  - benchmarks/baselines/linear_urgency.py
+  - benchmarks/datasets/generate_obligations.py
+  - benchmarks/metrics.py
+  - benchmarks/run.py
+  - tests/conftest.py
+  - tests/test_benchmarks.py
+  - tests/test_cognitive_bandwidth.py
+  - tests/test_golden_pipeline.py
+  - tests/test_integration.py
+  - tests/test_planner.py
+  - tests/test_pressure.py
+  - tests/test_triage.py
+  - tidewatch/__init__.py
+  - tidewatch/constants.py
+  - tidewatch/planner.py
+  - tidewatch/pressure.py
+  - tidewatch/triage.py
+  - tidewatch/types.py
+  edges:
+  - - benchmarks/run.py
+    - benchmarks/baselines/__init__.py
+  - - benchmarks/run.py
+    - benchmarks/datasets/generate_obligations.py
+  - - benchmarks/run.py
+    - benchmarks/metrics.py
+  - - benchmarks/run.py
+    - tidewatch/__init__.py
+  - - tests/conftest.py
+    - tidewatch/planner.py
+  - - tests/conftest.py
+    - tidewatch/types.py
+  - - tests/test_benchmarks.py
+    - benchmarks/baselines/__init__.py
+  - - tests/test_benchmarks.py
+    - benchmarks/datasets/generate_obligations.py
+  - - tests/test_benchmarks.py
+    - benchmarks/metrics.py
+  - - tests/test_benchmarks.py
+    - benchmarks/run.py
+  - - tests/test_cognitive_bandwidth.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/baselines/binary_deadline.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/baselines/eisenhower.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/baselines/linear_urgency.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/datasets/generate_obligations.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/datasets/generate_obligations.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/datasets/generate_obligations.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/datasets/generate_obligations.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/datasets/generate_obligations.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/datasets/generate_obligations.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/datasets/generate_obligations.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/datasets/generate_obligations.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/datasets/generate_obligations.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/datasets/generate_obligations.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/metrics.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/metrics.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/metrics.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/metrics.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/metrics.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/metrics.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/metrics.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/metrics.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/metrics.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/metrics.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/metrics.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/metrics.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/metrics.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/metrics.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/metrics.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/run.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/run.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/run.py
+  - - tests/test_golden_pipeline.py
+    - benchmarks/run.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/constants.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/constants.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/constants.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/constants.py
+  - - tests/test_integration.py
+    - tidewatch/__init__.py
+  - - tests/test_planner.py
+    - tidewatch/planner.py
+  - - tests/test_planner.py
+    - tidewatch/pressure.py
+  - - tests/test_planner.py
+    - tidewatch/types.py
+  - - tests/test_pressure.py
+    - tidewatch/pressure.py
+  - - tests/test_pressure.py
+    - tidewatch/types.py
+  - - tests/test_triage.py
+    - tidewatch/triage.py
+  - - tests/test_triage.py
+    - tidewatch/types.py
+  - - tidewatch/__init__.py
+    - tidewatch/planner.py
+  - - tidewatch/__init__.py
+    - tidewatch/pressure.py
+  - - tidewatch/__init__.py
+    - tidewatch/triage.py
+  - - tidewatch/__init__.py
+    - tidewatch/types.py
+  - - tidewatch/planner.py
+    - tidewatch/constants.py
+  - - tidewatch/planner.py
+    - tidewatch/types.py
+  - - tidewatch/pressure.py
+    - tidewatch/constants.py
+  - - tidewatch/pressure.py
+    - tidewatch/types.py
+  - - tidewatch/triage.py
+    - tidewatch/types.py
+  - - tidewatch/types.py
+    - tidewatch/constants.py
+  - - tidewatch/types.py
+    - tidewatch/constants.py
+  in_degree:
+    tidewatch/__init__.py: 73
+    benchmarks/metrics.py: 17
+    benchmarks/datasets/generate_obligations.py: 12
+    tidewatch/constants.py: 8
+    tidewatch/types.py: 8
+    benchmarks/run.py: 5
+    tidewatch/planner.py: 3
+    tidewatch/pressure.py: 3
+    tidewatch/triage.py: 2
+    benchmarks/baselines/__init__.py: 2
+    benchmarks/baselines/linear_urgency.py: 1
+    benchmarks/baselines/eisenhower.py: 1
+    benchmarks/baselines/binary_deadline.py: 1
+    tests/test_integration.py: 0
+    tests/test_planner.py: 0
+    tests/test_golden_pipeline.py: 0
+    tests/test_triage.py: 0
+    tests/test_benchmarks.py: 0
+    tests/conftest.py: 0
+    tests/test_cognitive_bandwidth.py: 0
+    tests/test_pressure.py: 0
+  out_degree:
+    tests/test_golden_pipeline.py: 106
+    benchmarks/run.py: 4
+    tests/test_benchmarks.py: 4
+    tidewatch/__init__.py: 4
+    tests/test_planner.py: 3
+    tidewatch/planner.py: 2
+    tidewatch/pressure.py: 2
+    tidewatch/types.py: 2
+    tests/test_triage.py: 2
+    tests/conftest.py: 2
+    tests/test_pressure.py: 2
+    tests/test_integration.py: 1
+    tests/test_cognitive_bandwidth.py: 1
+    tidewatch/triage.py: 1
+    tidewatch/constants.py: 0
+    benchmarks/baselines/linear_urgency.py: 0
+    benchmarks/baselines/eisenhower.py: 0
+    benchmarks/metrics.py: 0
+    benchmarks/baselines/binary_deadline.py: 0
+    benchmarks/datasets/generate_obligations.py: 0
+    benchmarks/baselines/__init__.py: 0
+  betweenness_centrality:
+    tidewatch/__init__.py: 24.0
+    benchmarks/run.py: 7.0
+    tidewatch/types.py: 6.333333333333333
+    tidewatch/planner.py: 1.8333333333333333
+    tidewatch/pressure.py: 1.8333333333333333
+    tests/test_integration.py: 0.0
+    tidewatch/constants.py: 0.0
+    benchmarks/baselines/linear_urgency.py: 0.0
+    benchmarks/baselines/eisenhower.py: 0.0
+    benchmarks/metrics.py: 0.0
+    tests/test_planner.py: 0.0
+    benchmarks/baselines/binary_deadline.py: 0.0
+    tests/test_golden_pipeline.py: 0.0
+    benchmarks/datasets/generate_obligations.py: 0.0
+    tests/test_triage.py: 0.0
+    tests/test_benchmarks.py: 0.0
+    tests/conftest.py: 0.0
+    tests/test_cognitive_bandwidth.py: 0.0
+    tidewatch/triage.py: 0.0
+    tests/test_pressure.py: 0.0
+    benchmarks/baselines/__init__.py: 0.0
+  orphans: []
+  clusters:
+  - - benchmarks/baselines/__init__.py
+    - benchmarks/baselines/binary_deadline.py
+    - benchmarks/baselines/eisenhower.py
+    - benchmarks/baselines/linear_urgency.py
+    - benchmarks/datasets/generate_obligations.py
+    - benchmarks/metrics.py
+    - benchmarks/run.py
+    - tests/conftest.py
+    - tests/test_benchmarks.py
+    - tests/test_cognitive_bandwidth.py
+    - tests/test_golden_pipeline.py
+    - tests/test_integration.py
+    - tests/test_planner.py
+    - tests/test_pressure.py
+    - tests/test_triage.py
+    - tidewatch/__init__.py
+    - tidewatch/constants.py
+    - tidewatch/planner.py
+    - tidewatch/pressure.py
+    - tidewatch/triage.py
+    - tidewatch/types.py
+  critical_paths:
+    benchmarks/run.py:
+    - benchmarks/run.py
+    - tidewatch/__init__.py
+    - tidewatch/planner.py
+    - tidewatch/types.py
+    - tidewatch/constants.py
+    tests/test_benchmarks.py:
+    - tests/test_benchmarks.py
+    - benchmarks/run.py
+    - tidewatch/__init__.py
+    - tidewatch/planner.py
+    - tidewatch/types.py
+    - tidewatch/constants.py
+    tests/test_cognitive_bandwidth.py:
+    - tests/test_cognitive_bandwidth.py
+    - tidewatch/__init__.py
+    - tidewatch/planner.py
+    - tidewatch/types.py
+    - tidewatch/constants.py
+    tests/test_golden_pipeline.py:
+    - tests/test_golden_pipeline.py
+    - benchmarks/run.py
+    - tidewatch/__init__.py
+    - tidewatch/planner.py
+    - tidewatch/types.py
+    - tidewatch/constants.py
+    tests/test_integration.py:
+    - tests/test_integration.py
+    - tidewatch/__init__.py
+    - tidewatch/planner.py
+    - tidewatch/types.py
+    - tidewatch/constants.py
+    tests/test_planner.py:
+    - tests/test_planner.py
+    - tidewatch/planner.py
+    - tidewatch/types.py
+    - tidewatch/constants.py
+    tests/test_pressure.py:
+    - tests/test_pressure.py
+    - tidewatch/pressure.py
+    - tidewatch/types.py
+    - tidewatch/constants.py
+    tests/test_triage.py:
+    - tests/test_triage.py
+    - tidewatch/triage.py
+    - tidewatch/types.py
+    - tidewatch/constants.py
+  hub_score:
+    tests/test_golden_pipeline.py: 106.0
+    tidewatch/__init__.py: 101.0
+    benchmarks/metrics.py: 17.0
+    tidewatch/types.py: 16.333333333333332
+    benchmarks/run.py: 16.0
+    benchmarks/datasets/generate_obligations.py: 12.0
+    tidewatch/constants.py: 8.0
+    tidewatch/planner.py: 6.833333333333333
+    tidewatch/pressure.py: 6.833333333333333
+    tests/test_benchmarks.py: 4.0
+    tests/test_planner.py: 3.0
+    tidewatch/triage.py: 3.0
+    tests/test_triage.py: 2.0
+    tests/conftest.py: 2.0
+    tests/test_pressure.py: 2.0
+    benchmarks/baselines/__init__.py: 2.0
+    tests/test_integration.py: 1.0
+    benchmarks/baselines/linear_urgency.py: 1.0
+    benchmarks/baselines/eisenhower.py: 1.0
+    benchmarks/baselines/binary_deadline.py: 1.0
+    tests/test_cognitive_bandwidth.py: 1.0
+  external_imports:
+    benchmarks/datasets/generate_obligations.py:
+    - argparse
+    - json
+    - random
+    - datetime
+    benchmarks/metrics.py:
+    - __future__
+    benchmarks/run.py:
+    - argparse
+    - json
+    - sys
+    - datetime
+    - pathlib
+    tests/conftest.py:
+    - datetime
+    - pytest
+    tests/test_benchmarks.py:
+    - datetime
+    tests/test_cognitive_bandwidth.py:
+    - datetime
+    - pytest
+    tests/test_golden_pipeline.py:
+    - __future__
+    - datetime
+    - pytest
+    - inspect
+    tests/test_integration.py:
+    - datetime
+    tests/test_planner.py:
+    - datetime
+    tests/test_pressure.py:
+    - math
+    - datetime
+    - pytest
+    tests/test_triage.py:
+    - datetime
+    tidewatch/planner.py:
+    - logging
+    - datetime
+    tidewatch/pressure.py:
+    - math
+    - datetime
+    - time
+    - sentinel_sdk.metrics
+    tidewatch/triage.py:
+    - uuid
+    - datetime
+    tidewatch/types.py:
+    - __future__
+    - enum
+    - dataclasses
+    - datetime
+  resolution_rate: 0.7861271676300579
+  resolved_import_count: 136
+  external_import_count: 37
+purpose:
+  archetype:
+  - scoring-engine
+  - analytics-harness
+  archetype_scores:
+    scoring-engine: 44
+    analytics-harness: 30
+    agent-loop: 10
+    analysis-tool: 7
+    cli-tool: 6
+    data-pipeline: 3
+  purpose_statement: tidewatch is a mathematical scoring, ranking, or pressure model + statistical analysis, benchmarking,
+    or data science workbench, with capabilities including Cognitive Context, Obligation, Pressure Result, Speculative Planner,
+    Test framework (pytest), communicating via http, stdin-stdout, persisting to yaml-files.
+  capabilities:
+  - Cognitive Context
+  - Obligation
+  - Pressure Result
+  - Speculative Planner
+  - Test framework (pytest)
+  - Triage Candidate
+  - Triage Queue
+  communication_patterns:
+  - http
+  - stdin-stdout
+  data_stores:
+  - yaml-files
+  architectural_notes:
+  - 'Repo also scores highly as: agent-loop, analysis-tool, cli-tool. This suggests a composite system spanning multiple architectural
+    patterns.'
+coherence:
+  coherence_score: 0.5
+  drift_indicators:
+  - severity: 1.0
+    category: purpose_divergence
+    evidence: Declared purpose 'Tidewatch is a standalone Python library + SSRN paper that extracts and' does not align with
+      inferred archetype(s) ['scoring-engine', 'analytics-harness']. Coherence measurements are unreliable until resolved.
+  - category: hub_test_gap
+    evidence: '10 structural hub(s) lack test coverage: tidewatch/__init__.py (101.0), benchmarks/metrics.py (17.0), tidewatch/types.py
+      (16.3), benchmarks/run.py (16.0), benchmarks/datasets/generate_obligations.py (12.0)'
+    implication: High-centrality files are the backbone of the codebase. Without tests, they are single points of failure.
+    files:
+    - tidewatch/__init__.py
+    - benchmarks/metrics.py
+    - tidewatch/types.py
+    - benchmarks/run.py
+    - benchmarks/datasets/generate_obligations.py
+    - tidewatch/constants.py
+    - benchmarks/baselines/__init__.py
+    - benchmarks/baselines/linear_urgency.py
+    - benchmarks/baselines/eisenhower.py
+    - benchmarks/baselines/binary_deadline.py
+    severity: 0.5601703940362087
+  - category: capability_mismatch
+    evidence: '2 capability(s) don''t align with the inferred archetype(s) (scoring-engine, analytics-harness): Cognitive
+      Context, Speculative Planner'
+    implication: These capabilities may indicate scope creep, vestigial features, or a repo that is evolving toward a different
+      identity.
+    files: []
+    severity: 0.3333333333333333
+  orientation_summary: Moderate drift detected (3 indicator(s) across capability_mismatch, hub_test_gap, purpose_divergence).
+    The codebase serves its purpose but structural issues are accumulating.
+  purpose_validated: false
+  component_scores:
+    capability_alignment: 0.6666666666666666
+    structural_coherence: 0.9838681468061969
+    archetype_consistency: 0.6666666666666667
+abstraction:
+  findings:
+  - file: benchmarks/baselines/linear_urgency.py
+    line: 25
+    category: math_clamp
+    severity: high
+    severity_rank: 0
+    code: return max(0.0, 1.0 - days_remaining / horizon)
+    note: max(..., 0.0) in 'score' — artificial bound. Trust the math's domain or make the bound a parameter
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: benchmarks/datasets/generate_obligations.py
+    line: 47
+    category: math_clamp
+    severity: high
+    severity_rank: 0
+    code: dep_count = min(int(rng.paretovariate(1.5)), 10)
+    note: min(..., 10) in 'generate' — artificial bound. Trust the math's domain or make the bound a parameter
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: benchmarks/datasets/generate_obligations.py
+    line: 54
+    category: math_clamp
+    severity: high
+    severity_rank: 0
+    code: optimal_attention_days = max(days_out * 0.3, 2) if days_out > 0 else 0
+    note: max(..., 2) in 'generate' — artificial bound. Trust the math's domain or make the bound a parameter
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: tidewatch/pressure.py
+    line: 141
+    category: math_clamp
+    severity: high
+    severity_rank: 0
+    code: time_p = OVERDUE_PRESSURE if days_rem <= 0 else 1.0 - math.exp(-RATE_CONSTANT / max(days_rem, 0.01))
+    note: max(..., 0.01) in 'calculate_pressure' — artificial bound. Trust the math's domain or make the bound a parameter
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: benchmarks/baselines/eisenhower.py
+    line: 34
+    category: conditional_chain
+    severity: medium
+    severity_rank: 1
+    code: 'if urgent and important:
+
+      return 1.0  # Q1
+
+      elif urgent and not important:
+
+      ... (5 more lines)'
+    note: 4-branch if/elif in 'score' — consider data-driven simplification
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: benchmarks/baselines/eisenhower.py
+    line: 36
+    category: conditional_chain
+    severity: medium
+    severity_rank: 1
+    code: 'elif urgent and not important:
+
+      return 0.75  # Q3
+
+      elif not urgent and important:
+
+      ... (3 more lines)'
+    note: 3-branch if/elif in 'score' — consider data-driven simplification
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: benchmarks/baselines/eisenhower.py
+    line: 37
+    category: magic_number
+    severity: medium
+    severity_rank: 1
+    code: 'return 0.75  # Q3'
+    note: Numeric literal 0.75 in 'score' — extract to named constant or parameter
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: benchmarks/baselines/eisenhower.py
+    line: 39
+    category: magic_number
+    severity: medium
+    severity_rank: 1
+    code: 'return 0.5  # Q2'
+    note: Numeric literal 0.5 in 'score' — extract to named constant or parameter
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: benchmarks/datasets/generate_obligations.py
+    line: 36
+    category: magic_number
+    severity: medium
+    severity_rank: 1
+    code: materiality = "material" if rng.random() < 0.3 else "routine"
+    note: Numeric literal 0.3 in 'generate' — extract to named constant or parameter
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: benchmarks/datasets/generate_obligations.py
+    line: 39
+    category: magic_number
+    severity: medium
+    severity_rank: 1
+    code: 'if rng.random() < 0.1:'
+    note: Numeric literal 0.1 in 'generate' — extract to named constant or parameter
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: benchmarks/datasets/generate_obligations.py
+    line: 40
+    category: magic_number
+    severity: medium
+    severity_rank: 1
+    code: 'days_out = -rng.randint(1, 14)  # overdue'
+    note: Numeric literal 14 in 'generate' — extract to named constant or parameter
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: benchmarks/datasets/generate_obligations.py
+    line: 42
+    category: magic_number
+    severity: medium
+    severity_rank: 1
+    code: days_out = rng.randint(1, 90)
+    note: Numeric literal 90 in 'generate' — extract to named constant or parameter
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: benchmarks/datasets/generate_obligations.py
+    line: 47
+    category: magic_number
+    severity: medium
+    severity_rank: 1
+    code: dep_count = min(int(rng.paretovariate(1.5)), 10)
+    note: Numeric literal 10 in 'generate' — extract to named constant or parameter
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: benchmarks/datasets/generate_obligations.py
+    line: 54
+    category: magic_number
+    severity: medium
+    severity_rank: 1
+    code: optimal_attention_days = max(days_out * 0.3, 2) if days_out > 0 else 0
+    note: Numeric literal 2 in 'generate' — extract to named constant or parameter
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: benchmarks/datasets/generate_obligations.py
+    line: 56
+    category: inline_collection
+    severity: medium
+    severity_rank: 1
+    code: 'obligations.append({
+
+      "id": i + 1,
+
+      "title": f"{domain.replace(''_'', '' '').title()} Task {i + 1}",
+
+      ... (8 more lines)'
+    note: dict with 9 elements in 'generate' — extract to module-level constant or load from config
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: benchmarks/datasets/generate_obligations.py
+    line: 73
+    category: magic_number
+    severity: medium
+    severity_rank: 1
+    code: parser.add_argument("--n", type=int, default=1000)
+    note: Numeric literal 1000 in 'main' — extract to named constant or parameter
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: benchmarks/datasets/generate_obligations.py
+    line: 74
+    category: magic_number
+    severity: medium
+    severity_rank: 1
+    code: parser.add_argument("--seed", type=int, default=42)
+    note: Numeric literal 42 in 'main' — extract to named constant or parameter
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: benchmarks/datasets/generate_obligations.py
+    line: 80
+    category: magic_number
+    severity: medium
+    severity_rank: 1
+    code: json.dump(data, f, indent=2)
+    note: Numeric literal 2 in 'main' — extract to named constant or parameter
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: benchmarks/metrics.py
+    line: 64
+    category: magic_number
+    severity: medium
+    severity_rank: 1
+    code: 'if n < 2:'
+    note: Numeric literal 2 in 'attention_allocation_efficiency' — extract to named constant or parameter
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: benchmarks/metrics.py
+    line: 66
+    category: magic_number
+    severity: medium
+    severity_rank: 1
+    code: d_squared = sum((p - a) ** 2 for p, a in zip(predicted_ranks, actual_ranks))
+    note: Numeric literal 2 in 'attention_allocation_efficiency' — extract to named constant or parameter
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: benchmarks/metrics.py
+    line: 67
+    category: magic_number
+    severity: medium
+    severity_rank: 1
+    code: return 1.0 - (6.0 * d_squared) / (n * (n ** 2 - 1))
+    note: Numeric literal 6.0 in 'attention_allocation_efficiency' — extract to named constant or parameter
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: benchmarks/run.py
+    line: 66
+    category: magic_number
+    severity: medium
+    severity_rank: 1
+    code: parser.add_argument("--n", type=int, default=1000)
+    note: Numeric literal 1000 in 'main' — extract to named constant or parameter
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: benchmarks/run.py
+    line: 67
+    category: magic_number
+    severity: medium
+    severity_rank: 1
+    code: parser.add_argument("--seed", type=int, default=42)
+    note: Numeric literal 42 in 'main' — extract to named constant or parameter
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: tidewatch/pressure.py
+    line: 71
+    category: magic_number
+    severity: medium
+    severity_rank: 1
+    code: return delta / 86400.0
+    note: Numeric literal 86400.0 in '_days_remaining' — extract to named constant or parameter
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: tidewatch/pressure.py
+    line: 141
+    category: magic_number
+    severity: medium
+    severity_rank: 1
+    code: time_p = OVERDUE_PRESSURE if days_rem <= 0 else 1.0 - math.exp(-RATE_CONSTANT / max(days_rem, 0.01))
+    note: Numeric literal 0.01 in 'calculate_pressure' — extract to named constant or parameter
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: tidewatch/pressure.py
+    line: 183
+    category: conditional_chain
+    severity: medium
+    severity_rank: 1
+    code: 'if pressure < ZONE_YELLOW:
+
+      return "green"
+
+      elif pressure < ZONE_ORANGE:
+
+      ... (5 more lines)'
+    note: 4-branch if/elif in 'pressure_zone' — consider data-driven simplification
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: tidewatch/pressure.py
+    line: 185
+    category: conditional_chain
+    severity: medium
+    severity_rank: 1
+    code: 'elif pressure < ZONE_ORANGE:
+
+      return "yellow"
+
+      elif pressure < ZONE_RED:
+
+      ... (3 more lines)'
+    note: 3-branch if/elif in 'pressure_zone' — consider data-driven simplification
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: tidewatch/pressure.py
+    line: 216
+    category: magic_number
+    severity: medium
+    severity_rank: 1
+    code: _latency_ms = (_time.monotonic() - _t0) * 1000
+    note: Numeric literal 1000 in 'recalculate_batch' — extract to named constant or parameter
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: tidewatch/pressure.py
+    line: 288
+    category: magic_number
+    severity: medium
+    severity_rank: 1
+    code: 'return (2, result.pressure)  # Hard floor: sorts above all bandwidth-adjusted items'
+    note: Numeric literal 2 in 'fit_score' — extract to named constant or parameter
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  summary:
+    total: 29
+    by_category:
+      magic_number: 20
+      math_clamp: 4
+      conditional_chain: 4
+      inline_collection: 1
+    by_severity:
+      high: 4
+      medium: 25
+      low: 0
+    hotspots:
+      benchmarks/datasets/generate_obligations.py: 12
+      tidewatch/pressure.py: 7
+      benchmarks/baselines/eisenhower.py: 4
+      benchmarks/metrics.py: 3
+      benchmarks/run.py: 2
+  files_analyzed: 11
+assumptions:
+  findings:
+  - file: benchmarks/baselines/eisenhower.py
+    line: 11
+    category: tunable_threshold
+    severity: high
+    severity_rank: 0
+    code: URGENT_THRESHOLD_DAYS = 7
+    note: Module-level constant 'URGENT_THRESHOLD_DAYS' = 7 — tunable parameter
+    current_value: 7
+    perturbation_range: '[3.5, 14]'
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: benchmarks/baselines/linear_urgency.py
+    line: 4
+    category: tunable_threshold
+    severity: medium
+    severity_rank: 1
+    code: DEFAULT_HORIZON = 90
+    note: Module-level constant 'DEFAULT_HORIZON' = 90 — tunable parameter
+    current_value: 90
+    perturbation_range: '[45, 180]'
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: benchmarks/datasets/generate_obligations.py
+    line: 36
+    category: comparison_constant
+    severity: medium
+    severity_rank: 1
+    code: materiality = "material" if rng.random() < 0.3 else "routine"
+    note: Comparison against literal 0.3 — classification boundary
+    current_value: 0.3
+    perturbation_range: '[0.15, 0.6]'
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: benchmarks/datasets/generate_obligations.py
+    line: 39
+    category: comparison_constant
+    severity: medium
+    severity_rank: 1
+    code: 'if rng.random() < 0.1:'
+    note: Comparison against literal 0.1 — classification boundary
+    current_value: 0.1
+    perturbation_range: '[0.05, 0.2]'
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: benchmarks/metrics.py
+    line: 66
+    category: formula_choice
+    severity: medium
+    severity_rank: 1
+    code: d_squared = sum((p - a) ** 2 for p, a in zip(predicted_ranks, actual_ranks))
+    note: Power operation in attention_allocation_efficiency() — geometric aggregation assumption
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: benchmarks/metrics.py
+    line: 67
+    category: formula_choice
+    severity: medium
+    severity_rank: 1
+    code: return 1.0 - (6.0 * d_squared) / (n * (n ** 2 - 1))
+    note: Power operation in attention_allocation_efficiency() — geometric aggregation assumption
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: tidewatch/pressure.py
+    line: 141
+    category: formula_choice
+    severity: medium
+    severity_rank: 1
+    code: time_p = OVERDUE_PRESSURE if days_rem <= 0 else 1.0 - math.exp(-RATE_CONSTANT / max(days_rem, 0.01))
+    note: Uses exp() — assumes this aggregation model is appropriate
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  summary:
+    total: 7
+    by_category:
+      formula_choice: 3
+      tunable_threshold: 2
+      comparison_constant: 2
+    by_severity:
+      high: 1
+      medium: 6
+    hotspots:
+      benchmarks/datasets/generate_obligations.py: 2
+      benchmarks/metrics.py: 2
+      benchmarks/baselines/eisenhower.py: 1
+      benchmarks/baselines/linear_urgency.py: 1
+      tidewatch/pressure.py: 1
+  files_analyzed: 11
+hubris:
+  findings:
+  - file: benchmarks/baselines/linear_urgency.py
+    line: 23
+    category: vacuous_truth
+    severity: high
+    severity_rank: 0
+    code: "    if days_remaining <= 0:\n        return 1.0"
+    note: score() returns 1.0 when comparison to 0 — caller cannot distinguish 'perfect' from 'unmeasured'
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: tidewatch/types.py
+    line: 171
+    category: vacuous_truth
+    severity: high
+    severity_rank: 0
+    code: "        if not signals:\n            return 1.0  # No data = assume full capacity"
+    note: effective_bandwidth() returns 1.0 when not signals — caller cannot distinguish 'perfect' from 'unmeasured'
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: benchmarks/baselines/eisenhower.py
+    line: 35
+    category: unfalsifiable_default
+    severity: medium
+    severity_rank: 1
+    code: 'return 1.0  # Q1'
+    note: score() has 1 perfect-score return(s) alongside 4 computed return(s) — some paths bypass measurement
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  - file: benchmarks/baselines/linear_urgency.py
+    line: 24
+    category: unfalsifiable_default
+    severity: medium
+    severity_rank: 1
+    code: return 1.0
+    note: score() has 1 perfect-score return(s) alongside 2 computed return(s) — some paths bypass measurement
+    remediation_context:
+      context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+        \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+        \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+      obligations_found: 20
+      memories_found: 0
+      scoring: raw_mssql
+  summary:
+    total: 4
+    by_category:
+      vacuous_truth: 2
+      unfalsifiable_default: 2
+    by_severity:
+      high: 2
+      medium: 2
+    hotspots:
+      benchmarks/baselines/linear_urgency.py: 2
+      tidewatch/types.py: 1
+      benchmarks/baselines/eisenhower.py: 1
+  files_analyzed: 11
+viewpoints:
+  results:
+    complexity_hotspots:
+      display_name: Complexity Hotspots
+      viewpoint_type: ast
+      findings:
+      - file: tests/test_benchmarks.py
+        line: 204
+        severity: medium
+        observation: 'test_full_pipeline_generate_score_evaluate(): complexity 11, 53 lines'
+        recommendation: Consider decomposing into smaller functions
+        viewpoint: complexity_hotspots
+        remediation_context:
+          context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+            \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+            \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+          obligations_found: 20
+          memories_found: 0
+          scoring: raw_mssql
+      - file: tests/test_golden_pipeline.py
+        line: 848
+        severity: medium
+        observation: 'test_triage_to_plan(): complexity 11'
+        recommendation: Consider decomposing into smaller functions
+        viewpoint: complexity_hotspots
+        remediation_context:
+          context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+            \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+            \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+          obligations_found: 20
+          memories_found: 0
+          scoring: raw_mssql
+      - file: tidewatch/planner.py
+        line: 92
+        severity: medium
+        observation: 'generate_plan_requests(): 62 lines'
+        recommendation: Consider decomposing into smaller functions
+        viewpoint: complexity_hotspots
+        remediation_context:
+          context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+            \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+            \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+          obligations_found: 20
+          memories_found: 0
+          scoring: raw_mssql
+      - file: tidewatch/pressure.py
+        line: 74
+        severity: medium
+        observation: 'calculate_pressure(): 93 lines'
+        recommendation: Consider decomposing into smaller functions
+        viewpoint: complexity_hotspots
+        remediation_context:
+          context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+            \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+            \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+          obligations_found: 20
+          memories_found: 0
+          scoring: raw_mssql
+      - file: tidewatch/pressure.py
+        line: 235
+        severity: medium
+        observation: 'bandwidth_adjusted_sort(): 64 lines'
+        recommendation: Consider decomposing into smaller functions
+        viewpoint: complexity_hotspots
+        remediation_context:
+          context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+            \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+            \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+          obligations_found: 20
+          memories_found: 0
+          scoring: raw_mssql
+      summary: 'Complexity Hotspots: 5 finding(s) (0 high, 5 medium, 0 low).'
+    import_hygiene:
+      display_name: Import Hygiene
+      viewpoint_type: ast
+      findings: []
+      summary: No issues found from Import Hygiene perspective.
+    coupling_analysis:
+      display_name: Coupling Analysis
+      viewpoint_type: hybrid
+      findings: []
+      summary: No issues found from Coupling Analysis perspective.
+    dead_code:
+      display_name: Dead Code
+      viewpoint_type: hybrid
+      findings: []
+      summary: No issues found from Dead Code perspective.
+    sovereign_reviewer:
+      error: no LLM backend available
+      findings: []
+    test_adequacy:
+      display_name: Test Adequacy
+      viewpoint_type: hybrid
+      findings:
+      - file: benchmarks/baselines/binary_deadline.py
+        line: 0
+        severity: low
+        observation: 'No test file for ''benchmarks/baselines/binary_deadline.py'' (hub score: 1.0)'
+        recommendation: Add test coverage, especially for structural hub files
+        viewpoint: test_adequacy
+      - file: benchmarks/baselines/eisenhower.py
+        line: 0
+        severity: low
+        observation: 'No test file for ''benchmarks/baselines/eisenhower.py'' (hub score: 1.0)'
+        recommendation: Add test coverage, especially for structural hub files
+        viewpoint: test_adequacy
+      - file: benchmarks/baselines/linear_urgency.py
+        line: 0
+        severity: low
+        observation: 'No test file for ''benchmarks/baselines/linear_urgency.py'' (hub score: 1.0)'
+        recommendation: Add test coverage, especially for structural hub files
+        viewpoint: test_adequacy
+      - file: benchmarks/datasets/generate_obligations.py
+        line: 0
+        severity: medium
+        observation: 'No test file for ''benchmarks/datasets/generate_obligations.py'' (hub score: 12.0)'
+        recommendation: Add test coverage, especially for structural hub files
+        viewpoint: test_adequacy
+        remediation_context:
+          context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+            \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+            \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+          obligations_found: 20
+          memories_found: 0
+          scoring: raw_mssql
+      - file: benchmarks/metrics.py
+        line: 0
+        severity: medium
+        observation: 'No test file for ''benchmarks/metrics.py'' (hub score: 17.0)'
+        recommendation: Add test coverage, especially for structural hub files
+        viewpoint: test_adequacy
+        remediation_context:
+          context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+            \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+            \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+          obligations_found: 20
+          memories_found: 0
+          scoring: raw_mssql
+      - file: benchmarks/run.py
+        line: 0
+        severity: medium
+        observation: 'No test file for ''benchmarks/run.py'' (hub score: 16.0)'
+        recommendation: Add test coverage, especially for structural hub files
+        viewpoint: test_adequacy
+        remediation_context:
+          context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+            \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+            \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+          obligations_found: 20
+          memories_found: 0
+          scoring: raw_mssql
+      - file: tidewatch/types.py
+        line: 0
+        severity: medium
+        observation: 'No test file for ''tidewatch/types.py'' (hub score: 16.3)'
+        recommendation: Add test coverage, especially for structural hub files
+        viewpoint: test_adequacy
+        remediation_context:
+          context_text: "Related obligations (20):\n  [P1][open] tidewatch: vacuous_truth — 2 finding(s)\n  [P1][open] tidewatch:\
+            \ tunable_threshold — 2 finding(s)\n  [P1][pending_review] tidewatch: hub_test_gap — 1 finding(s)\n  [P1][pending_review]\
+            \ tidewatch: math_clamp — 4 finding(s)\n  [P1][pending_review] tidewatch: conditional_chain — 6 finding(s)"
+          obligations_found: 20
+          memories_found: 0
+          scoring: raw_mssql
+      summary: 'Test Adequacy: 7 finding(s) (0 high, 4 medium, 3 low).'
+    constellation_diplomat:
+      error: no LLM backend available
+      findings: []
+    minimalist:
+      error: no LLM backend available
+      findings: []
+  viewpoints_loaded: 20
+timing:
+  total_s: 1501.4409
+  steps:
+  - step: scan
+    elapsed_s: 0.0229
+  - step: llm_decision
+    elapsed_s: 0.0851
+  - step: graph
+    elapsed_s: 0.0005
+  - step: purpose
+    elapsed_s: 0.0281
+  - step: coherence
+    elapsed_s: 0.0002
+  - step: abstraction
+    elapsed_s: 0.0308
+  - step: abstraction_llm_refine
+    elapsed_s: 300.4757
+  - step: assumptions
+    elapsed_s: 0.0202
+  - step: hubris
+    elapsed_s: 0.0185
+  - step: integration
+    elapsed_s: 0.038
+  - step: viewpoints_load
+    elapsed_s: 0.0761
+  - step: viewpoints_ast
+    elapsed_s: 0.0831
+  - step: viewpoints_llm
+    elapsed_s: 900.211
+  - step: viewpoints_save
+    elapsed_s: 0.0142
+  - step: remediation_context
+    elapsed_s: 0.0613
+  - step: llm_reasoning
+    elapsed_s: 300.101

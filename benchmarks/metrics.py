@@ -63,7 +63,7 @@ def attention_allocation_efficiency(
     n = len(predicted_ranks)
     if n < 2:
         return 1.0
-    d_squared = sum((p - a) ** 2 for p, a in zip(predicted_ranks, actual_ranks, strict=True))  # MATH_GUARD: Spearman rho formula (standard)
+    d_squared = sum((p - a) ** 2 for p, a in zip(predicted_ranks, actual_ranks, strict=True))
     return 1.0 - (6.0 * d_squared) / (n * (n ** 2 - 1))
 
 

@@ -27,7 +27,7 @@ from tidewatch.types import Obligation, PlanRequest, PlanResult, PressureResult
 logger = logging.getLogger(__name__)
 
 # Approximate chars-per-token for prompt length estimation
-_CHARS_PER_TOKEN = 4  # ASSUMPTION_OK: conservative average for English text
+_CHARS_PER_TOKEN = 4
 
 
 _DEFAULT_SYSTEM_PROMPT = (

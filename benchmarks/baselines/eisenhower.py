@@ -8,7 +8,7 @@ Urgent/Important matrix:
   Q4 (not urgent + not important) = 0.0
 """
 
-URGENT_THRESHOLD_DAYS = 7  # ASSUMPTION_OK: baseline parameter, not tunable in production
+URGENT_THRESHOLD_DAYS = 7
 
 # Eisenhower quadrant scores — fixed by definition of the matrix
 QUADRANT_SCORES: dict[tuple[bool, bool], float] = {

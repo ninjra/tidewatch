@@ -160,8 +160,9 @@ class CognitiveContext:
         """
         from tidewatch.constants import BANDWIDTH_HOURS_GOOD, BANDWIDTH_NORMALIZATION_RANGE
 
+        # Domain: bandwidth in [0, 1] where 1.0 = full capacity
         if self.bandwidth_score is not None:
-            return max(0.0, min(1.0, self.bandwidth_score))  # MATH_GUARD: probability domain [0,1]
+            return max(0.0, min(1.0, self.bandwidth_score))
 
         signals: list[float] = []
         if self.sleep_quality is not None:
@@ -171,17 +172,18 @@ class CognitiveContext:
         if self.pain_level is not None:
             signals.append(self.pain_level)
         if self.hours_since_sleep is not None:
-            normalized = max(0.0, 1.0 - max(0.0, self.hours_since_sleep - BANDWIDTH_HOURS_GOOD) / BANDWIDTH_NORMALIZATION_RANGE)  # MATH_GUARD: normalization to [0,1]
+            # Domain: normalize hours to [0, 1] — 8h=1.0, 16h=0.0
+            normalized = max(0.0, 1.0 - max(0.0, self.hours_since_sleep - BANDWIDTH_HOURS_GOOD) / BANDWIDTH_NORMALIZATION_RANGE)
             signals.append(normalized)
         if self.violation_rate is not None:
-            signals.append(1.0 - self.violation_rate)  # High violations = low bandwidth
+            signals.append(1.0 - self.violation_rate)
         if self.constraint_pressure is not None:
             signals.append(1.0 - self.constraint_pressure)
         if self.session_load is not None:
             signals.append(1.0 - self.session_load)
 
         if not signals:
-            return 1.0  # ASSUMPTION_OK: No data = assume full capacity (fail-open by design)
+            return 1.0  # Fail-open: no data = assume full capacity
         return sum(signals) / len(signals)
 
 
@@ -218,9 +220,10 @@ def estimate_task_demand(obligation: Obligation) -> TaskDemand:
     decision_weight = profile["decision_weight"]
     novelty = profile["novelty"]
 
+    # Domain: demand dimensions in [0, 1]
     if obligation.materiality == "material":
-        complexity = min(1.0, complexity + MATERIAL_COMPLEXITY_BOOST)  # MATH_GUARD: score ceiling
-        decision_weight = min(1.0, decision_weight + MATERIAL_DECISION_BOOST)  # MATH_GUARD: score ceiling
+        complexity = min(1.0, complexity + MATERIAL_COMPLEXITY_BOOST)
+        decision_weight = min(1.0, decision_weight + MATERIAL_DECISION_BOOST)
 
     return TaskDemand(
         complexity=complexity,

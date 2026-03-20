@@ -6,6 +6,7 @@
 
 from datetime import UTC, datetime, timedelta
 
+import tidewatch
 from tidewatch import (
     Obligation,
     SpeculativePlanner,
@@ -116,3 +117,27 @@ class TestFullPipeline:
         zone_order = {"green": 0, "yellow": 1, "orange": 2, "red": 3}
         for i in range(1, len(seen_zones)):
             assert zone_order[seen_zones[i]] > zone_order[seen_zones[i - 1]]
+
+
+class TestPublicAPISurface:
+    """Verify package __all__ exports are importable and functional."""
+
+    def test_all_exports_importable(self):
+        """Every name in __all__ must be importable from tidewatch."""
+        for name in tidewatch.__all__:
+            obj = getattr(tidewatch, name)
+            assert obj is not None, f"{name} exported but is None"
+
+    def test_version_present(self):
+        assert hasattr(tidewatch, "__version__")
+        assert isinstance(tidewatch.__version__, str)
+
+    def test_core_types_constructible(self):
+        """Core types can be instantiated with minimal args."""
+        from datetime import UTC, datetime
+        ob = tidewatch.Obligation(id=1, title="test", due_date=datetime.now(UTC))
+        assert ob.id == 1
+        ctx = tidewatch.CognitiveContext()
+        assert ctx.effective_bandwidth() == 1.0
+        demand = tidewatch.estimate_task_demand(ob)
+        assert 0.0 <= demand.complexity <= 1.0

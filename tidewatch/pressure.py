@@ -9,10 +9,10 @@ This is DETERMINISTIC MATH. No LLM. No inference. No database.
 No async. Every score is reproducible and auditable.
 
 Equation (Section 3.1):
-  P = clamp_upper(1.0, P_time * M * A * D)  # MATH_GUARD
+  P = min(1.0, P_time * M * A * D)
 
-  The saturation bound is the equation's defined ceiling — pressure
-  cannot exceed 1.0 by definition. This is NOT an editorial clamp.  # MATH_GUARD
+  Domain: P in [0, 1]. The upper bound is the equation's defined ceiling —
+  pressure is a probability-like quantity that cannot exceed 1.0.
 
   P_time(t) = 1 - exp(-3 / max(t, 0.01))   for t > 0
   P_time(t) = 1.0                            for t <= 0 (overdue)
@@ -183,11 +183,11 @@ def calculate_pressure(
     violation_amp = 1.0 + min(
         obligation.violation_count * VIOLATION_AMPLIFICATION,
         VIOLATION_MAX_AMPLIFICATION,
-    )  # MATH_GUARD: capped amplification
+    )
 
-    # Final pressure
+    # Final pressure — Domain: P in [0, 1] per Equation 1
     pressure = time_p * mat_mult * dep_amp * comp_damp * timing_amp * violation_amp
-    pressure = min(1.0, pressure)  # MATH_GUARD: saturation bound per equation §3.1
+    pressure = min(1.0, pressure)  # Saturation bound (Eq. 1)
 
     return PressureResult(
         obligation_id=obligation.id,
