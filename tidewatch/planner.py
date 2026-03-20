@@ -97,17 +97,28 @@ class PlanStubGenerator:
             else DEFAULT_DELIVERY_URGENCY
         )
 
+    # Prompt injection markers to strip (#1215).
+    # These are common patterns used to hijack LLM context windows.
+    _INJECTION_MARKERS: tuple[str, ...] = (
+        "SYSTEM:",
+        "```",
+        "IGNORE PREVIOUS",
+    )
+
     @staticmethod
     def _sanitize(text: str, max_len: int = PLANNER_DESC_MAX_LEN) -> str:
         """Sanitize user-provided text for LLM prompt inclusion.
 
-        Strips control characters, truncates to max_len, and escapes
-        potential prompt injection markers.
+        Strips control characters, truncates to max_len, and strips
+        common prompt injection markers (#1215).
         """
         if not text:
             return ""
         # Strip control chars except newline/tab
         cleaned = "".join(c for c in text if c == "\n" or c == "\t" or (ord(c) >= PLANNER_ASCII_PRINTABLE_MIN))
+        # Strip prompt injection markers (#1215)
+        for marker in PlanStubGenerator._INJECTION_MARKERS:
+            cleaned = cleaned.replace(marker, "")
         # Truncate
         if len(cleaned) > max_len:
             cleaned = cleaned[:max_len] + "..."

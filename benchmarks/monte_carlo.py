@@ -113,6 +113,7 @@ class TrialResult:
     inversion_checks: int      # Total inversion check points
     effective_attention_hours: float  # Hours on obligations that met deadline
     total_attention_hours: float     # Total hours worked
+    saturated_count: int = 0   # Obligations with pressure >= 0.999 (#1210)
 
     @property
     def missed_deadline_rate(self) -> float:
@@ -125,6 +126,11 @@ class TrialResult:
     @property
     def attention_efficiency(self) -> float:
         return self.effective_attention_hours / self.total_attention_hours if self.total_attention_hours > 0 else 0.0
+
+    @property
+    def saturation_rate(self) -> float:
+        """Fraction of obligations at pressure saturation (>= 0.999)."""
+        return self.saturated_count / self.total if self.total > 0 else 0.0
 
 
 def _bootstrap_ci(data: np.ndarray, n_bootstrap: int = 10000, alpha: float = 0.05,
@@ -159,6 +165,9 @@ class MonteCarloResult:
     missed_deadline_rate_ci: tuple[float, float] = (0.0, 0.0)
     queue_inversion_rate_ci: tuple[float, float] = (0.0, 0.0)
     attention_efficiency_ci: tuple[float, float] = (0.0, 0.0)
+    # Saturation frequency (#1210)
+    saturation_rate_mean: float = 0.0
+    saturation_rate_std: float = 0.0
     trial_results: list[TrialResult] = field(default_factory=list, repr=False)
 
     def to_dict(self) -> dict:
@@ -248,6 +257,27 @@ def _tidewatch_bandwidth_variable_order(
     return _tidewatch_bandwidth_order(obligations, now, bandwidth)
 
 
+def _weighted_edf_order(obligations: list[Obligation], now: datetime) -> list[int]:
+    """Weighted-EDF: sort by (urgency_tier, deadline) (#1211).
+
+    urgency_tier is derived from the Tidewatch zone: red=0 (highest priority),
+    orange=1, yellow=2, green=3. Within the same tier, sort by deadline ascending
+    (earliest first). This is a hybrid baseline combining zone-based urgency with
+    classical EDF.
+    """
+    _ZONE_TIER = {"red": 0, "orange": 1, "yellow": 2, "green": 3}
+    results = recalculate_batch(obligations, now=now)
+    id_to_zone = {r.obligation_id: r.zone for r in results}
+    indices = list(range(len(obligations)))
+    indices.sort(
+        key=lambda i: (
+            _ZONE_TIER.get(id_to_zone.get(obligations[i].id, "green"), 3),
+            obligations[i].due_date or datetime.max.replace(tzinfo=UTC),
+        ),
+    )
+    return indices
+
+
 def _weighted_sum_order(obligations: list[Obligation], now: datetime) -> list[int]:
     """Order by normalized weighted-sum of component space (MCDM baseline, #1185).
 
@@ -293,6 +323,7 @@ STRATEGIES: dict[str, str] = {
     "tidewatch_bw_low": "Tidewatch + bandwidth (b=0.2)",
     "tidewatch_bw_variable": "Tidewatch + variable bandwidth (Beta(2,3) per trial, #1188)",
     "weighted_sum": "Weighted-sum MCDM (equal weights, normalized)",
+    "weighted_edf": "Weighted-EDF: zone-tier + earliest-deadline (#1211)",
     "edf": "Earliest deadline first",
     "fifo": "First-in first-out",
     "random": "Random order (null hypothesis)",
@@ -307,6 +338,7 @@ _STRATEGY_DISPATCH: dict[str, callable] = {
     "tidewatch_bw_low": lambda obs, now, rng: _tidewatch_bandwidth_order(obs, now, 0.2),
     "tidewatch_bw_variable": lambda obs, now, rng: _tidewatch_bandwidth_variable_order(obs, now, rng),
     "weighted_sum": lambda obs, now, rng: _weighted_sum_order(obs, now),
+    "weighted_edf": lambda obs, now, rng: _weighted_edf_order(obs, now),
     "edf": lambda obs, now, rng: _deadline_order(obs, now),
     "fifo": lambda obs, now, rng: _fifo_order(obs, now),
     "random": lambda obs, now, rng: _random_order(obs, now, rng),
@@ -348,11 +380,14 @@ def _run_trial(
     inversions = 0
     inversion_checks = 0
 
-    # Track pressure for inversion detection
+    # Track pressure for inversion detection and saturation counting (#1210)
     remaining_pressures: dict[int, float] = {}
+    saturated_count = 0
     for i, sob in enumerate(sim_obs):
         r = calculate_pressure(sob.obligation, now=sim_start)
         remaining_pressures[i] = r.pressure
+        if r.pressure >= 0.999:
+            saturated_count += 1
 
     completed: set[int] = set()
 
@@ -398,6 +433,7 @@ def _run_trial(
         inversion_checks=inversion_checks,
         effective_attention_hours=effective_hours,
         total_attention_hours=total_hours,
+        saturated_count=saturated_count,
     )
 
 
@@ -442,6 +478,7 @@ def run_monte_carlo(
     missed_rates = np.array([t.missed_deadline_rate for t in trials])
     inversion_rates = np.array([t.queue_inversion_rate for t in trials])
     efficiency_rates = np.array([t.attention_efficiency for t in trials])
+    saturation_rates = np.array([t.saturation_rate for t in trials])
 
     # Bootstrap 95% CIs (#1177)
     missed_ci = _bootstrap_ci(missed_rates, seed=seed) if n_trials >= 10 else (0.0, 0.0)
@@ -460,6 +497,8 @@ def run_monte_carlo(
         missed_deadline_rate_ci=missed_ci,
         queue_inversion_rate_ci=inversion_ci,
         attention_efficiency_ci=efficiency_ci,
+        saturation_rate_mean=float(np.mean(saturation_rates)),
+        saturation_rate_std=float(np.std(saturation_rates)),
         trial_results=trials,
     )
 
@@ -480,6 +519,141 @@ def compare_strategies(
             obligations, strategy=name, n_trials=n_trials,
             seed=seed, sim_start=sim_start,
         )
+    return results
+
+
+def compare_strategies_multi_seed(
+    obligations: list[Obligation],
+    n_trials: int = DEFAULT_TRIALS,
+    seeds: range = range(42, 52),
+    sim_start: datetime | None = None,
+) -> dict[str, dict[str, dict[str, float]]]:
+    """Run compare_strategies for each seed and return inter-seed statistics (#1209).
+
+    For each strategy, computes the mean and std of each metric across all seeds.
+    This measures sensitivity to RNG seed choice — a robust strategy should have
+    low inter-seed variance.
+
+    Returns:
+        dict[strategy_name, dict[metric_name, {"mean": float, "std": float}]]
+    """
+    per_seed_results: dict[str, list[MonteCarloResult]] = {s: [] for s in STRATEGIES}
+
+    for seed in seeds:
+        seed_results = compare_strategies(
+            obligations, n_trials=n_trials, seed=seed, sim_start=sim_start,
+        )
+        for strategy_name, mc_result in seed_results.items():
+            per_seed_results[strategy_name].append(mc_result)
+
+    output: dict[str, dict[str, dict[str, float]]] = {}
+    for strategy_name, mc_results in per_seed_results.items():
+        missed = np.array([r.missed_deadline_rate_mean for r in mc_results])
+        inversions = np.array([r.queue_inversion_rate_mean for r in mc_results])
+        efficiency = np.array([r.attention_efficiency_mean for r in mc_results])
+        saturation = np.array([r.saturation_rate_mean for r in mc_results])
+        output[strategy_name] = {
+            "missed_deadline_rate": {"mean": float(np.mean(missed)), "std": float(np.std(missed))},
+            "queue_inversion_rate": {"mean": float(np.mean(inversions)), "std": float(np.std(inversions))},
+            "attention_efficiency": {"mean": float(np.mean(efficiency)), "std": float(np.std(efficiency))},
+            "saturation_rate": {"mean": float(np.mean(saturation)), "std": float(np.std(saturation))},
+        }
+
+    return output
+
+
+def run_ablation_study(
+    obligations: list[Obligation],
+    n_trials: int = DEFAULT_TRIALS,
+    seed: int = DEFAULT_SEED,
+    sim_start: datetime | None = None,
+) -> dict[str, MonteCarloResult]:
+    """Run 6-factor ablation study on the tidewatch strategy (#1214).
+
+    Runs the tidewatch strategy once with no ablation (baseline), then once
+    per factor with that factor neutralized (set to identity 1.0). Returns
+    a dict mapping factor name to MonteCarloResult.
+
+    The "baseline" key holds the unablated result. Each other key matches
+    a COMP_* constant from tidewatch.components.
+    """
+    from tidewatch.components import (
+        COMP_COMPLETION_DAMP,
+        COMP_DEPENDENCY_AMP,
+        COMP_MATERIALITY,
+        COMP_TIME_PRESSURE,
+        COMP_TIMING_AMP,
+        COMP_VIOLATION_AMP,
+    )
+
+    if sim_start is None:
+        sim_start = datetime.now(UTC)
+
+    factors = [
+        COMP_TIME_PRESSURE,
+        COMP_MATERIALITY,
+        COMP_DEPENDENCY_AMP,
+        COMP_COMPLETION_DAMP,
+        COMP_TIMING_AMP,
+        COMP_VIOLATION_AMP,
+    ]
+
+    results: dict[str, MonteCarloResult] = {}
+
+    # Baseline: no ablation
+    results["baseline"] = run_monte_carlo(
+        obligations, strategy="tidewatch", n_trials=n_trials,
+        seed=seed, sim_start=sim_start,
+    )
+
+    # Per-factor ablation: replace calculate_pressure with ablated version
+    for factor in factors:
+        ablate_set = frozenset({factor})
+        trials: list[TrialResult] = []
+
+        for trial_i in range(n_trials):
+            trial_rng = np.random.default_rng(seed + trial_i)
+            sim_obs = _sample_durations(obligations, trial_rng)
+
+            # Use tidewatch ordering with ablation
+            ablated_results = [
+                calculate_pressure(ob, now=sim_start, ablate=ablate_set)
+                for ob in obligations
+            ]
+            ablated_results.sort(key=lambda r: r.pressure, reverse=True)
+            id_to_rank = {r.obligation_id: i for i, r in enumerate(ablated_results)}
+            indices = list(range(len(obligations)))
+            indices.sort(key=lambda i: id_to_rank.get(obligations[i].id, i))
+
+            result = _run_trial(sim_obs, indices, sim_start)
+            trials.append(result)
+
+        missed_rates = np.array([t.missed_deadline_rate for t in trials])
+        inversion_rates = np.array([t.queue_inversion_rate for t in trials])
+        efficiency_rates = np.array([t.attention_efficiency for t in trials])
+        saturation_rates = np.array([t.saturation_rate for t in trials])
+
+        missed_ci = _bootstrap_ci(missed_rates, seed=seed) if n_trials >= 10 else (0.0, 0.0)
+        inversion_ci = _bootstrap_ci(inversion_rates, seed=seed) if n_trials >= 10 else (0.0, 0.0)
+        efficiency_ci = _bootstrap_ci(efficiency_rates, seed=seed) if n_trials >= 10 else (0.0, 0.0)
+
+        results[factor] = MonteCarloResult(
+            strategy=f"tidewatch_ablate_{factor}",
+            n_trials=n_trials,
+            missed_deadline_rate_mean=float(np.mean(missed_rates)),
+            missed_deadline_rate_std=float(np.std(missed_rates)),
+            queue_inversion_rate_mean=float(np.mean(inversion_rates)),
+            queue_inversion_rate_std=float(np.std(inversion_rates)),
+            attention_efficiency_mean=float(np.mean(efficiency_rates)),
+            attention_efficiency_std=float(np.std(efficiency_rates)),
+            missed_deadline_rate_ci=missed_ci,
+            queue_inversion_rate_ci=inversion_ci,
+            attention_efficiency_ci=efficiency_ci,
+            saturation_rate_mean=float(np.mean(saturation_rates)),
+            saturation_rate_std=float(np.std(saturation_rates)),
+            trial_results=trials,
+        )
+
     return results
 
 

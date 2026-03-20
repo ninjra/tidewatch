@@ -68,7 +68,9 @@ class TestCognitiveContext:
 
     def test_hours_since_sleep_bad(self):
         ctx = CognitiveContext(hours_since_sleep=16.0)
-        assert ctx.effective_bandwidth() == 0.0
+        # Floor at BANDWIDTH_MIN_FLOOR=0.2 prevents poisoned signals
+        # from reducing bandwidth below 20% (#1216)
+        assert ctx.effective_bandwidth() == 0.2
 
     def test_hours_since_sleep_midpoint(self):
         ctx = CognitiveContext(hours_since_sleep=12.0)

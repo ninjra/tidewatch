@@ -187,11 +187,14 @@ class CognitiveContext:
     def effective_bandwidth(self) -> float:
         """Compute composite bandwidth score from available signals.
 
-        Returns 0.0-1.0 where 1.0 = full capacity. If no signals
-        available, returns 1.0 (assume full capacity — fail-open).
+        Returns BANDWIDTH_MIN_FLOOR-1.0 where 1.0 = full capacity.
+        If no signals available, returns BANDWIDTH_NO_DATA (fail-safe-conservative).
+        The floor prevents telemetry poisoning from reducing bandwidth
+        below 20% (#1216).
         """
         from tidewatch.constants import (
             BANDWIDTH_HOURS_GOOD,
+            BANDWIDTH_MIN_FLOOR,
             BANDWIDTH_NO_DATA,
             BANDWIDTH_NORMALIZATION_RANGE,
             clamp_unit,
@@ -221,7 +224,10 @@ class CognitiveContext:
 
         if not signals:
             return BANDWIDTH_NO_DATA
-        return sum(signals) / len(signals)
+        avg = sum(signals) / len(signals)
+        # Clamp to [BANDWIDTH_MIN_FLOOR, 1.0] — poisoned signals cannot
+        # reduce bandwidth below the floor (#1216)
+        return max(avg, BANDWIDTH_MIN_FLOOR)
 
 
 # --- Task cognitive demand ---

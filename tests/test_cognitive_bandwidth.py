@@ -49,7 +49,7 @@ class TestCognitiveContext:
         assert ctx.effective_bandwidth() == 1.0  # 8h = fully rested
 
         ctx = CognitiveContext(hours_since_sleep=16.0)
-        assert ctx.effective_bandwidth() == 0.0  # 16h = depleted
+        assert ctx.effective_bandwidth() == 0.2  # 16h = depleted, clamped to floor (#1216)
 
         ctx = CognitiveContext(hours_since_sleep=12.0)
         assert ctx.effective_bandwidth() == 0.5  # 12h = half

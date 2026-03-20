@@ -42,6 +42,7 @@ from tidewatch.constants import (
     COMPLETION_LOGISTIC_K,
     COMPLETION_LOGISTIC_MID,
     DEPENDENCY_AMPLIFICATION,
+    DEPENDENCY_COUNT_CAP,
     DIVISION_GUARD,
     FANOUT_TEMPORAL_K,
     FIT_SCORE_MISMATCH_COMPONENTS,
@@ -215,7 +216,8 @@ def calculate_pressure(
         dep_days_rem = _days_remaining(obligation.earliest_dependent_deadline, now)
         dep_days = min(days_rem, dep_days_rem)
     t_gate = _temporal_gate(dep_days)
-    dep_amp = 1.0 + (obligation.dependency_count * DEPENDENCY_AMPLIFICATION * t_gate)
+    effective_deps = min(obligation.dependency_count, DEPENDENCY_COUNT_CAP)
+    dep_amp = 1.0 + (effective_deps * DEPENDENCY_AMPLIFICATION * t_gate)
     comp_damp = _completion_dampening(obligation.completion_pct)
     timing_amp = _timing_amplifier(obligation.days_in_status)
     violation_amp = _violation_amplifier(obligation.violation_count, obligation.days_in_status)
@@ -259,6 +261,18 @@ def calculate_pressure(
 
     # Scalar pressure is the default product collapse, saturated to [0,1]
     pressure = components.pressure
+
+    # Zombie task fix (#1212): completed obligations must not haunt the queue.
+    # Without this guard, a 100%-complete "done" obligation can still show
+    # P ≈ 0.615 due to the logistic dampening asymptote (D ≈ 0.411 at pct=1.0).
+    if obligation.completion_pct >= 1.0 and obligation.status in ("completed", "done"):
+        pressure = 0.0
+        return PressureResult(
+            obligation_id=obligation.id, pressure=pressure, zone="green",
+            time_pressure=time_p, materiality_mult=mat_mult,
+            dependency_amp=dep_amp, completion_damp=comp_damp,
+            component_space=components,
+        )
 
     return PressureResult(
         obligation_id=obligation.id, pressure=pressure, zone=pressure_zone(pressure),

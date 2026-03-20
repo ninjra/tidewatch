@@ -78,6 +78,7 @@ MATERIALITY_WEIGHTS: dict[str, float] = {
 
 # --- Dependencies ---
 DEPENDENCY_AMPLIFICATION = 0.1  # Per-dependency amplifier (junction multiplier)
+DEPENDENCY_COUNT_CAP = 20       # Max effective deps before capping (#1213 — DoS prevention)
 
 # Temporal gating for dependency fanout (§3.2):
 # dep_amp = 1.0 + (deps × AMPLIFICATION × temporal_gate)
@@ -122,6 +123,7 @@ ZONE_ORANGE = float(os.environ.get("TIDEWATCH_ZONE_ORANGE", "0.60"))
 ZONE_RED = float(os.environ.get("TIDEWATCH_ZONE_RED", "0.80"))
 
 # --- Cognitive bandwidth ---
+BANDWIDTH_MIN_FLOOR = 0.2        # Poisoned signals can't reduce bandwidth below 20% (#1216)
 BANDWIDTH_FULL_THRESHOLD = 0.99  # Above this, skip bandwidth adjustment
 BANDWIDTH_HOURS_GOOD = 8.0      # Hours since sleep: 0-8h = good (1.0)
 BANDWIDTH_HOURS_BAD = 16.0      # Hours since sleep: 16h+ = bad (0.0)
