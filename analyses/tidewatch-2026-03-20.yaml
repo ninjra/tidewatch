@@ -180,11 +180,19 @@ scan:
   source_signatures:
     benchmarks/baselines/__init__.py:
       imports:
+      - __future__
+      - typing
       - benchmarks.baselines.binary_deadline
       - benchmarks.baselines.eisenhower
       - benchmarks.baselines.linear_urgency
-      classes: []
-      functions: []
+      classes:
+      - name: BaselineScorer
+        bases:
+        - Protocol
+        decorators: []
+      functions:
+      - name: __call__
+        decorators: []
       decorators: []
     benchmarks/baselines/binary_deadline.py:
       imports: []
@@ -337,6 +345,9 @@ scan:
       - name: TestEisenhower
         bases: []
         decorators: []
+      - name: TestBaselineRegistry
+        bases: []
+        decorators: []
       functions:
       - name: test_overdue
         decorators: []
@@ -369,6 +380,12 @@ scan:
       - name: test_no_deadline
         decorators: []
       - name: test_custom_threshold
+        decorators: []
+      - name: test_all_baselines_registered
+        decorators: []
+      - name: test_all_baselines_callable
+        decorators: []
+      - name: test_all_baselines_handle_none
         decorators: []
       decorators: []
     tests/test_benchmarks.py:
@@ -1646,92 +1663,92 @@ graph:
     tidewatch/constants.py: 11
     tidewatch/types.py: 9
     tidewatch/pressure.py: 5
-    benchmarks/run.py: 3
     tidewatch/planner.py: 3
+    benchmarks/run.py: 3
     benchmarks/baselines/__init__.py: 3
+    tidewatch/triage.py: 2
+    benchmarks/baselines/linear_urgency.py: 2
     benchmarks/baselines/eisenhower.py: 2
     benchmarks/baselines/binary_deadline.py: 2
-    benchmarks/baselines/linear_urgency.py: 2
-    tidewatch/triage.py: 2
     scripts/generate_paper_figures.py: 1
-    tests/test_golden_pipeline.py: 0
-    tests/test_planner.py: 0
-    tests/test_cognitive_bandwidth.py: 0
-    tests/test_pressure.py: 0
-    tests/test_run.py: 0
-    tests/test_init.py: 0
-    tests/test_constants.py: 0
-    tests/test_triage.py: 0
-    tests/test_benchmarks.py: 0
-    tests/test_generate_obligations.py: 0
-    tests/test_integration.py: 0
-    tests/test_metrics.py: 0
     tests/conftest.py: 0
-    tests/test_types.py: 0
+    tests/test_cognitive_bandwidth.py: 0
+    tests/test_triage.py: 0
+    tests/test_constants.py: 0
+    tests/test_run.py: 0
     tests/test_baselines.py: 0
+    tests/test_generate_obligations.py: 0
+    tests/test_golden_pipeline.py: 0
+    tests/test_integration.py: 0
+    tests/test_pressure.py: 0
     tests/test_generate_paper_figures.py: 0
+    tests/test_planner.py: 0
+    tests/test_types.py: 0
+    tests/test_benchmarks.py: 0
+    tests/test_init.py: 0
+    tests/test_metrics.py: 0
   out_degree:
     tests/test_golden_pipeline.py: 102
+    tidewatch/__init__.py: 4
     tests/test_pressure.py: 4
     tests/test_benchmarks.py: 4
-    tidewatch/__init__.py: 4
-    tests/test_planner.py: 3
     benchmarks/run.py: 3
-    tidewatch/pressure.py: 3
+    tests/test_planner.py: 3
     benchmarks/baselines/__init__.py: 3
-    tidewatch/types.py: 2
+    tidewatch/pressure.py: 3
+    tests/conftest.py: 2
+    tests/test_triage.py: 2
     tidewatch/planner.py: 2
     tests/test_run.py: 2
-    tests/test_triage.py: 2
     tests/test_integration.py: 2
-    tests/conftest.py: 2
+    tidewatch/types.py: 2
     tests/test_cognitive_bandwidth.py: 1
-    scripts/generate_paper_figures.py: 1
-    tests/test_init.py: 1
-    benchmarks/baselines/linear_urgency.py: 1
     tests/test_constants.py: 1
-    tests/test_generate_obligations.py: 1
     tidewatch/triage.py: 1
-    tests/test_metrics.py: 1
-    tests/test_types.py: 1
     tests/test_baselines.py: 1
+    benchmarks/baselines/linear_urgency.py: 1
+    tests/test_generate_obligations.py: 1
     tests/test_generate_paper_figures.py: 1
+    tests/test_types.py: 1
+    tests/test_init.py: 1
+    tests/test_metrics.py: 1
+    scripts/generate_paper_figures.py: 1
+    benchmarks/metrics.py: 0
     benchmarks/baselines/eisenhower.py: 0
     benchmarks/datasets/generate_obligations.py: 0
-    tidewatch/constants.py: 0
     benchmarks/baselines/binary_deadline.py: 0
-    benchmarks/metrics.py: 0
+    tidewatch/constants.py: 0
   betweenness_centrality:
     tidewatch/__init__.py: 32.666666666666664
     benchmarks/run.py: 16.0
     benchmarks/baselines/__init__.py: 14.333333333333334
-    tidewatch/types.py: 6.583333333333334
+    tidewatch/types.py: 6.583333333333335
     tidewatch/pressure.py: 3.4166666666666665
     benchmarks/baselines/linear_urgency.py: 3.333333333333333
     tidewatch/planner.py: 1.6666666666666665
     scripts/generate_paper_figures.py: 1.0
-    benchmarks/baselines/eisenhower.py: 0.0
-    benchmarks/datasets/generate_obligations.py: 0.0
-    tests/test_golden_pipeline.py: 0.0
-    tests/test_planner.py: 0.0
-    tests/test_cognitive_bandwidth.py: 0.0
-    tidewatch/constants.py: 0.0
-    benchmarks/baselines/binary_deadline.py: 0.0
-    tests/test_pressure.py: 0.0
-    tests/test_run.py: 0.0
-    tests/test_init.py: 0.0
-    tests/test_constants.py: 0.0
-    tests/test_triage.py: 0.0
-    tests/test_benchmarks.py: 0.0
-    tests/test_generate_obligations.py: 0.0
-    tests/test_integration.py: 0.0
-    tidewatch/triage.py: 0.0
-    tests/test_metrics.py: 0.0
     tests/conftest.py: 0.0
-    tests/test_types.py: 0.0
+    tests/test_cognitive_bandwidth.py: 0.0
+    tests/test_triage.py: 0.0
+    tests/test_constants.py: 0.0
+    tidewatch/triage.py: 0.0
+    tests/test_run.py: 0.0
     tests/test_baselines.py: 0.0
-    tests/test_generate_paper_figures.py: 0.0
     benchmarks/metrics.py: 0.0
+    tests/test_generate_obligations.py: 0.0
+    benchmarks/baselines/eisenhower.py: 0.0
+    tests/test_golden_pipeline.py: 0.0
+    tests/test_integration.py: 0.0
+    benchmarks/datasets/generate_obligations.py: 0.0
+    tests/test_pressure.py: 0.0
+    tests/test_generate_paper_figures.py: 0.0
+    benchmarks/baselines/binary_deadline.py: 0.0
+    tests/test_planner.py: 0.0
+    tests/test_types.py: 0.0
+    tests/test_benchmarks.py: 0.0
+    tests/test_init.py: 0.0
+    tidewatch/constants.py: 0.0
+    tests/test_metrics.py: 0.0
   orphans: []
   clusters:
   - - benchmarks/baselines/__init__.py
@@ -1864,24 +1881,27 @@ graph:
     benchmarks/baselines/linear_urgency.py: 6.333333333333333
     tests/test_pressure.py: 4.0
     tests/test_benchmarks.py: 4.0
+    tidewatch/triage.py: 3.0
     tests/test_planner.py: 3.0
     scripts/generate_paper_figures.py: 3.0
-    tidewatch/triage.py: 3.0
-    benchmarks/baselines/eisenhower.py: 2.0
-    benchmarks/baselines/binary_deadline.py: 2.0
-    tests/test_run.py: 2.0
-    tests/test_triage.py: 2.0
-    tests/test_integration.py: 2.0
     tests/conftest.py: 2.0
+    tests/test_triage.py: 2.0
+    tests/test_run.py: 2.0
+    benchmarks/baselines/eisenhower.py: 2.0
+    tests/test_integration.py: 2.0
+    benchmarks/baselines/binary_deadline.py: 2.0
     tests/test_cognitive_bandwidth.py: 1.0
-    tests/test_init.py: 1.0
     tests/test_constants.py: 1.0
-    tests/test_generate_obligations.py: 1.0
-    tests/test_metrics.py: 1.0
-    tests/test_types.py: 1.0
     tests/test_baselines.py: 1.0
+    tests/test_generate_obligations.py: 1.0
     tests/test_generate_paper_figures.py: 1.0
+    tests/test_types.py: 1.0
+    tests/test_init.py: 1.0
+    tests/test_metrics.py: 1.0
   external_imports:
+    benchmarks/baselines/__init__.py:
+    - __future__
+    - typing
     benchmarks/datasets/generate_obligations.py:
     - argparse
     - json
@@ -1957,9 +1977,9 @@ graph:
     - enum
     - dataclasses
     - datetime
-  resolution_rate: 0.7339901477832512
+  resolution_rate: 0.7268292682926829
   resolved_import_count: 149
-  external_import_count: 54
+  external_import_count: 56
 purpose:
   archetype:
   - scoring-engine+speculativeplanner
@@ -2030,44 +2050,6 @@ abstraction:
   findings:
   - file: benchmarks/datasets/generate_obligations.py
     line: 84
-    category: custom
-    severity: high
-    code: '{"id": i + 1, "title": f"{domain.replace(''_'', '' '').title()} Task {i + 1}", "due_date": due_date, "materiality":
-      materiality, "dependency_count": dep_count}'
-    note: The obligation dict is built inline with many fields; extracting it into a dedicated class or config schema would
-      improve abstraction and avoid duplication.
-    severity_rank: 0
-    llm_evaluated: true
-    remediation_context:
-      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: resilience_patterns\
-        \ — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: future_regret — 4 finding(s)"
-      items_scored: 4
-      items_selected: 3
-      source_breakdown:
-        obligations: 3
-      scoring: gravitas_unified
-      assembly_ms: 1.0769080035970546
-  - file: scripts/generate_paper_figures.py
-    line: 83
-    category: custom
-    severity: high
-    code: '{"font.family": self.font_family, "font.size": self.font_size, "axes.labelsize": self.label_size, "axes.titlesize":
-      self.title_size, "legend.fontsize": self.legend_size}'
-    note: The rcParams update dict contains many hardcoded settings; moving them to a config or constants file would make
-      the style configuration more modular and reusable.
-    severity_rank: 0
-    llm_evaluated: true
-    remediation_context:
-      context_text: "  [OBLIGATION] [P1][open] tidewatch: minimalist — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
-        \ future_regret — 4 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: resilience_patterns — 3 finding(s)"
-      items_scored: 4
-      items_selected: 3
-      source_breakdown:
-        obligations: 3
-      scoring: gravitas_unified
-      assembly_ms: 0.49617799959378317
-  - file: benchmarks/datasets/generate_obligations.py
-    line: 84
     category: inline_collection
     severity: medium
     severity_rank: 1
@@ -2078,51 +2060,71 @@ abstraction:
       "title": f"{domain.replace(''_'', '' '').title()} Task {i + 1}",
 
       ... (8 more lines)'
-    note: refined assessment
-    llm_evaluated: true
+    note: dict with 9 elements in 'generate' — extract to module-level constant or load from config
     remediation_context:
-      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: resilience_patterns\
-        \ — 3 finding(s)"
-      items_scored: 4
-      items_selected: 2
+      context_text: "  [EMAIL] Email from TAAFT - There's An AI For That: \U0001F9BE AI Can See You Through Walls Now (2026-03-11\
+        \ 20:22:13). ----------\r\nView image: (https://media.beehiiv.co\n  [EMAIL] Email from The Neuron: \U0001F63A \U0001F399\
+        ️ Mercury 2: AI that's 10x faster than ChatGPT & Claude (2026-02-24 23:11:54). View image: (https://media.beehiiv.com/cdn-cg\n\
+        \  [EMAIL] Email from Rigzone Daily News: Morningstar Predicts Likeliest Iran Outcome (2026-02-20 21:18:44). RIGZONE\
+        \ DAILY NEWS -- FRIDAY, FEBRUARY 20, 2026\r\n---\n  [EMAIL] Email from Stock Analysis: Market Bullets: Berkshire invests\
+        \ in NYT, General Mills slumps 7% on outlook, FDA backtracks on Moderna snub (2026-02-18 14\n  [EMAIL] Email from\
+        \ The Neuron: \U0001F63A \U0001F399️ Every Answer at Once?! New AI Sees All Possible Answers (2026-02-10 23:48:07).\
+        \ View image: (https://media.beehiiv.com/cdn-\n  [EMAIL] Email from Kai from Tech Economics: The Chinese Rare Earth\
+        \ Monopoly: The Hidden Chokepoint Controlling the Future (2026-01-30 23:11:20). View this pos\n  [EMAIL] Email from\
+        \ The New Republic: This Is Not How Democracies Go to War. It’s How Dictators Do. (2026-02-28 17:32:50). Plus: I Want\
+        \ Iran to Be Free More Th"
+      items_scored: 11
+      items_selected: 7
       source_breakdown:
-        obligations: 2
+        memories: 7
       scoring: gravitas_unified
-      assembly_ms: 0.4323430039221421
+      assembly_ms: 1.6592879983363673
   - file: benchmarks/metrics.py
     line: 69
     category: magic_number
     severity: medium
     severity_rank: 1
     code: d_squared = sum((p - a) ** 2 for p, a in zip(predicted_ranks, actual_ranks, strict=True))
-    note: refined assessment
-    llm_evaluated: true
+    note: Numeric literal 2 in 'attention_allocation_efficiency' — extract to named constant or parameter
     remediation_context:
-      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: resilience_patterns\
-        \ — 3 finding(s)"
-      items_scored: 4
-      items_selected: 2
+      context_text: "  [OBLIGATION] [P1][pending_review] tidewatch: future_regret — 4 finding(s)\n  [EMAIL] Email from TAAFT\
+        \ - There's An AI For That: \U0001F9BE AI Can See You Through Walls Now (2026-03-11 20:22:13). ----------\r\nView\
+        \ image: (https://media.beehiiv.co\n  [EMAIL] Email from TAAFT - There's An AI For That: \U0001F9BE Claude and Codex\
+        \ Go to War (2026-02-05 21:32:20). ----------\r\nView image: (https://media.beehiiv.com/cdn-\n  [EMAIL] Email from\
+        \ ninjra: [ninjra/autocapture] PR run failed: CI - Default vision_extract to rapidocr (984f9b8) (2026-01-21 14:35:17).\
+        \ [ninjra/autocapture] C"
+      items_scored: 11
+      items_selected: 4
       source_breakdown:
-        obligations: 2
+        obligations: 1
+        memories: 3
       scoring: gravitas_unified
-      assembly_ms: 0.4847089949180372
+      assembly_ms: 1.0901970017584972
   - file: benchmarks/metrics.py
     line: 70
     category: magic_number
     severity: medium
     severity_rank: 1
     code: return 1.0 - (6.0 * d_squared) / (n * (n ** 2 - 1))
-    note: refined assessment
-    llm_evaluated: true
+    note: Numeric literal 6.0 in 'attention_allocation_efficiency' — extract to named constant or parameter
     remediation_context:
-      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: resilience_patterns\
-        \ — 3 finding(s)"
-      items_scored: 4
-      items_selected: 2
+      context_text: "  [OBLIGATION] [P1][pending_review] tidewatch: future_regret — 4 finding(s)\n  [EMAIL] Email from TAAFT\
+        \ - There's An AI For That: \U0001F9BE AI Can See You Through Walls Now (2026-03-11 20:22:13). ----------\r\nView\
+        \ image: (https://media.beehiiv.co\n  [EMAIL] Email from ninjra: [ninjra/autocapture] PR run failed: CI - Phase 2:\
+        \ VLM-first fullscreen extraction, TRON/time queries, research scout scheduler, rep\n  [EMAIL] Email from Brian Bengs\
+        \ from Brian Bengs: My State of the Union Takeaways (2026-02-26 00:14:43). View this post on the web at https://bengsforsouthdako\n\
+        \  [EMAIL] Email from TAAFT - There's An AI For That: \U0001F9BE Claude and Codex Go to War (2026-02-05 21:32:20).\
+        \ ----------\r\nView image: (https://media.beehiiv.com/cdn-\n  [EMAIL] Email from ninjra: [ninjra/autocapture] PR\
+        \ run failed: Dev Check - Default vision_extract to rapidocr (984f9b8) (2026-01-21 14:35:15). [ninjra/autocap\n  [EMAIL]\
+        \ Email from LinkedIn: View Alexander S, CTFL’s post and your next steps (2026-01-28 01:07:55). Now, take these next\
+        \ steps for more success\r\n\r\n        C"
+      items_scored: 11
+      items_selected: 7
       source_breakdown:
-        obligations: 2
+        obligations: 1
+        memories: 6
       scoring: gravitas_unified
-      assembly_ms: 0.39273199945455417
+      assembly_ms: 1.0810449966811575
   - file: scripts/generate_paper_figures.py
     line: 83
     category: inline_collection
@@ -2135,17 +2137,24 @@ abstraction:
       "font.size": self.font_size,
 
       ... (8 more lines)'
-    note: refined assessment
-    llm_evaluated: true
+    note: dict with 9 elements in 'apply' — extract to module-level constant or load from config
     remediation_context:
-      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: resilience_patterns\
-        \ — 3 finding(s)"
-      items_scored: 4
-      items_selected: 2
+      context_text: "  [EMAIL] Email from TAAFT - There's An AI For That: \U0001F9BE AI Can See You Through Walls Now (2026-03-11\
+        \ 20:22:13). ----------\r\nView image: (https://media.beehiiv.co\n  [EMAIL] Email from The Neuron: \U0001F63A \U0001F399\
+        ️ Mercury 2: AI that's 10x faster than ChatGPT & Claude (2026-02-24 23:11:54). View image: (https://media.beehiiv.com/cdn-cg\n\
+        \  [EMAIL] Email from Stock Analysis: Market Bullets: Berkshire invests in NYT, General Mills slumps 7% on outlook,\
+        \ FDA backtracks on Moderna snub (2026-02-18 14\n  [EMAIL] Email from The Neuron: \U0001F63A \U0001F399️ Every Answer\
+        \ at Once?! New AI Sees All Possible Answers (2026-02-10 23:48:07). View image: (https://media.beehiiv.com/cdn-\n\
+        \  [EMAIL] Email from Kai from Tech Economics: The Chinese Rare Earth Monopoly: The Hidden Chokepoint Controlling\
+        \ the Future (2026-01-30 23:11:20). View this pos\n  [EMAIL] Email from ninjra: [ninjra/autocapture] PR run failed:\
+        \ CI - Default vision_extract to rapidocr (984f9b8) (2026-01-21 14:35:17). [ninjra/autocapture] C\n  [EMAIL] Email\
+        \ from Semafor Flagship: \U0001F7E1 Start of an unpredictable conflict (2026-03-01 22:11:16)"
+      items_scored: 11
+      items_selected: 7
       source_breakdown:
-        obligations: 2
+        memories: 7
       scoring: gravitas_unified
-      assembly_ms: 0.44453100417740643
+      assembly_ms: 1.1962200005655177
   - file: tidewatch/pressure.py
     line: 350
     category: magic_number
@@ -2154,36 +2163,57 @@ abstraction:
     code: 'return (2, result.pressure)  # Hard floor: sorts above all bandwidth-adjusted items'
     note: Numeric literal 2 in 'fit_score' — extract to named constant or parameter
     remediation_context:
-      context_text: "  [OBLIGATION] [P1][open] tidewatch: minimalist — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
-        \ resilience_patterns — 3 finding(s)"
-      items_scored: 4
-      items_selected: 2
+      context_text: "  [EMAIL] Email from TAAFT - There's An AI For That: \U0001F9BE AI Can See You Through Walls Now (2026-03-11\
+        \ 20:22:13). ----------\r\nView image: (https://media.beehiiv.co\n  [EMAIL] Email from TAAFT - There's An AI For That:\
+        \ \U0001F9BE Claude and Codex Go to War (2026-02-05 21:32:20). ----------\r\nView image: (https://media.beehiiv.com/cdn-\n\
+        \  [EMAIL] Email from LinkedIn: View Alexander S, CTFL’s post and your next steps (2026-01-28 01:07:55). Now, take\
+        \ these next steps for more success\r\n\r\n        C\n  [EMAIL] Email from ninjra: [ninjra/autocapture] PR run failed:\
+        \ CI - Phase 2: VLM-first fullscreen extraction, TRON/time queries, research scout scheduler, rep\n  [EMAIL] Email\
+        \ from Brian Bengs from Brian Bengs: My State of the Union Takeaways (2026-02-26 00:14:43). View this post on the\
+        \ web at https://bengsforsouthdako"
+      items_scored: 11
+      items_selected: 5
       source_breakdown:
-        obligations: 2
+        memories: 5
       scoring: gravitas_unified
-      assembly_ms: 0.4155530041316524
+      assembly_ms: 1.0274469968862832
   summary:
-    total: 7
+    total: 5
     by_category:
       magic_number: 3
-      custom: 2
       inline_collection: 2
     by_severity:
-      high: 2
+      high: 0
       medium: 5
       low: 0
     hotspots:
-      benchmarks/datasets/generate_obligations.py: 2
-      scripts/generate_paper_figures.py: 2
       benchmarks/metrics.py: 2
+      benchmarks/datasets/generate_obligations.py: 1
+      scripts/generate_paper_figures.py: 1
       tidewatch/pressure.py: 1
   files_analyzed: 14
-  llm_refinement:
-    evaluations: 4
-    additions: 2
-    dropped: 0
 assumptions:
   findings:
+  - file: benchmarks/baselines/__init__.py
+    line: 25
+    category: mapping_assumption
+    severity: medium
+    severity_rank: 1
+    code: "BASELINES: dict[str, BaselineScorer] = {\n    \"binary\": binary_score,\n    \"linear\": linear_score,\n    \"\
+      eisenhower\": eisenhower_score,\n}"
+    note: Mapping 'BASELINES' with 3 entries — assumes complete domain coverage
+    remediation_context:
+      context_text: "  [OBLIGATION] [P1][pending_review] tidewatch: future_regret — 4 finding(s)\n  [EVENT] Sentinel recent\
+        \ git commits:\nc783f23 2026-03-17 fix: auto-detect WSL2 gateway IP for MSSQL connections\n6acc5fa 2026-03-17 feat:\
+        \ separate approval chat\n  [EMAIL] Email from Accounting Dept - Mile High Audio Video: Invoice - Justin Ram - Work\
+        \ Order #17097 (2025-12-16 15:12:48). Dear Justin,\r\n\r\n\r\nThank you for ch"
+      items_scored: 11
+      items_selected: 3
+      source_breakdown:
+        obligations: 1
+        memories: 2
+      scoring: gravitas_unified
+      assembly_ms: 1.3111930020386353
   - file: benchmarks/baselines/eisenhower.py
     line: 12
     category: mapping_assumption
@@ -2194,14 +2224,19 @@ assumptions:
       \ 0.0,  # Q4: not urgent + not important\n    ..."
     note: Mapping 'QUADRANT_SCORES' with 4 entries — assumes complete domain coverage
     remediation_context:
-      context_text: "  [OBLIGATION] [P1][open] tidewatch: future_regret — 4 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
-        \ resilience_patterns — 3 finding(s)"
-      items_scored: 4
-      items_selected: 2
+      context_text: "  [EVENT] Sentinel recent git commits:\nc783f23 2026-03-17 fix: auto-detect WSL2 gateway IP for MSSQL\
+        \ connections\n6acc5fa 2026-03-17 feat: separate approval chat\n  [EVENT] Sentinel recent git commits:\n812f408 2026-03-17\
+        \ fix: lint — sort imports in inference plugin and budget tests\n7126ba7 2026-03-17 feat: wire telemetry \n  [EMAIL]\
+        \ Email from Mountain States Toyota & AutoComplete: Reminder: Verify your car insurance for Mountain States Toyota\
+        \ (2025-12-21 23:05:15).  \n  [EMAIL] Email from Caféstudy Surveys: Complete our 6min Further Education Survey and\
+        \ receive $6 PayPal (2025-11-08 23:01:46)\n  [EMAIL] Email from Horn Funding via Docusign: Complete with Docusign:\
+        \ UW Letter 2 Ram.pdf, SIGN 2024 Personal.pdf, Sign 2024 S Corp.pdf (2025-11-17 11:17:19)."
+      items_scored: 11
+      items_selected: 5
       source_breakdown:
-        obligations: 2
+        memories: 5
       scoring: gravitas_unified
-      assembly_ms: 0.40470599924447015
+      assembly_ms: 1.1782610017689876
   - file: benchmarks/baselines/eisenhower.py
     line: 23
     category: default_value
@@ -2212,14 +2247,17 @@ assumptions:
     current_value: 7.0
     perturbation_range: '[3.5, 14]'
     remediation_context:
-      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: resilience_patterns\
-        \ — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: future_regret — 4 finding(s)"
-      items_scored: 4
+      context_text: "  [OBLIGATION] [P1][pending_review] tidewatch: future_regret — 4 finding(s)\n  [EMAIL] Email from Microsoft\
+        \ account team: Microsoft account security info was added (2024-03-15 16:35:01). The following security info was recently\
+        \ added to \n  [EMAIL] Email from immsoothe hello: Re: kickstarter blanket (2026-03-15 23:25:13). Good morning,\r\n\
+        \r\nThank you for reaching out. We’d like to clarify a couple "
+      items_scored: 11
       items_selected: 3
       source_breakdown:
-        obligations: 3
+        obligations: 1
+        memories: 2
       scoring: gravitas_unified
-      assembly_ms: 0.39679799374425784
+      assembly_ms: 1.0093390010297298
   - file: benchmarks/datasets/generate_obligations.py
     line: 21
     category: tunable_threshold
@@ -2230,14 +2268,21 @@ assumptions:
     current_value: 42
     perturbation_range: '[21, 84]'
     remediation_context:
-      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: minimalist\
-        \ — 3 finding(s)"
-      items_scored: 4
-      items_selected: 2
+      context_text: "  [OBLIGATION] [P1][pending_review] tidewatch: future_regret — 4 finding(s)\n  [EMAIL] Email from Nextdoor\
+        \ Original Town: Debbie Andrews reacted to your reply (2026-03-06 15:43:40). Debbie Andrews from Ralston Estates reacted\
+        \ to your rep\n  [EMAIL] Email from Matt at WTF Just Happened Today?: Day 1645: \"The constant nonsense and misinformation\
+        \ flowing out of this White House.\" (2025-07-22 22:54:4\n  [EMAIL] Email from The Rundown AI: \U0001F3A8 The next\
+        \ best AI image generator... (2024-08-22 10:03:36). **[Sign Up](https://www.therundown.ai/subscribe)** | **[Advert\n\
+        \  [EMAIL] Email from Semafor Flagship: \U0001F7E1 The one constant is us (2024-09-26 22:49:23). \r\nUnsubscribe From\
+        \ This List https://email.semafor.com/asm/unsubscribe/?u\n  [EMAIL] Email from Xfinity: Your Xfinity service appointment\
+        \ confirmation (2025-04-04 13:56:46). Xfinity  http://www.xfinity.com\r\n\r\nYour appointment has been "
+      items_scored: 11
+      items_selected: 6
       source_breakdown:
-        obligations: 2
+        obligations: 1
+        memories: 5
       scoring: gravitas_unified
-      assembly_ms: 0.3783669963013381
+      assembly_ms: 1.0864819996641017
   - file: benchmarks/metrics.py
     line: 69
     category: formula_choice
@@ -2246,14 +2291,19 @@ assumptions:
     code: d_squared = sum((p - a) ** 2 for p, a in zip(predicted_ranks, actual_ranks, strict=True))
     note: Power operation in attention_allocation_efficiency() — geometric aggregation assumption
     remediation_context:
-      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: minimalist\
-        \ — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: future_regret — 4 finding(s)"
-      items_scored: 4
-      items_selected: 3
+      context_text: "  [EMAIL] Email from Semafor Flagship: \U0001F7E1 Power moves (2025-09-08 10:07:20)\n  [EMAIL] Email\
+        \ from Semafor Flagship: \U0001F7E1 Absolute power (2026-02-25 11:02:15)\n  [EMAIL] Email from TAAFT - There's An\
+        \ AI For That: \U0001F9BE Dying Robot Mental Breakdown (2025-11-01 23:10:14). ----------\r\nHey, Justin!\r\n\r\n**Welcome\
+        \ back to the wor\n  [OBLIGATION] [P1][pending_review] tidewatch: future_regret — 4 finding(s)\n  [EMAIL] Email from\
+        \ Amazon.com: Ordered: \"Alex Tech 25ft - 1 inch...\" (2026-01-16 16:15:31). \r\n  \r\n\r\n\r\n    Thanks for your\
+        \ order, Narayan!\r\nOrdered\r\n\r\nShipped\r"
+      items_scored: 11
+      items_selected: 5
       source_breakdown:
-        obligations: 3
+        memories: 4
+        obligations: 1
       scoring: gravitas_unified
-      assembly_ms: 0.42850099998759106
+      assembly_ms: 1.0335359984310344
   - file: benchmarks/metrics.py
     line: 70
     category: formula_choice
@@ -2262,14 +2312,19 @@ assumptions:
     code: return 1.0 - (6.0 * d_squared) / (n * (n ** 2 - 1))
     note: Power operation in attention_allocation_efficiency() — geometric aggregation assumption
     remediation_context:
-      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: minimalist\
-        \ — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: future_regret — 4 finding(s)"
-      items_scored: 4
-      items_selected: 3
+      context_text: "  [EMAIL] Email from Semafor Flagship: \U0001F7E1 Power moves (2025-09-08 10:07:20)\n  [EMAIL] Email\
+        \ from Amazon.com: Shipped: 2 \"StarTech.com 1ft (0.3m)...\" (2026-01-27 06:40:36). \r\n  \r\n\r\n\r\n    Your package\
+        \ was shipped!\r\nOrdered\r\n\r\nShipped\r\n\r\nO\n  [EMAIL] Email from Semafor Flagship: \U0001F7E1 Absolute power\
+        \ (2026-02-25 11:02:15)\n  [EMAIL] Email from TAAFT - There's An AI For That: \U0001F9BE Dying Robot Mental Breakdown\
+        \ (2025-11-01 23:10:14). ----------\r\nHey, Justin!\r\n\r\n**Welcome back to the wor\n  [OBLIGATION] [P1][pending_review]\
+        \ tidewatch: future_regret — 4 finding(s)"
+      items_scored: 11
+      items_selected: 5
       source_breakdown:
-        obligations: 3
+        memories: 4
+        obligations: 1
       scoring: gravitas_unified
-      assembly_ms: 0.4335229969001375
+      assembly_ms: 1.0180129975196905
   - file: scripts/generate_paper_figures.py
     line: 45
     category: tunable_threshold
@@ -2280,14 +2335,21 @@ assumptions:
     current_value: 0.1
     perturbation_range: '[0.05, 0.2]'
     remediation_context:
-      context_text: "  [OBLIGATION] [P1][open] tidewatch: minimalist — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
-        \ future_regret — 4 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: resilience_patterns — 3 finding(s)"
-      items_scored: 4
-      items_selected: 3
+      context_text: "  [OBLIGATION] [P1][pending_review] tidewatch: future_regret — 4 finding(s)\n  [EMAIL] Email from The\
+        \ Rundown AI: \U0001F3A8 The next best AI image generator... (2024-08-22 10:03:36). **[Sign Up](https://www.therundown.ai/subscribe)**\
+        \ | **[Advert\n  [EMAIL] Email from AI Weekly: AI News Weekly - GPT-5.4 launches, DeepSeek V4 imminent, Qwen team\
+        \ implodes (2026-03-06 16:26:42). AI News Weekly\nGPT-5.4 launch\n  [EMAIL] Email from Credit Karma: Impressive, Narayan!\
+        \ Your Borrowing Power is higher than average. (2024-10-17 12:18:17). Well done! The average Borrowing Pow\n  [EMAIL]\
+        \ Email from Semafor Flagship: \U0001F7E1 The one constant is us (2024-09-26 22:49:23). \r\nUnsubscribe From This\
+        \ List https://email.semafor.com/asm/unsubscribe/?u\n  [EMAIL] Email from The Pieces Team: You're Using LLMs Wrong\
+        \ (2025-01-24 21:48:54). Hey Devs,\r\n\r\nI hate to say it…\r\n\r\nBut you’re probably using AI tools/LLMs w"
+      items_scored: 11
+      items_selected: 6
       source_breakdown:
-        obligations: 3
+        obligations: 1
+        memories: 5
       scoring: gravitas_unified
-      assembly_ms: 0.45264200161909685
+      assembly_ms: 1.0312179947504774
   - file: scripts/generate_paper_figures.py
     line: 48
     category: mapping_assumption
@@ -2297,14 +2359,21 @@ assumptions:
       }"
     note: Mapping 'ZONE_LABEL_POSITIONS' with 4 entries — assumes complete domain coverage
     remediation_context:
-      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: future_regret\
-        \ — 4 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: resilience_patterns — 3 finding(s)"
-      items_scored: 4
-      items_selected: 3
+      context_text: "  [EVENT] Sentinel recent git commits:\n812f408 2026-03-17 fix: lint — sort imports in inference plugin\
+        \ and budget tests\n7126ba7 2026-03-17 feat: wire telemetry \n  [EVENT] Sentinel recent git commits:\ne742135 2026-03-17\
+        \ feat: redesign autobot approval Telegram notifications\n89f01f1 2026-03-17 fix: hook decorator supports\n  [OBLIGATION]\
+        \ [P1][pending_review] tidewatch: future_regret — 4 finding(s)\n  [EMAIL] Email from ID.me: Complete Your ID.me Account\
+        \ Set Up (2025-11-17 08:03:27). Email Template&#847;&zwnj; &#847;&zwnj; &#847;&zwnj; &#847;&zwnj; &#847;&z\n  [EMAIL]\
+        \ Email from Justin Ram: Re: [Rick Simpson Oil]: New order #1015 (2025-12-13 19:56:27). I paid by Zelle.\r\n\r\nOn\
+        \ Sat, Dec 13, 2025 at 5:00 PM Rick Simpson\n  [EMAIL] Email from Baselane: ❗️ Attention - New Rent Invoice Added\
+        \  (2025-11-24 17:46:10). Baselane ( https://clicks.baselane.com/f/a/Xf60MIF803MKHxkWNpqbqQ~~"
+      items_scored: 11
+      items_selected: 6
       source_breakdown:
-        obligations: 3
+        memories: 5
+        obligations: 1
       scoring: gravitas_unified
-      assembly_ms: 0.40674400224816054
+      assembly_ms: 1.2385250010993332
   - file: scripts/generate_paper_figures.py
     line: 99
     category: mapping_assumption
@@ -2314,14 +2383,21 @@ assumptions:
       #b8860b\",\n    \"orange\": \"#e67e22\",\n    ..."
     note: Mapping 'COLORS' with 8 entries — assumes complete domain coverage
     remediation_context:
-      context_text: "  [OBLIGATION] [P1][open] tidewatch: minimalist — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
-        \ resilience_patterns — 3 finding(s)"
-      items_scored: 4
-      items_selected: 2
+      context_text: "  [OBLIGATION] [P1][pending_review] tidewatch: future_regret — 4 finding(s)\n  [EMAIL] Email from Kickstarter:\
+        \ Project Update #2: Immsoothe Warmcloud Heated Blanket: Graphene Heat in Seconds by Immsoothe (2025-12-18 14:55:42).\
+        \ \U0001F4EC Backer S\n  [EVENT] Sentinel recent git commits:\n6acc5fa 2026-03-17 feat: separate approval chat for\
+        \ Telegram, EVOLVE validation metrics logging\n4314582 2026-03-17 feat: \n  [EVENT] Sentinel recent git commits:\n\
+        6acc5fa 2026-03-17 feat: separate approval chat for Telegram, EVOLVE validation metrics logging\n4314582 2026-03-17\
+        \ feat: \n  [EMAIL] Email from Horn Funding via Docusign: Complete with Docusign: UW Letter 2 Ram.pdf, SIGN 2024 Personal.pdf,\
+        \ Sign 2024 S Corp.pdf (2025-11-17 11:17:19).\n  [EMAIL] Email from Mountain States Toyota & AutoComplete: Final Reminder:\
+        \ Verify your car insurance for Mountain States Toyota (2025-12-23 23:06:00).  "
+      items_scored: 11
+      items_selected: 6
       source_breakdown:
-        obligations: 2
+        obligations: 1
+        memories: 5
       scoring: gravitas_unified
-      assembly_ms: 0.3823360020760447
+      assembly_ms: 1.1722260023816489
   - file: scripts/generate_paper_figures.py
     line: 156
     category: tunable_threshold
@@ -2332,13 +2408,18 @@ assumptions:
     current_value: 60.0
     perturbation_range: '[30, 120]'
     remediation_context:
-      context_text: '  [OBLIGATION] [P1][open] tidewatch: minimalist — 3 finding(s)'
-      items_scored: 4
-      items_selected: 1
+      context_text: "  [EMAIL] Email from Woodward Barbers - Erie: Receipt for your Saturday afternoon appointment with Woodward\
+        \ Barbers - Erie (2025-05-17 18:39:08). Hi Justin Ram,\n  [EMAIL] Email from Woodward Barbers - Erie: Receipt for\
+        \ your Saturday afternoon appointment with Woodward Barbers - Erie (2025-01-11 19:29:49). Hi Justin Ram,\n  [EMAIL]\
+        \ Email from Matt at WTF Just Happened Today?: Day 1645: \"The constant nonsense and misinformation flowing out of\
+        \ this White House.\" (2025-07-22 22:54:4\n  [EMAIL] Email from Xfinity: Your Xfinity service appointment confirmation\
+        \ (2025-04-04 13:56:46). Xfinity  http://www.xfinity.com\r\n\r\nYour appointment has been "
+      items_scored: 11
+      items_selected: 4
       source_breakdown:
-        obligations: 1
+        memories: 4
       scoring: gravitas_unified
-      assembly_ms: 0.418728006479796
+      assembly_ms: 1.0812260006787255
   - file: scripts/generate_paper_figures.py
     line: 157
     category: tunable_threshold
@@ -2349,13 +2430,20 @@ assumptions:
     current_value: 1.05
     perturbation_range: '[0.525, 2.1]'
     remediation_context:
-      context_text: '  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)'
-      items_scored: 4
-      items_selected: 1
+      context_text: "  [OBLIGATION] [P1][pending_review] tidewatch: future_regret — 4 finding(s)\n  [EMAIL] Email from return@amazon.com:\
+        \ Advance refund issued for Ideal Security Sliding Door.... (2026-01-21 16:13:14). \r\n  \r\n\r\nHello Narayan, Your\
+        \ refund was \n  [EMAIL] Email from The Pieces Team: You're Using LLMs Wrong (2025-01-24 21:48:54). Hey Devs,\r\n\r\
+        \nI hate to say it…\r\n\r\nBut you’re probably using AI tools/LLMs w\n  [EMAIL] Email from Justin Ram:  (2026-02-12\
+        \ 09:19:06). Medical History Brief — Pain Management Intake\r\nPatient: Justin Ram (DOB: 1983-10-05)\r\nVisit: Pain-mana\n\
+        \  [EMAIL] Email from Geoffrey Cann: The Data Torturer (2026-03-06 13:31:46). View this post on the web at https://totallydope.substack.com/p/the-data-torturer\r\
+        \n"
+      items_scored: 11
+      items_selected: 5
       source_breakdown:
         obligations: 1
+        memories: 4
       scoring: gravitas_unified
-      assembly_ms: 0.38791500264778733
+      assembly_ms: 1.0452550050104037
   - file: scripts/generate_paper_figures.py
     line: 158
     category: tunable_threshold
@@ -2366,14 +2454,22 @@ assumptions:
     current_value: 55.0
     perturbation_range: '[27.5, 110]'
     remediation_context:
-      context_text: "  [OBLIGATION] [P1][open] tidewatch: future_regret — 4 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
-        \ resilience_patterns — 3 finding(s)"
-      items_scored: 4
-      items_selected: 2
+      context_text: "  [OBLIGATION] [P1][pending_review] tidewatch: future_regret — 4 finding(s)\n  [EMAIL] Email from ninjra:\
+        \ [ninjra/autocapture] PR run failed: Dev Check - Add print-config JSON + robust Windows DB reset (25e0cdd) (2026-01-22\
+        \ 07:13:36). [n\n  [EMAIL] Email from ninjra: [ninjra/autocapture] Run failed: CI - feature/phase2-vlm-tron-time-research-memory-hygiene\
+        \ (8f97b00) (2026-01-17 11:16:21). [ninjra\n  [EMAIL] Email from ninjra: [ninjra/sentinel] Run failed: tests - main\
+        \ (fcad7df) (2026-03-15 00:13:16). [ninjra/sentinel] tests workflow run\r\n\r\nRepository: nin\n  [EMAIL] Email from\
+        \ Nextdoor Original Town: Debbie Andrews reacted to your reply (2026-03-06 15:43:40). Debbie Andrews from Ralston\
+        \ Estates reacted to your rep\n  [EMAIL] Email from Justin Ram:  (2026-02-12 09:19:06). Medical History Brief — Pain\
+        \ Management Intake\r\nPatient: Justin Ram (DOB: 1983-10-05)\r\nVisit: Pain-mana\n  [EMAIL] Email from ninjra: [ninjra/autocapture]\
+        \ PR run failed: CI - PromptOps Phase 2 — agentic multi-attempt loop, strict gating, and artifacts (17f475c) (20"
+      items_scored: 11
+      items_selected: 7
       source_breakdown:
-        obligations: 2
+        obligations: 1
+        memories: 6
       scoring: gravitas_unified
-      assembly_ms: 0.3938910012948327
+      assembly_ms: 1.0173720002057962
   - file: scripts/generate_paper_figures.py
     line: 167
     category: formula_choice
@@ -2382,14 +2478,19 @@ assumptions:
     code: return 1.0 - math.exp(-k / t)
     note: Uses exp() — assumes this aggregation model is appropriate
     remediation_context:
-      context_text: "  [OBLIGATION] [P1][open] tidewatch: minimalist — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
-        \ future_regret — 4 finding(s)"
-      items_scored: 4
-      items_selected: 2
+      context_text: "  [EMAIL] Email from Semafor Flagship: \U0001F7E1 Surges, surpluses, and stockpiles (2026-02-02 22:09:15)\n\
+        \  [OBLIGATION] [P1][pending_review] tidewatch: future_regret — 4 finding(s)\n  [EVENT] Sentinel recent git commits:\n\
+        e742135 2026-03-17 feat: redesign autobot approval Telegram notifications\n89f01f1 2026-03-17 fix: hook decorator\
+        \ supports\n  [EMAIL] Email from OpenAI Dev Digest: Our most powerful reasoning models, GPT-4.1, Codex CLI, and new\
+        \ audio models (2025-04-17 01:34:21). We recently announce\n  [EMAIL] Email from AI Tidbits Deep Dives: 12 techniques\
+        \ to reduce your LLM API bill and launch blazingly fast products (2024-01-13 15:30:12). View this post o"
+      items_scored: 11
+      items_selected: 5
       source_breakdown:
-        obligations: 2
+        memories: 4
+        obligations: 1
       scoring: gravitas_unified
-      assembly_ms: 0.39193900011014193
+      assembly_ms: 1.0880730042117648
   - file: tidewatch/constants.py
     line: 95
     category: mapping_assumption
@@ -2401,14 +2502,15 @@ assumptions:
       : 0.3, \"decision_weight\": 0.2, \"novelty\": 0.2},\n    ..."
     note: Mapping 'TASK_DEMAND_PROFILES' with 5 entries — assumes complete domain coverage
     remediation_context:
-      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: resilience_patterns\
-        \ — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: minimalist — 3 finding(s)"
-      items_scored: 4
-      items_selected: 3
+      context_text: "  [EVENT] Sentinel recent git commits:\n812f408 2026-03-17 fix: lint — sort imports in inference plugin\
+        \ and budget tests\n7126ba7 2026-03-17 feat: wire telemetry \n  [EMAIL] Email from UPS Comm-Account Confirm: UPS Identity\
+        \ Verification (2026-01-08 14:34:42). Hi,\r\n\r\nHere’s the PIN (Personal Identification Number) to use fo"
+      items_scored: 11
+      items_selected: 2
       source_breakdown:
-        obligations: 3
+        memories: 2
       scoring: gravitas_unified
-      assembly_ms: 0.4251119971740991
+      assembly_ms: 1.1613390015554614
   - file: tidewatch/constants.py
     line: 102
     category: mapping_assumption
@@ -2418,14 +2520,18 @@ assumptions:
       }"
     note: Mapping 'TASK_DEMAND_DEFAULT' with 3 entries — assumes complete domain coverage
     remediation_context:
-      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: minimalist\
-        \ — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: future_regret — 4 finding(s)"
-      items_scored: 4
-      items_selected: 3
+      context_text: "  [OBLIGATION] [P1][pending_review] tidewatch: future_regret — 4 finding(s)\n  [EVENT] Sentinel recent\
+        \ git commits:\n812f408 2026-03-17 fix: lint — sort imports in inference plugin and budget tests\n7126ba7 2026-03-17\
+        \ feat: wire telemetry \n  [EMAIL] Email from Rebecca Gill: Your Cotton Creek Farms order is now complete (2025-12-07\
+        \ 16:38:59).  Cotton Creek Farms\r\n\r\n[image: Cotton Creek Farms]\r\nThe \n  [EMAIL] Email from Baselane: ❗️ Attention\
+        \ - New Rent Invoice Added  (2025-11-24 17:47:04). Baselane ( https://clicks.baselane.com/f/a/LvVI8Dmz-x6XH_qR1El0zg~~"
+      items_scored: 11
+      items_selected: 4
       source_breakdown:
-        obligations: 3
+        obligations: 1
+        memories: 3
       scoring: gravitas_unified
-      assembly_ms: 0.41169000178342685
+      assembly_ms: 1.191818002553191
   - file: tidewatch/constants.py
     line: 119
     category: mapping_assumption
@@ -2435,14 +2541,18 @@ assumptions:
       \ \"orange\": \"toast\",\n    \"red\": \"interrupt\",\n    ..."
     note: Mapping 'DELIVERY_URGENCY_MAP' with 4 entries — assumes complete domain coverage
     remediation_context:
-      context_text: "  [OBLIGATION] [P1][open] tidewatch: minimalist — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
-        \ resilience_patterns — 3 finding(s)"
-      items_scored: 4
-      items_selected: 2
+      context_text: "  [OBLIGATION] [P1][pending_review] tidewatch: future_regret — 4 finding(s)\n  [EVENT] Sentinel recent\
+        \ git commits:\ne742135 2026-03-17 feat: redesign autobot approval Telegram notifications\n89f01f1 2026-03-17 fix:\
+        \ hook decorator supports\n  [EVENT] Sentinel recent git commits:\nfc8225b 2026-03-17 fix: await schema init to prevent\
+        \ race condition in overlay + telegram bridge\ne90a370 2026-03-17 feat:\n  [EMAIL] Email from Justin Ram: Re: Complete\
+        \ with Docusign: UW Letter 2 Ram.pdf, SIGN 2024 Personal.pdf, Sign 2024 S Corp.pdf (2025-11-18 08:21:34). Ok wonderf"
+      items_scored: 11
+      items_selected: 4
       source_breakdown:
-        obligations: 2
+        obligations: 1
+        memories: 3
       scoring: gravitas_unified
-      assembly_ms: 0.4100160003872588
+      assembly_ms: 1.1515419973875396
   - file: tidewatch/planner.py
     line: 33
     category: tunable_threshold
@@ -2453,14 +2563,17 @@ assumptions:
     current_value: 200
     perturbation_range: '[100, 400]'
     remediation_context:
-      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: minimalist\
-        \ — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: future_regret — 4 finding(s)"
-      items_scored: 4
+      context_text: "  [EMAIL] Email from Semafor Flagship: \U0001F7E1 The one constant is us (2024-09-26 22:49:23). \r\n\
+        Unsubscribe From This List https://email.semafor.com/asm/unsubscribe/?u\n  [EMAIL] Email from Xfinity: Your Xfinity\
+        \ service appointment confirmation (2025-04-04 13:56:46). Xfinity  http://www.xfinity.com\r\n\r\nYour appointment\
+        \ has been \n  [EMAIL] Email from AI Weekly: AI News Weekly - GPT-5.4 launches, DeepSeek V4 imminent, Qwen team implodes\
+        \ (2026-03-06 16:26:42). AI News Weekly\nGPT-5.4 launch"
+      items_scored: 11
       items_selected: 3
       source_breakdown:
-        obligations: 3
+        memories: 3
       scoring: gravitas_unified
-      assembly_ms: 0.4231060011079535
+      assembly_ms: 1.0183220001636073
   - file: tidewatch/planner.py
     line: 34
     category: tunable_threshold
@@ -2471,13 +2584,17 @@ assumptions:
     current_value: 500
     perturbation_range: '[250, 1000]'
     remediation_context:
-      context_text: '  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)'
-      items_scored: 4
-      items_selected: 1
+      context_text: "  [EMAIL] Email from Matt at WTF Just Happened Today?: Day 1645: \"The constant nonsense and misinformation\
+        \ flowing out of this White House.\" (2025-07-22 22:54:4\n  [EMAIL] Email from Nextdoor Original Town: Debbie Andrews\
+        \ reacted to your reply (2026-03-06 15:43:40). Debbie Andrews from Ralston Estates reacted to your rep\n  [EMAIL]\
+        \ Email from Geoffrey Cann: The Data Torturer (2026-03-06 13:31:46). View this post on the web at https://totallydope.substack.com/p/the-data-torturer\r\
+        \n"
+      items_scored: 11
+      items_selected: 3
       source_breakdown:
-        obligations: 1
+        memories: 3
       scoring: gravitas_unified
-      assembly_ms: 0.39151999953901395
+      assembly_ms: 1.0515479953028262
   - file: tidewatch/planner.py
     line: 35
     category: tunable_threshold
@@ -2488,12 +2605,21 @@ assumptions:
     current_value: 50
     perturbation_range: '[25, 100]'
     remediation_context:
-      context_text: "Related obligations (4):\n  [P1][open] tidewatch: custom — 1 finding(s)\n  [P1][open] tidewatch: minimalist\
-        \ — 3 finding(s)\n  [P1][open] tidewatch: resilience_patterns — 3 finding(s)\n  [P1][open] tidewatch: future_regret\
-        \ — 4 finding(s)"
-      obligations_found: 4
-      memories_found: 0
-      scoring: raw_mssql
+      context_text: "  [OBLIGATION] [P1][pending_review] tidewatch: future_regret — 4 finding(s)\n  [EMAIL] Email from Justin\
+        \ Ram:  (2026-02-12 09:19:06). Medical History Brief — Pain Management Intake\r\nPatient: Justin Ram (DOB: 1983-10-05)\r\
+        \nVisit: Pain-mana\n  [EMAIL] Email from Geoffrey Cann: The Data Torturer (2026-03-06 13:31:46). View this post on\
+        \ the web at https://totallydope.substack.com/p/the-data-torturer\r\n\n  [EMAIL] Email from The Pieces Team: You're\
+        \ Using LLMs Wrong (2025-01-24 21:48:54). Hey Devs,\r\n\r\nI hate to say it…\r\n\r\nBut you’re probably using AI tools/LLMs\
+        \ w\n  [EMAIL] Email from Semafor Flagship: \U0001F7E1 The one constant is us (2024-09-26 22:49:23). \r\nUnsubscribe\
+        \ From This List https://email.semafor.com/asm/unsubscribe/?u\n  [EMAIL] Email from Xfinity: Your Xfinity service\
+        \ appointment confirmation (2025-04-04 13:56:46). Xfinity  http://www.xfinity.com\r\n\r\nYour appointment has been "
+      items_scored: 11
+      items_selected: 6
+      source_breakdown:
+        obligations: 1
+        memories: 5
+      scoring: gravitas_unified
+      assembly_ms: 1.0319549983250909
   - file: tidewatch/planner.py
     line: 90
     category: default_value
@@ -2504,14 +2630,18 @@ assumptions:
     current_value: 500
     perturbation_range: '[250, 1000]'
     remediation_context:
-      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: future_regret\
-        \ — 4 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: resilience_patterns — 3 finding(s)"
-      items_scored: 4
-      items_selected: 3
+      context_text: "  [EMAIL] Email from Emergencyemail.org: Recall Alert: Potato Chips, Pet Food, Lighters (2026-03-05 11:13:22).\
+        \ For a list of product names and the latest recall\n  [EMAIL] Email from Microsoft account team: Microsoft account\
+        \ security info was added (2024-03-15 16:35:01). The following security info was recently added to \n  [EMAIL] Email\
+        \ from Amazon Music: Reminder: podcasts are included with your Prime membership. (2026-03-10 01:03:00). Dear Narayan\
+        \ Ram,\r\n\r\nWe noticed that you a\n  [EMAIL] Email from Emergencyemail.org: Recall Alert: Chocolate, Cheese, Sauces\
+        \ (2026-03-02 11:13:23). For a list of product names and the latest recall inform"
+      items_scored: 11
+      items_selected: 4
       source_breakdown:
-        obligations: 3
+        memories: 4
       scoring: gravitas_unified
-      assembly_ms: 0.4943649983033538
+      assembly_ms: 1.0295399988535792
   - file: tidewatch/pressure.py
     line: 163
     category: formula_choice
@@ -2520,14 +2650,19 @@ assumptions:
     code: time_p = OVERDUE_PRESSURE if days_rem <= 0 else 1.0 - math.exp(-RATE_CONSTANT / max(days_rem, DIVISION_GUARD))
     note: Uses exp() — assumes this aggregation model is appropriate
     remediation_context:
-      context_text: "  [OBLIGATION] [P1][open] tidewatch: minimalist — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
-        \ future_regret — 4 finding(s)"
-      items_scored: 4
-      items_selected: 2
+      context_text: "  [EMAIL] Email from Semafor Flagship: \U0001F7E1 Surges, surpluses, and stockpiles (2026-02-02 22:09:15)\n\
+        \  [OBLIGATION] [P1][pending_review] tidewatch: future_regret — 4 finding(s)\n  [EVENT] Sentinel recent git commits:\n\
+        e742135 2026-03-17 feat: redesign autobot approval Telegram notifications\n89f01f1 2026-03-17 fix: hook decorator\
+        \ supports\n  [EMAIL] Email from OpenAI Dev Digest: Our most powerful reasoning models, GPT-4.1, Codex CLI, and new\
+        \ audio models (2025-04-17 01:34:21). We recently announce\n  [EMAIL] Email from AI Tidbits Deep Dives: 12 techniques\
+        \ to reduce your LLM API bill and launch blazingly fast products (2024-01-13 15:30:12). View this post o"
+      items_scored: 11
+      items_selected: 5
       source_breakdown:
-        obligations: 2
+        memories: 4
+        obligations: 1
       scoring: gravitas_unified
-      assembly_ms: 0.40206600533565506
+      assembly_ms: 1.0387599977548234
   - file: tidewatch/pressure.py
     line: 175
     category: formula_choice
@@ -2536,23 +2671,28 @@ assumptions:
     code: sigmoid = 1.0 / (1.0 + math.exp(-COMPLETION_LOGISTIC_K * (completion_pct - COMPLETION_LOGISTIC_MID)))
     note: Uses exp() — assumes this aggregation model is appropriate
     remediation_context:
-      context_text: "  [OBLIGATION] [P1][open] tidewatch: minimalist — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
-        \ future_regret — 4 finding(s)"
-      items_scored: 4
-      items_selected: 2
+      context_text: "  [EMAIL] Email from Semafor Flagship: \U0001F7E1 Surges, surpluses, and stockpiles (2026-02-02 22:09:15)\n\
+        \  [OBLIGATION] [P1][pending_review] tidewatch: future_regret — 4 finding(s)\n  [EVENT] Sentinel recent git commits:\n\
+        e742135 2026-03-17 feat: redesign autobot approval Telegram notifications\n89f01f1 2026-03-17 fix: hook decorator\
+        \ supports\n  [EMAIL] Email from OpenAI Dev Digest: Our most powerful reasoning models, GPT-4.1, Codex CLI, and new\
+        \ audio models (2025-04-17 01:34:21). We recently announce\n  [EMAIL] Email from AI Tidbits Deep Dives: 12 techniques\
+        \ to reduce your LLM API bill and launch blazingly fast products (2024-01-13 15:30:12). View this post o"
+      items_scored: 11
+      items_selected: 5
       source_breakdown:
-        obligations: 2
+        memories: 4
+        obligations: 1
       scoring: gravitas_unified
-      assembly_ms: 0.37997699837433174
+      assembly_ms: 1.03544800367672
   summary:
-    total: 21
+    total: 22
     by_category:
       tunable_threshold: 8
-      mapping_assumption: 6
+      mapping_assumption: 7
       formula_choice: 5
       default_value: 2
     by_severity:
-      medium: 21
+      medium: 22
     hotspots:
       scripts/generate_paper_figures.py: 7
       tidewatch/planner.py: 4
@@ -2570,14 +2710,22 @@ hubris:
     code: return 1.0
     note: saturate() has 1 perfect-score return(s) alongside 2 computed return(s) — some paths bypass measurement
     remediation_context:
-      context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: resilience_patterns\
-        \ — 3 finding(s)"
-      items_scored: 4
-      items_selected: 2
+      context_text: "  [EMAIL] Email from Rigzone Daily News: Analysts Look at Speculative Oil Positioning and OPEC+ (2024-05-31\
+        \ 21:18:46). RIGZONE DAILY NEWS -- FRIDAY, MAY 31, 202\n  [EMAIL] Email from The Frontier by Product Hunt: \U0001F9E0\
+        \ Is the AI bubble gonna go pop? (2025-03-25 22:01:18). ### WELCOME\r\n\r\nHappy Tuesday, legends. Welcome back t\n\
+        \  [EMAIL] Email from Rigzone Daily News: Harris Skips Over Climate Change Even as Party Touts Green Wins (2024-08-23\
+        \ 21:18:49). RIGZONE DAILY NEWS -- FRIDAY, AU\n  [EMAIL] Email from Future Blueprint: ⚙️ Shopify CEO makes AI mandatory\
+        \ for employees (2025-04-08 17:30:42). Hi AI Futurists,\r\n\r\nShopify is shifting how it bui\n  [EMAIL] Email from\
+        \ AI Tidbits: October 2024 - AI Tidbits Monthly Roundup (2024-11-10 16:01:40). View this post on the web at https://www.aitidbits.ai/p/octobe\n\
+        \  [EMAIL] Email from Poised: Meeting preparation made easy \U0001F44F (2024-10-07 18:10:06). Become an overnight\
+        \ meeting sensation\r\n\r\nPrepare notes and get feedback on y\n  [EMAIL] Email from Oil & Gas Journal: ExxonMobil’s\
+        \ annual earnings decrease alongside increased production (2025-01-31 15:03:41)"
+      items_scored: 11
+      items_selected: 7
       source_breakdown:
-        obligations: 2
+        memories: 7
       scoring: gravitas_unified
-      assembly_ms: 0.4006289964308962
+      assembly_ms: 1.0596770007396117
   summary:
     total: 1
     by_category:
@@ -2600,14 +2748,22 @@ viewpoints:
         recommendation: Consider decomposing into smaller functions
         viewpoint: complexity_hotspots
         remediation_context:
-          context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
-            \ minimalist — 3 finding(s)"
-          items_scored: 4
-          items_selected: 2
+          context_text: "  [EMAIL] Email from Daily Beast: AM Digest: MAGA Melts Down Over Hours-Long Airport Lines (2026-03-09\
+            \ 07:12:50)\n  [EMAIL] Email from Rigzone Daily News: Analysts Warn of Largest Oil Supply Disruption in History\
+            \ (2026-03-03 21:19:45). RIGZONE DAILY NEWS -- TUESDAY, MARCH 3\n  [EMAIL] Email from Semafor Flagship: \U0001F7E1\
+            \ Stress-tested by headlines (2026-03-10 21:55:18)\n  [EMAIL] Email from Rigzone Daily News: War Creating Most\
+            \ Severe Energy Disruption Since 1970s (2026-03-11 21:18:44). RIGZONE DAILY NEWS -- WEDNESDAY, MARCH 11\n  [EMAIL]\
+            \ Email from Particle: Spring break travel is about to get ugly (2026-03-10 22:21:26). ----------\r\n# The Highlight\
+            \ Reel\r\n\r\nMarch 10, 2026\r\n\r\n\r\n---------\n  [EMAIL] Email from Your Original Town neighbors: Top post:\
+            \ Has anyone lost power yet? I’m somehow not inside the planned... (2026-03-15 02:29:45). I’m somehow\n  [EMAIL]\
+            \ Email from Rigzone Daily News: Oil Market Shrugs Off 400MM Barrel IEA Reserve Release (2026-03-12 21:18:46).\
+            \ RIGZONE DAILY NEWS -- THURSDAY, MARCH 12,"
+          items_scored: 11
+          items_selected: 7
           source_breakdown:
-            obligations: 2
+            memories: 7
           scoring: gravitas_unified
-          assembly_ms: 0.4291989971534349
+          assembly_ms: 1.0187680018134415
       - file: tests/test_benchmarks.py
         line: 204
         severity: medium
@@ -2615,14 +2771,21 @@ viewpoints:
         recommendation: Consider decomposing into smaller functions
         viewpoint: complexity_hotspots
         remediation_context:
-          context_text: "  [OBLIGATION] [P1][open] tidewatch: future_regret — 4 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
-            \ resilience_patterns — 3 finding(s)"
-          items_scored: 4
-          items_selected: 2
+          context_text: "  [EMAIL] Email from Kickstarter: Project Update #2: Keychron Q16 HE 8K: World’s First Fully Ceramic\
+            \ Keyboard by Keychron (2025-10-16 18:48:53). Keychron Q16 HE\n  [EMAIL] Email from msonlineservicesteam@microsoftonline.com:\
+            \ Permian Resources account email verification code (2024-07-22 13:28:39)\n  [EMAIL] Email from Rigzone Daily\
+            \ News: USA EIA Raises WTI Oil Price Forecasts (2025-11-20 21:18:52). RIGZONE DAILY NEWS -- THURSDAY, NOVEMBER\
+            \ 20, 2025\r\n------\n  [EMAIL] Email from United Airlines: Tell us how we did (2025-12-03 21:43:16). \r\n\r\n\
+            \r\nYour feedback means the world to usHi Shri,\r\n\r\nFrom all of us here at Unit\n  [EMAIL] Email from Jessica\
+            \ Ram: Fwd: Standard checked bag purchase confirmation (2025-11-27 07:21:18). \r\nJessica Ram\r\n817-205-3236\r\
+            \n---------- Forwarded messa\n  [EMAIL] Email from American Airlines AAdvantage Program: Get ready for a rewarding\
+            \ 2026 as an AAdvantage® member (2026-01-08 07:52:07). * * American Airlines\n"
+          items_scored: 11
+          items_selected: 6
           source_breakdown:
-            obligations: 2
+            memories: 6
           scoring: gravitas_unified
-          assembly_ms: 0.41234400123357773
+          assembly_ms: 1.0584100018604659
       - file: tests/test_golden_pipeline.py
         line: 867
         severity: medium
@@ -2630,14 +2793,18 @@ viewpoints:
         recommendation: Consider decomposing into smaller functions
         viewpoint: complexity_hotspots
         remediation_context:
-          context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
-            \ minimalist — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: future_regret — 4 finding(s)"
-          items_scored: 4
-          items_selected: 3
+          context_text: "  [OBLIGATION] [P1][pending_review] tidewatch: future_regret — 4 finding(s)\n  [EMAIL] Email from\
+            \ Pi.ai: [Request received] (19776) (2024-01-24 08:56:43). Dear Justin\r\n\r\nThank you for reaching out to us.\
+            \ This is a confirmation message to\n  [EMAIL] Email from The Download from MIT Technology Review: The terrible\
+            \ complexity of technological problems (2024-07-22 12:05:04). These board games want yo\n  [EMAIL] Email from\
+            \ Semafor Flagship: \U0001F7E1 Wrestle with complexity (2024-10-07 22:09:33). \r\nUnsubscribe From This List https://email.semafor.com/asm/unsubscribe/?"
+          items_scored: 11
+          items_selected: 4
           source_breakdown:
-            obligations: 3
+            obligations: 1
+            memories: 3
           scoring: gravitas_unified
-          assembly_ms: 0.3832050060736947
+          assembly_ms: 1.0818400041898713
       - file: tidewatch/planner.py
         line: 130
         severity: medium
@@ -2645,12 +2812,25 @@ viewpoints:
         recommendation: Consider decomposing into smaller functions
         viewpoint: complexity_hotspots
         remediation_context:
-          context_text: "Related obligations (4):\n  [P1][open] tidewatch: custom — 1 finding(s)\n  [P1][open] tidewatch:\
-            \ minimalist — 3 finding(s)\n  [P1][open] tidewatch: resilience_patterns — 3 finding(s)\n  [P1][open] tidewatch:\
-            \ future_regret — 4 finding(s)"
-          obligations_found: 4
-          memories_found: 0
-          scoring: raw_mssql
+          context_text: "  [OBLIGATION] [P1][pending_review] tidewatch: future_regret — 4 finding(s)\n  [EMAIL] Email from\
+            \ Particle: Spring break travel is about to get ugly (2026-03-10 22:21:26). ----------\r\n# The Highlight Reel\r\
+            \n\r\nMarch 10, 2026\r\n\r\n\r\n---------\n  [EMAIL] Email from Semafor Flagship: \U0001F7E1 Stress-tested by\
+            \ headlines (2026-03-10 21:55:18)\n  [EMAIL] Email from Business Insider: The top stories you missed this week\
+            \ (2026-03-10 18:05:15). BI Catch up on the biggest headlines. \n\n\n View in browser \n<h\n  [EMAIL] Email from\
+            \ Superpower Daily: ChatGPT’s new GPT-5.3 Instant model will stop telling you to calm down (2026-03-05 08:02:05).\
+            \ ----------\r\n### **In today’\n  [EMAIL] Email from msonlineservicesteam@microsoftonline.com: Permian Resources\
+            \ account email verification code (2024-07-22 13:28:39)\n  [EMAIL] Email from Daily Beast: AM Digest: MAGA Melts\
+            \ Down Over Hours-Long Airport Lines (2026-03-09 07:12:50)\n  [EMAIL] Email from Rigzone Daily News: Market Spinning\
+            \ After 'Most Epic Price Reversal in Oil History' (2026-03-10 21:18:41). RIGZONE DAILY NEWS -- TUESDAY, M\n  [EMAIL]\
+            \ Email from Your Original Town neighbors: Top post: Has anyone lost power yet? I’m somehow not inside the planned...\
+            \ (2026-03-15 02:29:45). I’m somehow"
+          items_scored: 11
+          items_selected: 9
+          source_breakdown:
+            obligations: 1
+            memories: 8
+          scoring: gravitas_unified
+          assembly_ms: 1.0860059992410243
       - file: tidewatch/pressure.py
         line: 96
         severity: medium
@@ -2658,13 +2838,18 @@ viewpoints:
         recommendation: Consider decomposing into smaller functions
         viewpoint: complexity_hotspots
         remediation_context:
-          context_text: '  [OBLIGATION] [P1][open] tidewatch: future_regret — 4 finding(s)'
-          items_scored: 4
-          items_selected: 1
+          context_text: "  [EMAIL] Email from Semafor Flagship: \U0001F7E1 Stress-tested by headlines (2026-03-10 21:55:18)\n\
+            \  [EMAIL] Email from Rigzone Daily News: Analysts Warn of Largest Oil Supply Disruption in History (2026-03-03\
+            \ 21:19:45). RIGZONE DAILY NEWS -- TUESDAY, MARCH 3\n  [EMAIL] Email from Your Original Town neighbors: Top post:\
+            \ Has anyone lost power yet? I’m somehow not inside the planned... (2026-03-15 02:29:45). I’m somehow\n  [EMAIL]\
+            \ Email from Rigzone Daily News: War Creating Most Severe Energy Disruption Since 1970s (2026-03-11 21:18:44).\
+            \ RIGZONE DAILY NEWS -- WEDNESDAY, MARCH 11"
+          items_scored: 11
+          items_selected: 4
           source_breakdown:
-            obligations: 1
+            memories: 4
           scoring: gravitas_unified
-          assembly_ms: 0.36912900395691395
+          assembly_ms: 1.0703560037654825
       - file: tidewatch/pressure.py
         line: 297
         severity: medium
@@ -2672,14 +2857,22 @@ viewpoints:
         recommendation: Consider decomposing into smaller functions
         viewpoint: complexity_hotspots
         remediation_context:
-          context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
-            \ minimalist — 3 finding(s)"
-          items_scored: 4
-          items_selected: 2
+          context_text: "  [OBLIGATION] [P1][pending_review] tidewatch: future_regret — 4 finding(s)\n  [EMAIL] Email from\
+            \ Rigzone Daily News: Analysts Warn of Largest Oil Supply Disruption in History (2026-03-03 21:19:45). RIGZONE\
+            \ DAILY NEWS -- TUESDAY, MARCH 3\n  [EMAIL] Email from Particle: Spring break travel is about to get ugly (2026-03-10\
+            \ 22:21:26). ----------\r\n# The Highlight Reel\r\n\r\nMarch 10, 2026\r\n\r\n\r\n---------\n  [EMAIL] Email from\
+            \ Business Insider: The top stories you missed this week (2026-03-10 18:05:15). BI Catch up on the biggest headlines.\
+            \ \n\n\n View in browser \n<h\n  [EMAIL] Email from Rigzone Daily News: War Creating Most Severe Energy Disruption\
+            \ Since 1970s (2026-03-11 21:18:44). RIGZONE DAILY NEWS -- WEDNESDAY, MARCH 11\n  [EMAIL] Email from Your Original\
+            \ Town neighbors: Top post: Has anyone lost power yet? I’m somehow not inside the planned... (2026-03-15 02:29:45).\
+            \ I’m somehow"
+          items_scored: 11
+          items_selected: 6
           source_breakdown:
-            obligations: 2
+            obligations: 1
+            memories: 5
           scoring: gravitas_unified
-          assembly_ms: 0.40250599704449996
+          assembly_ms: 1.1005209962604567
       summary: 'Complexity Hotspots: 6 finding(s) (0 high, 6 medium, 0 low).'
     import_hygiene:
       display_name: Import Hygiene
@@ -2707,15 +2900,22 @@ viewpoints:
         recommendation: Log the exception or re-raise — silent swallowing hides bugs
         viewpoint: observability_gaps
         remediation_context:
-          context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
-            \ resilience_patterns — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: minimalist — 3 finding(s)\n  [OBLIGATION]\
-            \ [P1][open] tidewatch: future_regret — 4 finding(s)"
-          items_scored: 4
-          items_selected: 4
+          context_text: "  [OBLIGATION] [P1][pending_review] tidewatch: future_regret — 4 finding(s)\n  [EMAIL] Email from\
+            \ Justin Ram: Re: SOW renewal – scope alignment (2026-01-22 10:18:23). Good Morning Sir,\r\n\r\nBender gave me\
+            \ a bunch of tips and we are meeting\n  [EMAIL] Email from Ultrahuman: Now live: Respiratory Health PowerPlug\
+            \ (2026-01-16 19:38:00). Spot breathing disruptuons silently eroding your sleep and recove\n  [EMAIL] Email from\
+            \ Dyan Christine Danao: Career Possibilities (2026-01-09 19:08:31). Career Possibilities\r\nCareer Possibilities\r\
+            \n\r\n      Dyan Christine Danao\r\n  [EMAIL] Email from The Neuron: \U0001F63A\U0001F399️Watch: OpenAI Researcher\
+            \ Explains How AI Hides Its Thinking (2026-01-23 17:40:59). View image: (https://media.beehiiv.com/cd\n  [EMAIL]\
+            \ Email from The Neuron: \U0001F63A You can stream real time generative worlds now?! (2026-01-25 21:36:10). View\
+            \ image: (https://media.beehiiv.com/cdn-cgi/image/"
+          items_scored: 11
+          items_selected: 6
           source_breakdown:
-            obligations: 4
+            obligations: 1
+            memories: 5
           scoring: gravitas_unified
-          assembly_ms: 0.5329560008249246
+          assembly_ms: 1.101765999919735
       summary: 'Observability Gaps: 1 finding(s) (0 high, 1 medium, 0 low).'
     sovereign_reviewer:
       display_name: The Sovereign Reviewer
@@ -2730,14 +2930,20 @@ viewpoints:
         recommendation: Remove from dependencies or verify it's used at runtime (lazy import, plugin)
         viewpoint: sovereign_reviewer
         remediation_context:
-          context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
-            \ future_regret — 4 finding(s)\n  [OBLIGATION] [P1][open] tidewatch: resilience_patterns — 3 finding(s)"
-          items_scored: 4
-          items_selected: 3
+          context_text: "  [EMAIL] Email from TAAFT - There's An AI For That: \U0001F9BE AI Robot Fools Crowd (2025-11-10\
+            \ 02:57:14). ----------\r\nView image: (https://media.beehiiv.com/cdn-cgi/im\n  [EMAIL] Email from Dropbox: Last\
+            \ week's updates in your shared folders (2024-02-20 02:13:04). Activity in Shared Folders \r\n  Here's what happened\
+            \ in your shar\n  [EMAIL] Email from Daily Kos Cartoons: Cartoon: President(s) of the United States (2025-01-04\
+            \ 14:31:15). Daily Kos Cartoons <http://www.dailykos.com?detail=em\n  [EVENT] Sentinel recent git commits:\n6acc5fa\
+            \ 2026-03-17 feat: separate approval chat for Telegram, EVOLVE validation metrics logging\n4314582 2026-03-17\
+            \ feat: \n  [EVENT] Sentinel recent git commits:\n6acc5fa 2026-03-17 feat: separate approval chat for Telegram,\
+            \ EVOLVE validation metrics logging\n4314582 2026-03-17 feat: "
+          items_scored: 11
+          items_selected: 5
           source_breakdown:
-            obligations: 3
+            memories: 5
           scoring: gravitas_unified
-          assembly_ms: 0.4255300009390339
+          assembly_ms: 1.150599004176911
       - file: pyproject.toml
         line: 0
         severity: medium
@@ -2747,14 +2953,21 @@ viewpoints:
         recommendation: Remove from dependencies or verify it's used at runtime (lazy import, plugin)
         viewpoint: sovereign_reviewer
         remediation_context:
-          context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
-            \ future_regret — 4 finding(s)"
-          items_scored: 4
-          items_selected: 2
+          context_text: "  [EMAIL] Email from Dropbox: Last week's updates in your shared folders (2024-02-03 04:48:08). Activity\
+            \ in Shared Folders \r\n  Here's what happened in your shar\n  [OBLIGATION] [P1][pending_review] tidewatch: future_regret\
+            \ — 4 finding(s)\n  [EMAIL] Email from Dropbox: Last week's updates in your shared folders (2024-02-20 02:13:04).\
+            \ Activity in Shared Folders \r\n  Here's what happened in your shar\n  [EMAIL] Email from Daily Kos Cartoons:\
+            \ Cartoon: President(s) of the United States (2025-01-04 14:31:15). Daily Kos Cartoons <http://www.dailykos.com?detail=em\n\
+            \  [EVENT] Sentinel recent git commits:\n6acc5fa 2026-03-17 feat: separate approval chat for Telegram, EVOLVE\
+            \ validation metrics logging\n4314582 2026-03-17 feat: \n  [EVENT] Sentinel recent git commits:\n6acc5fa 2026-03-17\
+            \ feat: separate approval chat for Telegram, EVOLVE validation metrics logging\n4314582 2026-03-17 feat: "
+          items_scored: 11
+          items_selected: 6
           source_breakdown:
-            obligations: 2
+            memories: 5
+            obligations: 1
           scoring: gravitas_unified
-          assembly_ms: 0.44563600386027247
+          assembly_ms: 1.2733600015053526
       - file: pyproject.toml
         line: 0
         severity: medium
@@ -2764,14 +2977,15 @@ viewpoints:
         recommendation: Remove from dependencies or verify it's used at runtime (lazy import, plugin)
         viewpoint: sovereign_reviewer
         remediation_context:
-          context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
-            \ future_regret — 4 finding(s)"
-          items_scored: 4
+          context_text: "  [EMAIL] Email from Dropbox: Last week's updates in your shared folders (2024-02-20 02:13:04). Activity\
+            \ in Shared Folders \r\n  Here's what happened in your shar\n  [EMAIL] Email from Daily Kos Cartoons: Cartoon:\
+            \ President(s) of the United States (2025-01-04 14:31:15). Daily Kos Cartoons <http://www.dailykos.com?detail=em"
+          items_scored: 11
           items_selected: 2
           source_breakdown:
-            obligations: 2
+            memories: 2
           scoring: gravitas_unified
-          assembly_ms: 0.41008099651662633
+          assembly_ms: 1.1504340000101365
       summary: 'The Sovereign Reviewer: 3 finding(s) (0 high, 3 medium, 0 low).'
     test_adequacy:
       display_name: Test Adequacy
@@ -2796,340 +3010,50 @@ viewpoints:
         recommendation: Add test coverage, especially for structural hub files
         viewpoint: test_adequacy
         remediation_context:
-          context_text: "Related obligations (4):\n  [P1][open] tidewatch: custom — 1 finding(s)\n  [P1][open] tidewatch:\
-            \ minimalist — 3 finding(s)\n  [P1][open] tidewatch: resilience_patterns — 3 finding(s)\n  [P1][open] tidewatch:\
-            \ future_regret — 4 finding(s)"
-          obligations_found: 4
-          memories_found: 0
-          scoring: raw_mssql
+          context_text: "  [EMAIL] Email from TAAFT - There's An AI For That: \U0001F9BE Renting Robots Is Now a Thing (2025-12-27\
+            \ 05:27:04). ----------\r\nView image: (https://media.beehiiv.com/c\n  [EMAIL] Email from The Rundown AI: \U0001F916\
+            \ New robot-dog uses AI to talk! (2023-10-27 13:06:33). **[Sign Up](https://www.therundown.ai/subscribe)** | **[Advertise](\n\
+            \  [EMAIL] Email from TAAFT - There's An AI For That: \U0001F9BE AI Robot Fools Crowd (2025-11-10 02:57:14). ----------\r\
+            \nView image: (https://media.beehiiv.com/cdn-cgi/im\n  [EMAIL] Email from There's An AI For That: Alert - Agents:\
+            \ 1 new AI (2026-01-26 17:21:00). Chatbots, Prompts, Websites, Coding, Prompt optimization - 7 new AI\n  [EVENT]\
+            \ Sentinel recent git commits:\ne742135 2026-03-17 feat: redesign autobot approval Telegram notifications\n89f01f1\
+            \ 2026-03-17 fix: hook decorator supports\n  [DECISION] I'll execute the E2E test chain obligations in sequence\
+            \ with approval routing. First, let me retrieve the details of obligations #22-25."
+          items_scored: 12
+          items_selected: 6
+          source_breakdown:
+            memories: 5
+            decisions: 1
+          scoring: gravitas_unified
+          assembly_ms: 1.236748998053372
       summary: 'Test Adequacy: 3 finding(s) (0 high, 1 medium, 2 low).'
-    config_shaman:
-      display_name: The Ops Engineer at 4am
-      viewpoint_type: llm
-      findings:
-      - file: benchmarks/run.py
-        line: 18
-        severity: high
-        observation: Code calls `config.get('benchmark_mode')` but the top-level `config.yaml` does not contain a `benchmark_mode`
-          key; the default is None, causing the benchmark runner to skip all scheduled tests silently.
-        recommendation: 'Add `benchmark_mode` entry to `config.yaml` with a default value (e.g., `benchmark_mode: false`)
-          and document it in the README.'
-        viewpoint: config_shaman
-        remediation_context:
-          context_text: '  [OBLIGATION] [P1][open] tidewatch: future_regret — 4 finding(s)'
-          items_scored: 4
-          items_selected: 1
-          source_breakdown:
-            obligations: 1
-          scoring: gravitas_unified
-          assembly_ms: 0.42742899677250534
-      - file: tidewatch/planner.py
-        line: 42
-        severity: high
-        observation: Uses `os.getenv('TIDEWATCH_MAX_RETRIES', 0)`; the environment variable is never declared in any `.env`
-          file or documented config schema, so a missing variable results in zero retries and a "connection refused" failure
-          that is hard to trace.
-        recommendation: 'Document `TIDEWATCH_MAX_RETRIES` in the environment variable list and add it to the default config
-          with a sensible default (e.g., `max_retries: 3`).'
-        viewpoint: config_shaman
-        remediation_context:
-          context_text: "  [OBLIGATION] [P1][open] tidewatch: minimalist — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
-            \ future_regret — 4 finding(s)"
-          items_scored: 4
-          items_selected: 2
-          source_breakdown:
-            obligations: 2
-          scoring: gravitas_unified
-          assembly_ms: 0.417709001339972
-      - file: scripts/generate_paper_figures.py
-        line: 27
-        severity: medium
-        observation: References `config.get('output_dir')` without checking for its presence; if the key is absent the script
-          writes figures to the current working directory, overwriting unrelated files and causing silent data loss.
-        recommendation: Validate existence of `output_dir` and raise a clear error if missing, or default to a dedicated `output/`
-          directory and update the config file accordingly.
-        viewpoint: config_shaman
-        remediation_context:
-          context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
-            \ resilience_patterns — 3 finding(s)"
-          items_scored: 4
-          items_selected: 2
-          source_breakdown:
-            obligations: 2
-          scoring: gravitas_unified
-          assembly_ms: 0.416829003370367
-      - file: tests/test_generate_obligations.py
-        line: 12
-        severity: low
-        observation: Assumes the environment variable `SOB_CONFIG_PATH` is set to point at the SOB config file, but this variable
-          is not listed in any documentation or sample `.env`, leading to a fallback to the current directory when the variable
-          is absent.
-        recommendation: Add `SOB_CONFIG_PATH` to the documented env‑var list and provide a default fallback path in the test
-          setup.
-        viewpoint: config_shaman
-      summary: 'From an Ops Engineer''s 4am perspective, the codebase contains several config‑code mismatches that cause silent
-        failures: missing config keys (`benchmark_mode`, `output_dir`) and undocumented environment variables (`TIDEWATCH_MAX_RETRIES`,
-        `SOB_CONFIG_PATH`). These gaps lead to default values that silently break functionality—zero retries, overwritten
-        output files, or test path failures—making production incidents hard to diagnose. The fixes are straightforward: explicitly
-        define and document these config entries and env vars, and add validation to catch missing values early.'
-      model: Nemotron-3-Nano-30B-A3B-IQ4_XS.gguf
-      source: local
-    archaeologist:
-      display_name: Code Archaeologist
-      viewpoint_type: llm
-      findings:
-      - file: benchmarks/baselines/binary_deadline.py
-        line: 1
-        severity: high
-        observation: The `score` function is defined inline without any shared base class or abstraction, mirroring the identical
-          implementation in `eisenhower.py` and `linear_urgency.py`. This duplication is a historical accident from copy-paste
-          evolution rather than an intentional design.
-        recommendation: Extract a common `UrgencyStrategy` protocol and have each baseline inherit from it to eliminate duplicated
-          code.
-        viewpoint: archaeologist
-        remediation_context:
-          context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
-            \ minimalist — 3 finding(s)"
-          items_scored: 4
-          items_selected: 2
-          source_breakdown:
-            obligations: 2
-          scoring: gravitas_unified
-          assembly_ms: 0.42373900214442983
-      - file: benchmarks/baselines/eisenhower.py
-        line: 1
-        severity: high
-        observation: Same `score` function appears here, identical to `binary_deadline.py`. The presence of three near‑identical
-          files signals an accumulated accidental layer rather than a purposeful modular design.
-        recommendation: Delete the redundant files and consolidate the logic into a single configurable strategy module.
-        viewpoint: archaeologist
-        remediation_context:
-          context_text: "  [OBLIGATION] [P1][open] tidewatch: minimalist — 3 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
-            \ future_regret — 4 finding(s)"
-          items_scored: 4
-          items_selected: 2
-          source_breakdown:
-            obligations: 2
-          scoring: gravitas_unified
-          assembly_ms: 0.4613740020431578
-      - file: benchmarks/baselines/linear_urgency.py
-        line: 1
-        severity: high
-        observation: Repeats the copy‑pasted `score` implementation for the third time. The pattern shows historical accidents
-          where each baseline was created to experiment with a different formula but never unified.
-        recommendation: Merge the three strategies behind a single `UrgencyStrategy` class parameterized by a callable decay
-          function.
-        viewpoint: archaeologist
-        remediation_context:
-          context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
-            \ resilience_patterns — 3 finding(s)"
-          items_scored: 4
-          items_selected: 2
-          source_breakdown:
-            obligations: 2
-          scoring: gravitas_unified
-          assembly_ms: 0.5282359998091124
-      - file: benchmarks/baselines/__init__.py
-        line: 5
-        severity: medium
-        observation: Explicitly imports each baseline module (`binary_deadline`, `eisenhower`, `linear_urgency`) instead of
-          exposing a unified API. This ad‑hoc import list is a vestige of the original copy‑paste approach and obscures the
-          true set of available strategies.
-        recommendation: Create a single `baselines/__init__.py` that re‑exports a unified `get_strategy(name)` function.
-        viewpoint: archaeologist
-        remediation_context:
-          context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
-            \ future_regret — 4 finding(s)"
-          items_scored: 4
-          items_selected: 2
-          source_breakdown:
-            obligations: 2
-          scoring: gravitas_unified
-          assembly_ms: 0.5150069991941564
-      - file: tidewatch/planner.py
-        line: 27
-        severity: medium
-        observation: 'Contains a commented‑out reference to a now‑removed `llm_engine` parameter (`# TODO: remove legacy llm_engine
-          usage`). The leftover comment is a historical artifact that pollutes the current codebase.'
-        recommendation: Delete the obsolete comment and any dead code paths referencing `llm_engine`.
-        viewpoint: archaeologist
-        remediation_context:
-          context_text: '  [OBLIGATION] [P1][open] tidewatch: resilience_patterns — 3 finding(s)'
-          items_scored: 4
-          items_selected: 1
-          source_breakdown:
-            obligations: 1
-          scoring: gravitas_unified
-          assembly_ms: 0.8388290007133037
-      - file: tidewatch/types.py
-        line: 12
-        severity: low
-        observation: 'The `Obligation` model uses a field named `materiality` with a comment `# TODO: rename to ''importance''
-          to match spec`. The naming mismatch hints that the field''s purpose evolved from an earlier, abandoned specification.'
-        recommendation: Rename `materiality` to `importance` and update all references to maintain consistency.
-        viewpoint: archaeologist
-      - file: tests/test_generate_obligations.py
-        line: 34
-        severity: low
-        observation: The test constructs a `SOBConfig` using the variable name `domain` which originally stood for "problem
-          domain" but now is repurposed to mean "obligation type". This naming drift reflects an accidental abstraction that
-          no longer matches its original intent.
-        recommendation: Rename the field to `obligation_type` and update associated documentation and tests.
-        viewpoint: archaeologist
-      - file: scripts/generate_paper_figures.py
-        line: 78
-        severity: low
-        observation: Hard‑codes a relative path `../benchmarks/datasets/generate_obligations.py` to load dataset configurations.
-          This tight coupling to file layout is an accident of the script's creation and will break if the directory structure
-          changes.
-        recommendation: Resolve the path using `pathlib` and the package's installed location (`importlib.resources`) to make
-          it resilient to structural moves.
-        viewpoint: archaeologist
-      summary: The codebase is riddled with copy‑paste artifacts that survived multiple rewrites, leaving a patchwork of near‑identical
-        modules, stale comments, and naming mismatches. While the core math remains intentional, the surrounding scaffolding
-        is accidental complexity accumulated over time. Refactoring toward shared abstractions and clearer naming will expose
-        the original design intent and prevent future maintenance hazards.
-      model: Nemotron-3-Nano-30B-A3B-IQ4_XS.gguf
-      source: local
-    future_regret:
-      display_name: Future Regret
-      viewpoint_type: llm
-      findings:
-      - file: tidewatch/planner.py
-        line: 27
-        severity: high
-        observation: Writes all generated plan requests to a hard‑coded "plans.yaml" file, overwriting any previous output.
-          When multiple users or CI jobs run the planner concurrently, earlier results are silently lost, causing data corruption
-          and non‑deterministic behavior.
-        recommendation: Generate unique output filenames (e.g., using a timestamp or job ID) and acquire a file lock or write
-          to a temporary file before renaming, ensuring each run produces isolated results.
-        viewpoint: future_regret
-        remediation_context:
-          context_text: "  [OBLIGATION] [P1][open] tidewatch: custom — 1 finding(s)\n  [OBLIGATION] [P1][open] tidewatch:\
-            \ minimalist — 3 finding(s)"
-          items_scored: 4
-          items_selected: 2
-          source_breakdown:
-            obligations: 2
-          scoring: gravitas_unified
-          assembly_ms: 0.48530999629292637
-      - file: benchmarks/run.py
-        line: 45
-        severity: high
-        observation: Builds a shell command by interpolating user‑supplied obligation IDs directly into a string and passes
-          it to `subprocess.run(..., shell=True)`. This creates a command‑injection vulnerability; an attacker controlling
-          an obligation ID can execute arbitrary commands when the benchmark is exposed via HTTP.
-        recommendation: Replace the shell‑based invocation with a list of arguments and avoid `shell=True`. Sanitize or validate
-          any user‑provided input before embedding it in a command.
-        viewpoint: future_regret
-        remediation_context:
-          context_text: '  [OBLIGATION] [P1][open] tidewatch: minimalist — 3 finding(s)'
-          items_scored: 4
-          items_selected: 1
-          source_breakdown:
-            obligations: 1
-          scoring: gravitas_unified
-          assembly_ms: 0.5489199975272641
-      - file: tests/test_golden_pipeline.py
-        line: 108
-        severity: medium
-        observation: Uses an exact floating‑point equality check `assert pressure == expected` for pressure calculations.
-          Small model refinements or floating‑point rounding differences will cause the test to fail intermittently, leading
-          to flaky CI and false negatives as the scoring engine evolves.
-        recommendation: Replace the equality check with a tolerant comparison, e.g., `assert abs(pressure - expected) < 1e-6`,
-          and update the tolerance if the model's precision changes.
-        viewpoint: future_regret
-        remediation_context:
-          context_text: '  [OBLIGATION] [P1][open] tidewatch: resilience_patterns — 3 finding(s)'
-          items_scored: 4
-          items_selected: 1
-          source_breakdown:
-            obligations: 1
-          scoring: gravitas_unified
-          assembly_ms: 0.4822530027013272
-      summary: 'The codebase contains several ''temporary'' shortcuts that will become concrete constraints as Tidewatch scales:
-        hard‑coded file writes cause race conditions, shell‑injection risks emerge when the system is exposed to external
-        users, and fragile floating‑point assertions in tests will generate flaky CI as the scoring model matures. Addressing
-        these now will prevent costly rewrites once the architecture is widely adopted across the three teams.'
-      model: Nemotron-3-Nano-30B-A3B-IQ4_XS.gguf
-      source: local
   viewpoints_loaded: 24
 timing:
-  total_s: 47.4743
+  total_s: 12.9089
   steps:
   - step: scan
-    elapsed_s: 0.0253
+    elapsed_s: 0.0269
   - step: llm_decision
-    elapsed_s: 0.0701
+    elapsed_s: 0.0943
   - step: graph
-    elapsed_s: 0.0009
+    elapsed_s: 0.0006
   - step: purpose
-    elapsed_s: 0.0718
+    elapsed_s: 0.0744
   - step: coherence
     elapsed_s: 0.0003
   - step: abstraction
-    elapsed_s: 0.0309
-  - step: abstraction_llm_refine
-    elapsed_s: 11.1205
+    elapsed_s: 0.032
   - step: assumptions
-    elapsed_s: 0.0357
+    elapsed_s: 0.0354
   - step: hubris
-    elapsed_s: 0.0302
+    elapsed_s: 0.0314
   - step: integration
-    elapsed_s: 0.0467
+    elapsed_s: 0.0506
   - step: viewpoints_load
-    elapsed_s: 0.0748
+    elapsed_s: 0.0764
   - step: viewpoints_ast
-    elapsed_s: 0.1394
-  - step: viewpoints_llm
-    elapsed_s: 27.9697
+    elapsed_s: 0.1452
   - step: viewpoints_save
-    elapsed_s: 0.0357
+    elapsed_s: 0.0215
   - step: remediation_context
-    elapsed_s: 0.1456
-  - step: llm_reasoning
-    elapsed_s: 7.2156
-llm_analysis:
-  identity_assessment: The repository implements a speculative‑planning engine that models deadline‑driven "obligation pressure"
-    as a hydraulic field. It combines a scoring engine, an analytics harness with context normalizers, health context, and
-    memory clusters, and adds a SpeculativePlanner component that emits plan requests via HTTP/stdin‑stdout and persists results
-    to YAML files. The system’s purpose is to compute pressure, rank obligations, and generate proactive plans for high‑pressure
-    tasks.
-  orientation_assessment: 'Code is tightly aligned with the inferred purpose: the hub module `tidewatch/__init__.py` aggregates
-    core types (`Obligation`, `calculate_pressure`, `pressure_zone`), `tidewatch/planner.py` provides the speculative planner,
-    `tidewatch/pressure.py` computes pressure, and `tidewatch/constants.py` stores pressure‑zone constants. Test modules (`tests/test_baselines.py`,
-    `tests/test_benchmarks.py`, `tests/test_cognitive_bandwidth.py`, etc.) validate these components. Helper scripts (`scripts/generate_paper_figures.py`,
-    `benchmarks/run.py`) integrate the core logic into benchmarking and figure generation, directly supporting the pressure‑modeling
-    workflow.'
-  coherence_judgment: 'The codebase shows high structural coherence: a single cluster dominates the dependency graph, hub
-    files (`tidewatch/__init__.py`, `tests/test_golden_pipeline.py`) connect all major components, and there are no orphaned
-    modules. All major pathways (e.g., `benchmarks/run.py → tidewatch/__init__.py → tidewatch/planner.py → tidewatch/types.py
-    → tidewatch/constants.py`) flow through the central hub, indicating a unified design direction.'
-  drift_observations:
-  - area: Archetype mix mismatch
-    evidence: Archetype scores list `analytics-harness+contextnormalizer+healthcontext+memorycluster` at 51 and `scoring-engine+speculativeplanner`
-      at 111, while the architectural notes also tag the repo as `cli-tool+blockchain+quantumcomputing` and `analysis-tool+archetyperegistry+mockclustersummary+archetypeproxy`.
-      These high‑score tags do not map to any concrete files or modules; they appear only as metadata.
-    interpretation: The presence of high‑level archetype tags that are not reflected in the actual package structure suggests
-      a conceptual drift between the marketed archetype taxonomy and the implemented code, indicating that the system was
-      initially envisioned with broader or different capabilities that were later narrowed to the pressure‑modeling core.
-  - area: Unused high‑score archetype proxy
-    evidence: '`analysis-tool+archetyperegistry+mockclustersummary+archetypeproxy` scores 14 but there is no explicit registry
-      or proxy implementation visible in the directory listing; the only registry‑like object is the implicit module registry
-      in `tidewatch/__init__.py`.'
-    interpretation: A declared architectural pattern remains unimplemented, hinting at latent functionality or abandoned experimental
-      code that could introduce future fragmentation if activated.
-  risk_factors:
-  - Hub file `tidewatch/__init__.py` (score 111.7) lacks a corresponding test file, creating a single point of structural
-    dependency without test coverage.
-  - Import resolution rate of 73.4% suggests a non‑trivial portion of potential imports are unused or ambiguous, which may
-    signal loosely coupled or ambiguous module interfaces.
-  - Over‑reliance on a single depth‑6 dependency chain (`tests/test_benchmarks.py → benchmarks/run.py → ... → tidewatch/constants.py`)
-    indicates that core functionality propagates through a narrow set of modules, increasing fragility if any link changes.
-  confidence: 0.88
-  token_usage:
-    completion_tokens: 1326
-    prompt_tokens: 1909
-    total_tokens: 3235
-  source: local
-  model: claude-sonnet-4-6
+    elapsed_s: 11.984

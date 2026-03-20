@@ -206,6 +206,13 @@ def calculate_pressure(
     )
 
 
+# Sort tier constants for bandwidth-adjusted ordering
+_SORT_TIER_NORMAL = 1     # Standard bandwidth-adjusted items
+_SORT_TIER_HARD_FLOOR = 2  # Binding deadlines sort above all adjusted items
+
+# Spearman rank correlation formula constant (textbook: ρ = 1 - 6Σd²/(n(n²-1)))
+SPEARMAN_COEFFICIENT = 6.0
+
 # Data-driven zone mapping — sorted ascending by threshold
 _ZONE_THRESHOLDS: list[tuple[float, str]] = [
     (ZONE_YELLOW, "green"),
@@ -342,17 +349,17 @@ def bandwidth_adjusted_sort(
         return False
 
     def fit_score(result: PressureResult) -> tuple[int, float]:
-        """Returns (tier, score). Tier 2 = hard floor (sorts first with reverse=True)."""
+        """Returns (tier, score). Hard floor tier sorts first with reverse=True."""
         ob = ob_map.get(result.obligation_id)
         if ob is None:
-            return (1, result.pressure)
+            return (_SORT_TIER_NORMAL, result.pressure)
         if _is_hard_floor(ob):
-            return (2, result.pressure)  # Hard floor: sorts above all bandwidth-adjusted items
+            return (_SORT_TIER_HARD_FLOOR, result.pressure)
         demand = estimate_task_demand(ob)
         mismatch = (demand.complexity + demand.novelty + demand.decision_weight) / FIT_SCORE_MISMATCH_COMPONENTS
         base = result.pressure * (1.0 - mismatch * (1.0 - bandwidth))
         gravity_bonus = (ob.gravity_score or 0.0) * GRAVITY_TIEBREAK_WEIGHT  # (#635)
-        return (1, base + gravity_bonus)
+        return (_SORT_TIER_NORMAL, base + gravity_bonus)
 
     sorted_results = sorted(
         results,
