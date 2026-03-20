@@ -87,8 +87,9 @@ We validate the model against 11 pre-computed known-value scenarios
 ($|{\Delta}| < 10^{-10}$), compare against EDF, linear, and
 Eisenhower-matrix baselines via a formal \texttt{BaselineScorer}
 protocol, and present a sensitivity analysis of the rate constant.
-The implementation is 1{,}119 lines of pure Python with zero runtime
-dependencies and 483 deterministic tests.
+The implementation is 1{,}132 lines of pure Python with zero runtime
+dependencies, an explicit reproducibility contract on all time-dependent
+functions, and 483 deterministic tests.
 \end{abstract}
 
 % ======================================================================
@@ -523,7 +524,7 @@ any storage backend to be plugged in above it.
 Tidewatch is implemented in Python 3.11+ with \textbf{zero runtime
 dependencies}---only \texttt{math}, \texttt{datetime}, \texttt{dataclasses},
 and \texttt{uuid} from the standard library.
-The core library comprises 1{,}119 lines across five modules:
+The core library comprises 1{,}132 lines across five modules:
 
 \begin{itemize}[nosep]
   \item \texttt{pressure.py}: pressure equation and batch recalculation
