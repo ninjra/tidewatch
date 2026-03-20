@@ -14,13 +14,9 @@ import random
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
-DOMAINS = ["legal", "financial", "client_work", "personal_admin", "health"]
+from benchmarks.constants import DEFAULT_N, DEFAULT_OUTPUT, DEFAULT_SEED, JSON_INDENT
 
-# CLI defaults
-DEFAULT_N = 1000
-DEFAULT_SEED = 42
-DEFAULT_OUTPUT = "sob.json"
-JSON_INDENT = 2
+DOMAINS = ["legal", "financial", "client_work", "personal_admin", "health"]
 
 
 @dataclass
@@ -35,6 +31,25 @@ class SOBConfig:
     dependency_pareto_alpha: float = 1.5
     optimal_attention_fraction: float = 0.3
     min_attention_days: float = 2.0
+
+
+def _build_obligation(
+    idx: int, domain: str, materiality: str, due_date: str,
+    dep_count: int, completion: float, days_out: int,
+    optimal_attention_days: float,
+) -> dict:
+    """Build a single synthetic obligation dict."""
+    return {
+        "id": idx + 1,
+        "title": f"{domain.replace('_', ' ').title()} Task {idx + 1}",
+        "due_date": due_date,
+        "materiality": materiality,
+        "dependency_count": dep_count,
+        "completion_pct": completion,
+        "domain": domain,
+        "days_out": days_out,
+        "optimal_attention_days": round(optimal_attention_days, 1),
+    }
 
 
 def generate(
@@ -81,17 +96,10 @@ def generate(
         else:
             optimal_attention_days = 0.0
 
-        obligations.append({
-            "id": i + 1,
-            "title": f"{domain.replace('_', ' ').title()} Task {i + 1}",
-            "due_date": due_date,
-            "materiality": materiality,
-            "dependency_count": dep_count,
-            "completion_pct": completion,
-            "domain": domain,
-            "days_out": days_out,
-            "optimal_attention_days": round(optimal_attention_days, 1),
-        })
+        obligations.append(_build_obligation(
+            i, domain, materiality, due_date,
+            dep_count, completion, days_out, optimal_attention_days,
+        ))
 
     return obligations
 

@@ -21,12 +21,16 @@ class BaselineScorer(Protocol):
     def __call__(self, days_remaining: float | None, **kwargs) -> float: ...
 
 
-# Registry of all baseline scorers
-BASELINES: dict[str, BaselineScorer] = {
-    "binary": binary_score,
-    "linear": linear_score,
-    "eisenhower": eisenhower_score,
-}
+def _build_baselines() -> dict[str, BaselineScorer]:
+    """Build registry of all baseline scorers."""
+    return {
+        "binary": binary_score,
+        "linear": linear_score,
+        "eisenhower": eisenhower_score,
+    }
+
+
+BASELINES: dict[str, BaselineScorer] = _build_baselines()
 
 __all__ = [
     "BaselineScorer",

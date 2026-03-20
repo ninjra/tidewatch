@@ -18,8 +18,12 @@ from datetime import UTC, datetime
 from tidewatch.constants import (
     DEFAULT_DELIVERY_URGENCY,
     DELIVERY_URGENCY_MAP,
+    PLANNER_ASCII_PRINTABLE_MIN,
+    PLANNER_DESC_MAX_LEN,
+    PLANNER_DOMAIN_MAX_LEN,
     PLANNER_MAX_TOKENS,
     PLANNER_MIN_ZONES,
+    PLANNER_TITLE_MAX_LEN,
     PLANNER_TOP_N,
 )
 from tidewatch.types import Obligation, PlanRequest, PlanResult, PressureResult
@@ -29,13 +33,6 @@ logger = logging.getLogger(__name__)
 # Approximate chars-per-token for prompt length estimation
 _CHARS_PER_TOKEN = 4
 
-# Sanitization limits for prompt field lengths
-_TITLE_MAX_LEN = 200
-_DESC_MAX_LEN = 500
-_DOMAIN_MAX_LEN = 50
-
-# ASCII printable threshold (control chars below this are stripped)
-_ASCII_PRINTABLE_MIN = 32
 
 
 _DEFAULT_SYSTEM_PROMPT = (
@@ -87,7 +84,7 @@ class SpeculativePlanner:
         )
 
     @staticmethod
-    def _sanitize(text: str, max_len: int = 500) -> str:
+    def _sanitize(text: str, max_len: int = PLANNER_DESC_MAX_LEN) -> str:
         """Sanitize user-provided text for LLM prompt inclusion.
 
         Strips control characters, truncates to max_len, and escapes
@@ -96,7 +93,7 @@ class SpeculativePlanner:
         if not text:
             return ""
         # Strip control chars except newline/tab
-        cleaned = "".join(c for c in text if c == "\n" or c == "\t" or (ord(c) >= _ASCII_PRINTABLE_MIN))
+        cleaned = "".join(c for c in text if c == "\n" or c == "\t" or (ord(c) >= PLANNER_ASCII_PRINTABLE_MIN))
         # Truncate
         if len(cleaned) > max_len:
             cleaned = cleaned[:max_len] + "..."
@@ -104,9 +101,9 @@ class SpeculativePlanner:
 
     def _build_prompt(self, obligation: Obligation, result: PressureResult) -> str:
         """Build the LLM prompt for a single obligation."""
-        title = self._sanitize(obligation.title, max_len=_TITLE_MAX_LEN)
-        desc = self._sanitize(obligation.description or "", max_len=_DESC_MAX_LEN)
-        domain = self._sanitize(obligation.domain or "general", max_len=_DOMAIN_MAX_LEN)
+        title = self._sanitize(obligation.title, max_len=PLANNER_TITLE_MAX_LEN)
+        desc = self._sanitize(obligation.description or "", max_len=PLANNER_DESC_MAX_LEN)
+        domain = self._sanitize(obligation.domain or "general", max_len=PLANNER_DOMAIN_MAX_LEN)
 
         prompt = (
             f"Obligation: {title}\n"

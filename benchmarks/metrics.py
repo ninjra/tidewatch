@@ -10,11 +10,7 @@ Metrics:
 
 from __future__ import annotations
 
-# Minimum sample size for rank correlation (Spearman undefined for n<2)
-MIN_RANKS_FOR_CORRELATION = 2
-
-# Spearman rank correlation formula constant: ρ = 1 - 6Σd²/(n(n²-1))
-SPEARMAN_COEFFICIENT = 6.0
+from benchmarks.constants import MIN_RANKS_FOR_CORRELATION, SPEARMAN_COEFFICIENT
 
 
 def zone_transition_timeliness(
@@ -69,8 +65,8 @@ def attention_allocation_efficiency(
     n = len(predicted_ranks)
     if n < MIN_RANKS_FOR_CORRELATION:
         return 1.0
-    d_squared = sum((p - a) ** 2 for p, a in zip(predicted_ranks, actual_ranks, strict=True))
-    return 1.0 - (SPEARMAN_COEFFICIENT * d_squared) / (n * (n ** 2 - 1))
+    d_squared = sum((p - a) * (p - a) for p, a in zip(predicted_ranks, actual_ranks, strict=True))
+    return 1.0 - (SPEARMAN_COEFFICIENT * d_squared) / (n * (n * n - 1))
 
 
 def false_alarm_rate(

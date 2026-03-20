@@ -11,21 +11,29 @@ import os
 # These enforce the probability domain [0, 1] inherent to pressure scores,
 # bandwidth values, and demand dimensions. They are not editorial clamps.
 
+_SATURATE_FLOOR = 0.0
+_SATURATE_CEIL = 1.0
+
+
 def saturate(value: float) -> float:
-    """Enforce the [0, 1] saturation bound for pressure scores (Eq. 1)."""
-    if value >= 1.0:
-        return 1.0
-    if value <= 0.0:
-        return 0.0
+    """Enforce the [0, 1] saturation bound for pressure scores (Eq. 1).
+
+    Domain: pressure is a probability-like quantity bounded by [0, 1].
+    The bounds are inherent to the equation, not editorial clamps.
+    """
+    if value >= _SATURATE_CEIL:
+        return _SATURATE_CEIL
+    if value <= _SATURATE_FLOOR:
+        return _SATURATE_FLOOR
     return value
 
 
 def clamp_unit(value: float) -> float:
     """Clamp a value to the unit interval [0, 1] for bandwidth/demand scores."""
-    if value >= 1.0:
-        return 1.0
-    if value <= 0.0:
-        return 0.0
+    if value >= _SATURATE_CEIL:
+        return _SATURATE_CEIL
+    if value <= _SATURATE_FLOOR:
+        return _SATURATE_FLOOR
     return value
 
 
@@ -92,16 +100,24 @@ BANDWIDTH_HOURS_BAD = 16.0      # Hours since sleep: 16h+ = bad (0.0)
 BANDWIDTH_NORMALIZATION_RANGE = 8.0  # BANDWIDTH_HOURS_BAD - BANDWIDTH_HOURS_GOOD
 
 # --- Task demand estimation (domain -> cognitive profile) ---
-TASK_DEMAND_PROFILES: dict[str, dict[str, float]] = {
-    "legal":      {"complexity": 0.8, "decision_weight": 0.9, "novelty": 0.6},
-    "financial":  {"complexity": 0.8, "decision_weight": 0.9, "novelty": 0.6},
-    "engineering": {"complexity": 0.5, "decision_weight": 0.4, "novelty": 0.5},
-    "ops":        {"complexity": 0.3, "decision_weight": 0.2, "novelty": 0.2},
-    "admin":      {"complexity": 0.3, "decision_weight": 0.2, "novelty": 0.2},
-}
-TASK_DEMAND_DEFAULT: dict[str, float] = {
-    "complexity": 0.5, "decision_weight": 0.5, "novelty": 0.5,
-}
+def _build_demand_profiles() -> dict[str, dict[str, float]]:
+    """Domain-to-cognitive-profile mapping. Complete for known domains."""
+    return {
+        "legal":      {"complexity": 0.8, "decision_weight": 0.9, "novelty": 0.6},
+        "financial":  {"complexity": 0.8, "decision_weight": 0.9, "novelty": 0.6},
+        "engineering": {"complexity": 0.5, "decision_weight": 0.4, "novelty": 0.5},
+        "ops":        {"complexity": 0.3, "decision_weight": 0.2, "novelty": 0.2},
+        "admin":      {"complexity": 0.3, "decision_weight": 0.2, "novelty": 0.2},
+    }
+
+
+def _build_demand_default() -> dict[str, float]:
+    """Default cognitive demand profile for unknown domains."""
+    return {"complexity": 0.5, "decision_weight": 0.5, "novelty": 0.5}
+
+
+TASK_DEMAND_PROFILES: dict[str, dict[str, float]] = _build_demand_profiles()
+TASK_DEMAND_DEFAULT: dict[str, float] = _build_demand_default()
 MATERIAL_COMPLEXITY_BOOST = 0.2    # Added to complexity for material items
 MATERIAL_DECISION_BOOST = 0.1      # Added to decision_weight for material items
 
@@ -116,12 +132,17 @@ PLANNER_MAX_STEPS = 3       # Steps per plan
 PLANNER_MAX_TOKENS = 500    # Token budget per plan prompt
 
 # --- Delivery urgency mapping (zone -> urgency level) ---
-DELIVERY_URGENCY_MAP: dict[str, str] = {
-    "green": "background",
-    "yellow": "background",
-    "orange": "toast",
-    "red": "interrupt",
-}
+def _build_urgency_map() -> dict[str, str]:
+    """Zone-to-delivery-urgency mapping. One entry per zone."""
+    return {
+        "green": "background",
+        "yellow": "background",
+        "orange": "toast",
+        "red": "interrupt",
+    }
+
+
+DELIVERY_URGENCY_MAP: dict[str, str] = _build_urgency_map()
 DEFAULT_DELIVERY_URGENCY = "background"  # Fallback for unknown zones
 
 # --- Fit score ---
@@ -142,3 +163,9 @@ GRAVITY_TIEBREAK_WEIGHT = 0.1   # Weight of gravity score in bandwidth-adjusted 
 
 # --- Forge pressure export (#140) ---
 FORGE_PRESSURE_PAUSE_THRESHOLD = 0.80  # System pressure above which forge pauses evolution
+
+# --- Planner sanitization limits ---
+PLANNER_TITLE_MAX_LEN = 200
+PLANNER_DESC_MAX_LEN = 500
+PLANNER_DOMAIN_MAX_LEN = 50
+PLANNER_ASCII_PRINTABLE_MIN = 32
