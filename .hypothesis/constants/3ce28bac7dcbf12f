@@ -1,4 +1,0 @@
-# file: /home/justi/projects/gravitas/gravitas/query_classifier.py
-# hypothesis_version: 6.151.9
-
-[0.0, '"[^"]+"|\\\'[^\\\']+\\\'', '?', '@\\w+', '\\b\\w+\\b', 'afternoon', 'ago', 'bm25', 'define', 'describe', 'earlier', 'earlier today', 'entity', 'entity_graph', 'explain', 'factual', 'gravity', 'how did', 'how do', 'how does', 'how long ago', 'just', 'just now', 'last', 'last month', 'last night', 'last time', 'last week', 'latest', 'month', 'morning', 'new', 'recent', 'recently', 'semantic', 'tell me about', 'temporal', 'this month', 'this week', 'today', 'tonight', 'week', 'what are', 'what did', 'what is', 'what was', 'what were', 'when', 'where are', 'where is', 'who are', 'who is', 'who was', 'why did', 'why do', 'why does', 'yesterday']

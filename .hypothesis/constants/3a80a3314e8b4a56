@@ -1,4 +1,0 @@
-# file: /home/justi/projects/tidewatch/tidewatch/types.py
-# hypothesis_version: 6.151.9
-
-[0.0, 0.5, 1.0, 'active', 'complexity', 'decision_weight', 'green', 'material', 'novelty', 'orange', 'red', 'routine', 'unknown', 'yellow']

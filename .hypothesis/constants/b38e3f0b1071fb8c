@@ -1,4 +1,0 @@
-# file: /home/justi/projects/gravitas/gravitas/weight_bandit.py
-# hypothesis_version: 6.151.9
-
-[0.0, 0.5, 1.0, 1.5, 2.0, '-inf', ':', 'arms', 'balanced', 'bm25', 'buckets', 'core_trio', 'entity_graph', 'entity_lookup', 'factual_trio', 'gravity', 'gravity_semantic', 'keyword_search', 'mu', 'multi_signal', 'n_pulls', 'no_gravity', 'no_gravity_temporal', 'posteriors', 'presets', 'recency_focused', 'semantic', 'semantic_bm25', 'semantic_only', 'sigma', 'sigma_floor', 'temporal', 'temporal_semantic', 'total_reward', 'version']

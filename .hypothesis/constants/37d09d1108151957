@@ -1,4 +1,0 @@
-# file: /home/justi/projects/tidewatch/tidewatch/pressure.py
-# hypothesis_version: 6.151.9
-
-[0.0, 1.0, 'completion_pct', 'days_remaining', 'dependency_count', 'green', 'logistic', 'obligations_at_risk', 'orange', 'red', 'red_count', 'system_pressure', 'temporal_gate', 'tidewatch', 'yellow']

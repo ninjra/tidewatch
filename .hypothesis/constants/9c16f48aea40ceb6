@@ -1,4 +1,0 @@
-# file: /home/justi/projects/gravitas/gravitas/config/constants.py
-# hypothesis_version: 6.151.9
-
-[0.5, 1.5, 2.0, 4.0, 15.0, 'ago', 'belief', 'brute_force', 'earlier today', 'faiss', 'foresight', 'just now', 'last month', 'last night', 'last time', 'last week', 'latest', 'recent', 'recently', 'this month', 'this week', 'today', 'yesterday']

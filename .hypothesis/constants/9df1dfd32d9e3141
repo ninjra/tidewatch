@@ -1,4 +1,0 @@
-# file: /home/justi/projects/tidewatch/benchmarks/baselines/__init__.py
-# hypothesis_version: 6.151.9
-
-['BASELINES', 'BaselineScorer', 'QUADRANT_SCORES', 'binary', 'binary_score', 'eisenhower', 'eisenhower_score', 'linear', 'linear_score']

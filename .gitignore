@@ -27,3 +27,4 @@ paper/*.pdf
 
 # Coverage
 .coverage
+.hypothesis/

@@ -1,4 +1,0 @@
-# file: /home/justi/projects/gravitas/gravitas/policy.py
-# hypothesis_version: 6.151.9
-
-[0.0, 0.5, 1.0, 15.0, '\\?', 'beta', 'corpus_size', 'date', 'decay_lambda', 'dedup_threshold', 'default', 'embedding_dim', 'expansion_terms', 'max_memories', 'min_cluster_size', 'prefilter_exponent', 'prefilter_k', 'question', 'retrieve_k', 'staleness_penalty']
