@@ -261,7 +261,29 @@ editorial clamp but the equation's defined ceiling: pressure is a
 probability-like quantity bounded by $[0, 1]$.
 The lower bound is guaranteed by the non-negativity of all four factors.
 
+Figure~\ref{fig:pressure_curve} shows the pressure curve $P_{\text{time}}(t)$
+for $t \in [0, 60]$ days with zone boundaries.
+Figure~\ref{fig:factors} illustrates the multiplicative factor decomposition
+for a material obligation with two dependencies at 40\% completion.
 Table~\ref{tab:constants} summarizes all tunable constants.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/pressure_curve.pdf}
+\caption{Exponential decay pressure curve $P_{\text{time}}(t) = 1 - e^{-k/t}$
+with $k = 3$. Zone boundaries at $\theta_Y = 0.30$, $\theta_O = 0.60$,
+$\theta_R = 0.80$.}
+\label{fig:pressure_curve}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/factor_decomposition.pdf}
+\caption{Factor decomposition for a material obligation ($M = 1.5$) with
+two dependencies ($A = 1.2$) at 40\% completion ($D = 0.76$). Each
+factor multiplicatively shifts the pressure curve.}
+\label{fig:factors}
+\end{figure}
 
 \begin{table}[t]
 \centering
@@ -398,6 +420,16 @@ and sort by pure pressure.
 The sort key becomes a two-tier tuple: $(t, f)$ where $t = 2$ for
 hard-floor items and $t = 1$ for all others, ensuring binding deadlines
 always surface first regardless of operator state.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/bandwidth_modulation.pdf}
+\caption{Bandwidth modulation effect on task priority.
+At full bandwidth ($b = 1.0$), the high-pressure legal brief ranks first.
+As bandwidth decreases, the low-demand config update overtakes it.
+The crossover point depends on the demand differential between tasks.}
+\label{fig:bandwidth}
+\end{figure}
 
 % ------------------------------------------------------------------
 % 3.4  Speculative Planning
@@ -584,7 +616,87 @@ Additional bandwidth tests verify:
 \end{itemize}
 
 % ------------------------------------------------------------------
-% 5.3  Deployment
+% 5.3  Baseline Comparison
+% ------------------------------------------------------------------
+\subsection{Baseline Comparison}
+\label{sec:baselines}
+
+We compare Tidewatch's pressure signal against three baseline urgency
+models (Figure~\ref{fig:baselines}):
+
+\begin{enumerate}[nosep]
+  \item \textbf{EDF (Earliest Deadline First).}
+        Priority $\propto 1/t$, normalized to $[0, 1]$.
+        EDF produces a hyperbolic urgency signal that rises sharply near
+        the deadline but provides poor gradient in the 5--30 day range
+        where planning decisions are most valuable.
+  \item \textbf{Linear decay.}
+        $P_{\text{lin}} = 1 - t/t_{\max}$ for a fixed horizon $t_{\max} = 30$ days.
+        Linear models distribute urgency uniformly across the horizon,
+        producing premature pressure for distant deadlines (e.g.,
+        $P_{\text{lin}}(20) = 0.33$ vs.\ Tidewatch's $P_{\text{time}}(20) = 0.14$).
+  \item \textbf{Binary step.}
+        $P = 1$ if $t \leq 7$, else $P = 0$.
+        The conventional overdue flag.
+        Provides zero gradient information before or after the threshold.
+\end{enumerate}
+
+Tidewatch's exponential decay occupies a productive middle ground:
+near-zero pressure for distant items ($P_{\text{time}}(30) = 0.095$),
+a smooth transition through yellow and orange zones, and rapid
+convergence to 1.0 in the final days.
+The multiplicative factors ($M$, $A$, $D$) further differentiate
+obligations that the baselines treat identically.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/baseline_comparison.pdf}
+\caption{Baseline comparison.
+Tidewatch (blue) produces a smooth, informative gradient across the full
+deadline range. EDF (orange, dashed) provides similar near-deadline
+behavior but poor mid-range differentiation. Linear (green, dash-dot)
+overestimates distant urgency. Binary (red, dotted) provides no gradient.}
+\label{fig:baselines}
+\end{figure}
+
+% ------------------------------------------------------------------
+% 5.4  Sensitivity Analysis
+% ------------------------------------------------------------------
+\subsection{Sensitivity Analysis}
+\label{sec:sensitivity}
+
+The rate constant $k$ is the primary tunable parameter.
+Figure~\ref{fig:sensitivity} shows $P_{\text{time}}(t)$ for
+$k \in \{2, 3, 4, 5\}$.
+The key design constraint is that a 7-day deadline with no other
+factors should enter the yellow zone ($P \geq 0.30$):
+
+\begin{itemize}[nosep]
+  \item $k = 2$: yellow entry at ${\sim}5$ days (too late for planning)
+  \item $k = 3$: yellow entry at ${\sim}7$ days (chosen value)
+  \item $k = 4$: yellow entry at ${\sim}10$ days (premature alerting)
+  \item $k = 5$: yellow entry at ${\sim}12$ days (excessive noise)
+\end{itemize}
+
+The $k = 3$ curve satisfies two additional constraints validated by
+sensitivity tests in the test suite:
+(1) a 14-day deadline stays green ($P_{\text{time}}(14) = 0.19$),
+avoiding alert fatigue, and
+(2) a 3-day deadline enters orange ($P_{\text{time}}(3) = 0.63$),
+triggering active attention at the appropriate horizon.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/sensitivity_k.pdf}
+\caption{Sensitivity analysis for the rate constant $k$.
+$k = 3$ (blue) balances early warning (yellow at 7 days) against
+alert fatigue. $k = 2$ (green) reacts too late; $k = 5$ (red)
+too early.}
+\label{fig:sensitivity}
+\end{figure}
+
+% ------------------------------------------------------------------
+% 5.5  Deployment
 % ------------------------------------------------------------------
 \subsection{Deployment}
 \label{sec:deployment}
@@ -592,7 +704,7 @@ Additional bandwidth tests verify:
 Tidewatch has been in production use since early 2026:
 
 \begin{itemize}[nosep]
-  \item \textbf{Performance:} 314 tests execute in under 0.2s,
+  \item \textbf{Performance:} 342 tests execute in under 0.2s,
         confirming sub-millisecond per-obligation pressure calculation.
   \item \textbf{Determinism:} 21 end-to-end golden pipeline gates
         cover the full pipeline from triage through pressure
@@ -653,7 +765,7 @@ Three directions are planned:
         planned Vitae integration module, replacing self-reported
         signals with continuous sensor streams.
   \item \textbf{Learned constants.}
-        Using Sentinel's Forge optimizer~\citep{autogpt2023} to
+        Using a prompt evolution optimizer to
         tune pressure constants via outcome-driven reward signals
         (obligation completion time vs.\ predicted pressure rank).
   \item \textbf{Multi-agent pressure.}
@@ -677,7 +789,7 @@ The cognitive bandwidth dimension ensures that the \emph{right}
 task surfaces at the \emph{right} time---not just the most urgent
 one, but the most urgent one the operator can actually execute.
 
-At 861 lines with zero dependencies and 314 deterministic tests,
+At 1{,}061 lines with zero dependencies and 342 deterministic tests,
 Tidewatch demonstrates that useful prioritization infrastructure
 does not require complexity.
 It requires the right equation.
