@@ -5,7 +5,7 @@ scan:
   repo_path: /home/justi/projects/tidewatch
   repo_name: tidewatch
   stats:
-    total_files: 66
+    total_files: 67
     languages:
     - Python
     - Markdown
@@ -13,7 +13,7 @@ scan:
     - TOML
     - Shell
     language_counts:
-      YAML: 3
+      YAML: 4
       Markdown: 7
       Python: 38
       TOML: 1
@@ -28,6 +28,7 @@ scan:
   - README.md
   - REDTEAM.md
   - TIDEWATCH-BOOTSTRAP.md
+  - analyses/-2026-03-20.yaml
   - analyses/tidewatch-2026-03-19.yaml
   - analyses/tidewatch-2026-03-20.yaml
   - benchmarks/__init__.py
@@ -516,9 +517,21 @@ scan:
         decorators: []
       - name: test_run_baselines_return_scores
         decorators: []
-      - name: test_full_pipeline_generate_score_evaluate
+      - name: _score_pipeline_data
         decorators: []
-      decorators: []
+      - name: _build_alert_signals
+        decorators:
+        - staticmethod
+      - name: test_pipeline_zone_transition_timeliness
+        decorators: []
+      - name: test_pipeline_missed_deadline_rate
+        decorators: []
+      - name: test_pipeline_attention_allocation
+        decorators: []
+      - name: test_pipeline_false_alarm_rate
+        decorators: []
+      decorators:
+      - staticmethod
     tests/test_binary_deadline.py:
       imports:
       - benchmarks.baselines.binary_deadline
@@ -860,6 +873,8 @@ scan:
       - tidewatch
       - tidewatch
       - tidewatch
+      - tidewatch
+      - tidewatch
       - inspect
       - tidewatch
       - benchmarks.datasets.generate_obligations
@@ -890,7 +905,6 @@ scan:
       - benchmarks.metrics
       - benchmarks.metrics
       - benchmarks.metrics
-      - benchmarks.run
       classes: []
       functions: []
       decorators: []
@@ -1331,6 +1345,12 @@ scan:
         decorators: []
       - name: _completion_dampening
         decorators: []
+      - name: _no_deadline_result
+        decorators: []
+      - name: _timing_amplifier
+        decorators: []
+      - name: _violation_amplifier
+        decorators: []
       - name: calculate_pressure
         decorators: []
       - name: pressure_zone
@@ -1572,7 +1592,9 @@ graph:
   - - tests/test_golden_pipeline.py
     - benchmarks/metrics.py
   - - tests/test_golden_pipeline.py
-    - benchmarks/run.py
+    - tidewatch/__init__.py
+  - - tests/test_golden_pipeline.py
+    - tidewatch/__init__.py
   - - tests/test_golden_pipeline.py
     - tidewatch/__init__.py
   - - tests/test_golden_pipeline.py
@@ -1778,113 +1800,113 @@ graph:
   - - tidewatch/types.py
     - tidewatch/constants.py
   in_degree:
-    tidewatch/__init__.py: 75
+    tidewatch/__init__.py: 77
     benchmarks/metrics.py: 17
     benchmarks/datasets/generate_obligations.py: 14
     tidewatch/constants.py: 11
     tidewatch/types.py: 9
     tidewatch/pressure.py: 5
     benchmarks/constants.py: 4
+    benchmarks/baselines/eisenhower.py: 3
+    benchmarks/baselines/binary_deadline.py: 3
+    tidewatch/planner.py: 3
     benchmarks/baselines/linear_urgency.py: 3
     benchmarks/baselines/__init__.py: 3
-    tidewatch/planner.py: 3
-    benchmarks/baselines/binary_deadline.py: 3
-    benchmarks/baselines/eisenhower.py: 3
-    benchmarks/run.py: 3
     tidewatch/triage.py: 2
-    scripts/generate_paper_figures.py: 1
+    benchmarks/run.py: 2
     scripts/constants.py: 1
-    tests/test_generate_paper_figures.py: 0
-    tests/test_baselines.py: 0
-    tests/test_benchmarks.py: 0
-    tests/test_run.py: 0
-    tests/test_pressure.py: 0
-    tests/test_linear_urgency.py: 0
+    scripts/generate_paper_figures.py: 1
     tests/test_cognitive_bandwidth.py: 0
-    tests/test_types.py: 0
-    tests/test_metrics.py: 0
+    tests/test_generate_paper_figures.py: 0
+    tests/test_pressure.py: 0
+    tests/test_run.py: 0
     tests/conftest.py: 0
     tests/test_golden_pipeline.py: 0
+    tests/test_generate_obligations.py: 0
+    tests/test_metrics.py: 0
+    tests/test_benchmarks.py: 0
+    tests/test_types.py: 0
+    tests/test_constants.py: 0
+    tests/test_linear_urgency.py: 0
+    tests/test_baselines.py: 0
+    tests/test_binary_deadline.py: 0
+    tests/test_triage.py: 0
+    tests/test_integration.py: 0
+    tests/test_planner.py: 0
     tests/test_init.py: 0
     tests/test_eisenhower.py: 0
-    tests/test_constants.py: 0
-    tests/test_triage.py: 0
-    tests/test_generate_obligations.py: 0
-    tests/test_planner.py: 0
-    tests/test_integration.py: 0
-    tests/test_binary_deadline.py: 0
   out_degree:
-    tests/test_golden_pipeline.py: 102
-    tests/test_benchmarks.py: 4
+    tests/test_golden_pipeline.py: 103
     tests/test_pressure.py: 4
+    tests/test_benchmarks.py: 4
     tidewatch/__init__.py: 4
-    benchmarks/baselines/__init__.py: 3
-    tidewatch/pressure.py: 3
-    tests/test_planner.py: 3
     benchmarks/run.py: 3
+    benchmarks/baselines/__init__.py: 3
+    tests/test_planner.py: 3
+    tidewatch/pressure.py: 3
     tests/test_run.py: 2
-    scripts/generate_paper_figures.py: 2
-    tidewatch/planner.py: 2
-    tidewatch/types.py: 2
     tests/conftest.py: 2
-    tests/test_eisenhower.py: 2
+    tidewatch/types.py: 2
+    tidewatch/planner.py: 2
     tests/test_triage.py: 2
     tests/test_integration.py: 2
-    tests/test_generate_paper_figures.py: 1
-    tests/test_baselines.py: 1
-    benchmarks/baselines/linear_urgency.py: 1
-    tests/test_linear_urgency.py: 1
+    scripts/generate_paper_figures.py: 2
+    tests/test_eisenhower.py: 2
     tests/test_cognitive_bandwidth.py: 1
-    tests/test_types.py: 1
-    benchmarks/metrics.py: 1
-    tests/test_metrics.py: 1
+    tests/test_generate_paper_figures.py: 1
     benchmarks/baselines/eisenhower.py: 1
-    benchmarks/datasets/generate_obligations.py: 1
-    tests/test_init.py: 1
-    tests/test_constants.py: 1
     tests/test_generate_obligations.py: 1
+    tests/test_metrics.py: 1
+    benchmarks/datasets/generate_obligations.py: 1
+    tests/test_types.py: 1
+    tests/test_constants.py: 1
+    tests/test_linear_urgency.py: 1
+    tests/test_baselines.py: 1
     tidewatch/triage.py: 1
+    benchmarks/metrics.py: 1
     tests/test_binary_deadline.py: 1
-    scripts/constants.py: 0
-    benchmarks/constants.py: 0
+    benchmarks/baselines/linear_urgency.py: 1
+    tests/test_init.py: 1
     benchmarks/baselines/binary_deadline.py: 0
+    scripts/constants.py: 0
     tidewatch/constants.py: 0
+    benchmarks/constants.py: 0
   betweenness_centrality:
     tidewatch/__init__.py: 32.666666666666664
-    benchmarks/run.py: 16.0
     benchmarks/baselines/__init__.py: 15.333333333333336
-    tidewatch/types.py: 6.583333333333333
-    benchmarks/baselines/linear_urgency.py: 4.333333333333333
+    benchmarks/run.py: 15.0
+    tidewatch/types.py: 6.583333333333335
+    benchmarks/baselines/linear_urgency.py: 4.333333333333334
     benchmarks/datasets/generate_obligations.py: 3.8846153846153846
-    tidewatch/pressure.py: 3.4166666666666665
+    tidewatch/pressure.py: 3.416666666666666
     benchmarks/metrics.py: 2.0769230769230766
     benchmarks/baselines/eisenhower.py: 2.0384615384615383
     scripts/generate_paper_figures.py: 2.0
     tidewatch/planner.py: 1.6666666666666665
-    tests/test_generate_paper_figures.py: 0.0
-    tests/test_baselines.py: 0.0
-    tests/test_benchmarks.py: 0.0
-    tests/test_run.py: 0.0
-    tests/test_pressure.py: 0.0
-    tests/test_linear_urgency.py: 0.0
     tests/test_cognitive_bandwidth.py: 0.0
-    scripts/constants.py: 0.0
-    benchmarks/constants.py: 0.0
-    tests/test_types.py: 0.0
-    benchmarks/baselines/binary_deadline.py: 0.0
-    tests/test_metrics.py: 0.0
+    tests/test_generate_paper_figures.py: 0.0
+    tests/test_pressure.py: 0.0
+    tests/test_run.py: 0.0
     tests/conftest.py: 0.0
     tests/test_golden_pipeline.py: 0.0
+    tests/test_generate_obligations.py: 0.0
+    tests/test_metrics.py: 0.0
+    tests/test_benchmarks.py: 0.0
+    tests/test_types.py: 0.0
+    tests/test_constants.py: 0.0
+    tests/test_linear_urgency.py: 0.0
+    tests/test_baselines.py: 0.0
+    tidewatch/triage.py: 0.0
+    benchmarks/baselines/binary_deadline.py: 0.0
+    scripts/constants.py: 0.0
+    tests/test_binary_deadline.py: 0.0
+    tests/test_triage.py: 0.0
     tidewatch/constants.py: 0.0
+    benchmarks/constants.py: 0.0
+    tests/test_integration.py: 0.0
+    tests/test_planner.py: 0.0
     tests/test_init.py: 0.0
     tests/test_eisenhower.py: 0.0
-    tests/test_constants.py: 0.0
-    tests/test_triage.py: 0.0
-    tests/test_generate_obligations.py: 0.0
-    tests/test_planner.py: 0.0
-    tests/test_integration.py: 0.0
-    tidewatch/triage.py: 0.0
-    tests/test_binary_deadline.py: 0.0
   orphans: []
   clusters:
   - - benchmarks/baselines/__init__.py
@@ -1973,7 +1995,6 @@ graph:
     - tidewatch/constants.py
     tests/test_golden_pipeline.py:
     - tests/test_golden_pipeline.py
-    - benchmarks/run.py
     - tidewatch/__init__.py
     - tidewatch/planner.py
     - tidewatch/types.py
@@ -2025,41 +2046,41 @@ graph:
     - tidewatch/types.py
     - tidewatch/constants.py
   hub_score:
-    tidewatch/__init__.py: 111.66666666666666
-    tests/test_golden_pipeline.py: 102.0
-    benchmarks/run.py: 22.0
+    tidewatch/__init__.py: 113.66666666666666
+    tests/test_golden_pipeline.py: 103.0
     benchmarks/baselines/__init__.py: 21.333333333333336
     benchmarks/metrics.py: 20.076923076923077
+    benchmarks/run.py: 20.0
     benchmarks/datasets/generate_obligations.py: 18.884615384615383
-    tidewatch/types.py: 17.583333333333332
+    tidewatch/types.py: 17.583333333333336
     tidewatch/pressure.py: 11.416666666666666
     tidewatch/constants.py: 11.0
-    benchmarks/baselines/linear_urgency.py: 8.333333333333332
+    benchmarks/baselines/linear_urgency.py: 8.333333333333334
     tidewatch/planner.py: 6.666666666666666
     benchmarks/baselines/eisenhower.py: 6.038461538461538
     scripts/generate_paper_figures.py: 5.0
-    tests/test_benchmarks.py: 4.0
     tests/test_pressure.py: 4.0
+    tests/test_benchmarks.py: 4.0
     benchmarks/constants.py: 4.0
+    tidewatch/triage.py: 3.0
     benchmarks/baselines/binary_deadline.py: 3.0
     tests/test_planner.py: 3.0
-    tidewatch/triage.py: 3.0
     tests/test_run.py: 2.0
     tests/conftest.py: 2.0
-    tests/test_eisenhower.py: 2.0
     tests/test_triage.py: 2.0
     tests/test_integration.py: 2.0
-    tests/test_generate_paper_figures.py: 1.0
-    tests/test_baselines.py: 1.0
-    tests/test_linear_urgency.py: 1.0
+    tests/test_eisenhower.py: 2.0
     tests/test_cognitive_bandwidth.py: 1.0
-    scripts/constants.py: 1.0
-    tests/test_types.py: 1.0
-    tests/test_metrics.py: 1.0
-    tests/test_init.py: 1.0
-    tests/test_constants.py: 1.0
+    tests/test_generate_paper_figures.py: 1.0
     tests/test_generate_obligations.py: 1.0
+    tests/test_metrics.py: 1.0
+    tests/test_types.py: 1.0
+    tests/test_constants.py: 1.0
+    tests/test_linear_urgency.py: 1.0
+    tests/test_baselines.py: 1.0
+    scripts/constants.py: 1.0
     tests/test_binary_deadline.py: 1.0
+    tests/test_init.py: 1.0
   external_imports:
     benchmarks/baselines/__init__.py:
     - __future__
@@ -2140,34 +2161,27 @@ graph:
     - enum
     - dataclasses
     - datetime
-  resolution_rate: 0.7336448598130841
-  resolved_import_count: 157
+  resolution_rate: 0.7348837209302326
+  resolved_import_count: 158
   external_import_count: 57
 purpose:
   archetype:
-  - scoring-engine+speculativeplanner
+  - scoring-engine+cognitivecontext+speculativeplanner
   - scoring-engine
   - analytics-harness
-  - analytics-harness+contextnormalizer+healthcontext+memorycluster
   archetype_scores:
-    scoring-engine+speculativeplanner: 114
+    scoring-engine+cognitivecontext+speculativeplanner: 119
     scoring-engine: 52
     analytics-harness: 51
-    analytics-harness+contextnormalizer+healthcontext+memorycluster: 51
-    analysis-tool+archetyperegistry+mockclustersummary+archetypeproxy: 14
-    analysis-tool+archetyperegistry+mockclustersummary+archetypeproxy+embeddingcomputation: 14
     agent-loop: 10
     analysis-tool: 8
     cli-tool: 6
     cli-tool+blockchain+quantumcomputing: 6
     cli-tool+fastapiwebframework: 6
-    data-pipeline: 3
-  purpose_statement: 'tidewatch is a composite: scoring-engine, analytics-harness, analytics-harness+contextnormalizer+healthcontext+memorycluster
-    extended with Speculative Planner + mathematical scoring, ranking, or pressure model + statistical analysis, benchmarking,
-    or data science workbench + composite: analytics-harness extended with Context Normalizer, Health Context, Memory Cluster,
-    Memory Index, Memory Mass, Memory Record, Ranked Memory, Unified Context Assembler, with capabilities including Cognitive
-    Context, NumPy numerical computing, Obligation, Pressure Result, Speculative Planner, communicating via http, stdin-stdout,
-    persisting to yaml-files.'
+  purpose_statement: 'tidewatch is a composite: scoring-engine, analytics-harness extended with Cognitive Context, Speculative
+    Planner + mathematical scoring, ranking, or pressure model + statistical analysis, benchmarking, or data science workbench,
+    with capabilities including Cognitive Context, NumPy numerical computing, Obligation, Pressure Result, Speculative Planner,
+    communicating via http, stdin-stdout.'
   capabilities:
   - Cognitive Context
   - NumPy numerical computing
@@ -2180,31 +2194,29 @@ purpose:
   communication_patterns:
   - http
   - stdin-stdout
-  data_stores:
-  - yaml-files
+  data_stores: []
   architectural_notes:
-  - 'Repo also scores highly as: analysis-tool+archetyperegistry+mockclustersummary+archetypeproxy, analysis-tool+archetyperegistry+mockclustersummary+archetypeproxy+embeddingcomputation,
-    agent-loop, analysis-tool, cli-tool, cli-tool+blockchain+quantumcomputing, cli-tool+fastapiwebframework. This suggests
-    a composite system spanning multiple architectural patterns.'
-  - Strong test presence (19/66 files).
-  - Critical hub file 'tidewatch/__init__.py' (score 111.7) has no corresponding test file.
+  - 'Repo also scores highly as: agent-loop, analysis-tool, cli-tool, cli-tool+blockchain+quantumcomputing, cli-tool+fastapiwebframework.
+    This suggests a composite system spanning multiple architectural patterns.'
+  - Strong test presence (19/67 files).
+  - Critical hub file 'tidewatch/__init__.py' (score 113.7) has no corresponding test file.
 coherence:
-  coherence_score: 0.9280069559453872
+  coherence_score: 0.947614799082642
   drift_indicators:
   - category: hub_test_gap
-    evidence: '2 structural hub(s) lack test coverage: tidewatch/__init__.py (111.7), benchmarks/baselines/__init__.py (21.3)'
+    evidence: '2 structural hub(s) lack test coverage: tidewatch/__init__.py (113.7), benchmarks/baselines/__init__.py (21.3)'
     implication: High-centrality files are the backbone of the codebase. Without tests, they are single points of failure.
     files:
     - tidewatch/__init__.py
     - benchmarks/baselines/__init__.py
-    severity: 0.3292079207920792
+    severity: 0.3333333333333333
   orientation_summary: Moderate drift detected (1 indicator(s) across hub_test_gap). The codebase serves its purpose but structural
     issues are accumulating.
   purpose_validated: true
   component_scores:
     capability_alignment: 1.0
     structural_coherence: 0.990384019787941
-    archetype_consistency: 0.7254901960784313
+    archetype_consistency: 0.803921568627451
 abstraction:
   findings: []
   summary:
@@ -2237,97 +2249,8 @@ viewpoints:
     complexity_hotspots:
       display_name: Complexity Hotspots
       viewpoint_type: ast
-      findings:
-      - file: tests/test_benchmarks.py
-        line: 204
-        severity: medium
-        observation: 'test_full_pipeline_generate_score_evaluate(): complexity 11, 53 lines'
-        recommendation: Consider decomposing into smaller functions
-        viewpoint: complexity_hotspots
-        remediation_context:
-          context_text: "  [EMAIL] Email from Stock Analysis: Market Bullets: Alphabet leapfrogs Apple in market cap, Ford\
-            \ plans to launch self-driving EV, defense stocks on the move (2\n  [EMAIL] Email from American Airlines AAdvantage\
-            \ Program: Get ready for a rewarding 2026 as an AAdvantage® member (2026-01-08 07:52:07). * * American Airlines\n\
-            \n  [EMAIL] Email from msonlineservicesteam@microsoftonline.com: Permian Resources account email verification\
-            \ code (2024-07-22 13:28:39)\n  [EMAIL] Email from Rigzone Daily News: IPAA Boss Highlights 'Challenging Price\
-            \ Environment' (2026-01-13 21:18:49). RIGZONE DAILY NEWS -- TUESDAY, JANUARY 13, \n  [EMAIL] Email from Rigzone\
-            \ Daily News: USA Gasoline Price Falls to Lowest Level Since May 2021 (2025-12-03 21:18:43). RIGZONE DAILY NEWS\
-            \ -- WEDNESDAY, DECEMBE"
-          items_scored: 11
-          items_selected: 5
-          source_breakdown:
-            memories: 5
-          scoring: gravitas_unified
-          assembly_ms: 1.0375060010119341
-      - file: tests/test_golden_pipeline.py
-        line: 867
-        severity: medium
-        observation: 'test_triage_to_plan(): complexity 11'
-        recommendation: Consider decomposing into smaller functions
-        viewpoint: complexity_hotspots
-        remediation_context:
-          context_text: "  [OBLIGATION] [P1][pending_review] tidewatch: future_regret — 4 finding(s)\n  [EMAIL] Email from\
-            \ Pi.ai: [Request received] (19776) (2024-01-24 08:56:43). Dear Justin\r\n\r\nThank you for reaching out to us.\
-            \ This is a confirmation message to\n  [EMAIL] Email from The Download from MIT Technology Review: The terrible\
-            \ complexity of technological problems (2024-07-22 12:05:04). These board games want yo\n  [EMAIL] Email from\
-            \ Semafor Flagship: \U0001F7E1 Wrestle with complexity (2024-10-07 22:09:33). \r\nUnsubscribe From This List https://email.semafor.com/asm/unsubscribe/?"
-          items_scored: 11
-          items_selected: 4
-          source_breakdown:
-            obligations: 1
-            memories: 3
-          scoring: gravitas_unified
-          assembly_ms: 0.9505609996267594
-      - file: tidewatch/planner.py
-        line: 127
-        severity: medium
-        observation: 'generate_plan_requests(): 55 lines'
-        recommendation: Consider decomposing into smaller functions
-        viewpoint: complexity_hotspots
-        remediation_context:
-          context_text: "  [OBLIGATION] [P1][pending_review] tidewatch: future_regret — 4 finding(s)\n  [EMAIL] Email from\
-            \ msonlineservicesteam@microsoftonline.com: Permian Resources account email verification code (2024-07-22 13:28:39)\n\
-            \  [EMAIL] Email from Semafor Flagship: \U0001F7E1 Stress-tested by headlines (2026-03-10 21:55:18)\n  [EMAIL]\
-            \ Email from Daily Beast: AM Digest: MAGA Melts Down Over Hours-Long Airport Lines (2026-03-09 07:12:50)\n  [EMAIL]\
-            \ Email from Rigzone Daily News: Analysts Warn of Largest Oil Supply Disruption in History (2026-03-03 21:19:45).\
-            \ RIGZONE DAILY NEWS -- TUESDAY, MARCH 3\n  [EMAIL] Email from Rigzone Daily News: Market Spinning After 'Most\
-            \ Epic Price Reversal in Oil History' (2026-03-10 21:18:41). RIGZONE DAILY NEWS -- TUESDAY, M\n  [EMAIL] Email\
-            \ from Rigzone Daily News: Oil Market Shrugs Off 400MM Barrel IEA Reserve Release (2026-03-12 21:18:46). RIGZONE\
-            \ DAILY NEWS -- THURSDAY, MARCH 12,"
-          items_scored: 11
-          items_selected: 7
-          source_breakdown:
-            obligations: 1
-            memories: 6
-          scoring: gravitas_unified
-          assembly_ms: 0.9310349996667355
-      - file: tidewatch/pressure.py
-        line: 120
-        severity: medium
-        observation: 'calculate_pressure(): 83 lines'
-        recommendation: Consider decomposing into smaller functions
-        viewpoint: complexity_hotspots
-        remediation_context:
-          context_text: "  [EMAIL] Email from Business Insider: The top stories you missed this week (2026-03-10 18:05:15).\
-            \ BI Catch up on the biggest headlines. \n\n\n View in browser \n<h\n  [EMAIL] Email from Rigzone Daily News:\
-            \ Analysts Warn of Largest Oil Supply Disruption in History (2026-03-03 21:19:45). RIGZONE DAILY NEWS -- TUESDAY,\
-            \ MARCH 3\n  [EMAIL] Email from msonlineservicesteam@microsoftonline.com: Permian Resources account email verification\
-            \ code (2024-07-22 13:28:39)\n  [EMAIL] Email from Particle: Spring break travel is about to get ugly (2026-03-10\
-            \ 22:21:26). ----------\r\n# The Highlight Reel\r\n\r\nMarch 10, 2026\r\n\r\n\r\n---------\n  [EMAIL] Email from\
-            \ Daily Beast: AM Digest: MAGA Melts Down Over Hours-Long Airport Lines (2026-03-09 07:12:50)\n  [EMAIL] Email\
-            \ from Rigzone Daily News: Oil Market Shrugs Off 400MM Barrel IEA Reserve Release (2026-03-12 21:18:46). RIGZONE\
-            \ DAILY NEWS -- THURSDAY, MARCH 12,\n  [EMAIL] Email from Rigzone Daily News: War Creating Most Severe Energy\
-            \ Disruption Since 1970s (2026-03-11 21:18:44). RIGZONE DAILY NEWS -- WEDNESDAY, MARCH 11\n  [EMAIL] Email from\
-            \ Rigzone Daily News: Market Spinning After 'Most Epic Price Reversal in Oil History' (2026-03-10 21:18:41). RIGZONE\
-            \ DAILY NEWS -- TUESDAY, M\n  [EMAIL] Email from Your Original Town neighbors: Top post: Has anyone lost power\
-            \ yet? I’m somehow not inside the planned... (2026-03-15 02:29:45). I’m somehow"
-          items_scored: 11
-          items_selected: 9
-          source_breakdown:
-            memories: 9
-          scoring: gravitas_unified
-          assembly_ms: 1.0724999956437387
-      summary: 'Complexity Hotspots: 4 finding(s) (0 high, 4 medium, 0 low).'
+      findings: []
+      summary: No issues found from Complexity Hotspots perspective.
     import_hygiene:
       display_name: Import Hygiene
       viewpoint_type: ast
@@ -2360,31 +2283,31 @@ viewpoints:
       summary: No issues found from Test Adequacy perspective.
   viewpoints_loaded: 24
 timing:
-  total_s: 1.4855
+  total_s: 0.8279
   steps:
   - step: scan
-    elapsed_s: 0.0273
+    elapsed_s: 0.0418
   - step: llm_decision
-    elapsed_s: 0.0725
+    elapsed_s: 0.0777
   - step: graph
     elapsed_s: 0.0007
   - step: purpose
-    elapsed_s: 0.0862
+    elapsed_s: 0.0636
   - step: coherence
     elapsed_s: 0.0003
   - step: abstraction
-    elapsed_s: 0.0322
+    elapsed_s: 0.0336
   - step: assumptions
-    elapsed_s: 0.0359
+    elapsed_s: 0.0376
   - step: hubris
-    elapsed_s: 0.0321
+    elapsed_s: 0.0333
   - step: integration
-    elapsed_s: 0.0527
+    elapsed_s: 0.0532
   - step: viewpoints_load
-    elapsed_s: 0.002
+    elapsed_s: 0.0025
   - step: viewpoints_ast
-    elapsed_s: 0.145
+    elapsed_s: 0.1511
   - step: viewpoints_save
-    elapsed_s: 0.0117
+    elapsed_s: 0.0118
   - step: remediation_context
-    elapsed_s: 0.6267
+    elapsed_s: 0.0412
