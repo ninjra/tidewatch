@@ -2,11 +2,19 @@
 
 ## What This Repo Is
 
-Tidewatch is a pure-math scoring engine for obligation pressure with a benchmark
-analytics harness. It computes continuous pressure scores (0.0-1.0) from deadline
-proximity, materiality, dependencies, and completion progress. It also provides
-cognitive bandwidth-aware sorting (CognitiveContext) and speculative planning
-(SpeculativePlanner) for proactive idle-time plan generation.
+Tidewatch is a pure-math scoring engine for obligation pressure with cognitive
+bandwidth adaptation and a benchmark analytics harness. Core capabilities:
+
+- **Pressure scoring**: continuous scores (0.0-1.0) from deadline proximity,
+  materiality, dependencies, and completion progress
+- **Cognitive bandwidth modulation** (CognitiveContext): re-ranks the pressure-sorted
+  queue based on operator physiological state (sleep, pain, HRV) — integral to the
+  scoring engine, not an add-on
+- **Speculative planning** (SpeculativePlanner): uses idle compute to pre-generate
+  action plans for high-pressure obligations — extends the scoring engine's output
+  into actionable plan requests
+- **Triage** (TriageQueue): stages candidate obligations from external scanners
+  for operator review with deduplication
 
 An accompanying SSRN paper formalizes the exponential decay pressure model.
 

@@ -14,6 +14,7 @@ Output: paper/figures/*.pdf
 import math
 import os
 import sys
+from dataclasses import dataclass
 
 import matplotlib
 
@@ -24,6 +25,7 @@ import numpy as np
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from tidewatch.constants import (
     COMPLETION_DAMPENING,
+    DEPENDENCY_AMPLIFICATION,
     MATERIALITY_WEIGHTS,
     OVERDUE_PRESSURE,
     RATE_CONSTANT,
@@ -37,22 +39,56 @@ from tidewatch.constants import (
 OUTDIR = os.path.join(os.path.dirname(__file__), "..", "paper", "figures")
 os.makedirs(OUTDIR, exist_ok=True)
 
-# Style
-plt.rcParams.update({
-    "font.family": "serif",
-    "font.size": 10,
-    "axes.labelsize": 11,
-    "axes.titlesize": 12,
-    "legend.fontsize": 9,
-    "figure.figsize": (5.5, 3.5),
-    "figure.dpi": 300,
-    "savefig.bbox": "tight",
-    "savefig.pad_inches": 0.05,
-})
 
-COLORS = {
+# ── Plot configuration ───────────────────────────────────────────────────────
+
+@dataclass
+class PlotStyle:
+    """Centralized plot parameters for paper figures."""
+
+    font_family: str = "serif"
+    font_size: int = 10
+    label_size: int = 11
+    title_size: int = 12
+    legend_size: int = 9
+    fig_width: float = 5.5
+    fig_height: float = 3.5
+    dpi: int = 300
+    pad_inches: float = 0.05
+    line_width_primary: float = 2.0
+    line_width_secondary: float = 1.5
+    zone_bg_alpha: float = 0.08
+    zone_line_alpha: float = 0.5
+    zone_line_width: float = 0.5
+    annotation_fontsize: int = 8
+    legend_alpha: float = 0.9
+    sample_points_fine: int = 500
+    sample_points_normal: int = 300
+    sample_points_coarse: int = 200
+    sample_points_bandwidth: int = 100
+
+    def apply(self) -> None:
+        """Apply style to matplotlib rcParams."""
+        plt.rcParams.update({
+            "font.family": self.font_family,
+            "font.size": self.font_size,
+            "axes.labelsize": self.label_size,
+            "axes.titlesize": self.title_size,
+            "legend.fontsize": self.legend_size,
+            "figure.figsize": (self.fig_width, self.fig_height),
+            "figure.dpi": self.dpi,
+            "savefig.bbox": "tight",
+            "savefig.pad_inches": self.pad_inches,
+        })
+
+
+STYLE = PlotStyle()
+STYLE.apply()
+
+COLORS: dict[str, str] = {
     "green": "#2ecc71",
     "yellow": "#f1c40f",
+    "dark_yellow": "#b8860b",
     "orange": "#e67e22",
     "red": "#e74c3c",
     "blue": "#3498db",
@@ -61,63 +97,110 @@ COLORS = {
 }
 
 
-def p_time(t, k=RATE_CONSTANT):
+# ── Scenario parameters ──────────────────────────────────────────────────────
+
+@dataclass
+class DecompositionScenario:
+    """Parameters for the factor decomposition figure."""
+
+    dependency_count: int = 2
+    completion_pct: float = 0.4
+    t_min: float = 0.5
+    t_max: float = 30.0
+
+
+@dataclass
+class BandwidthScenario:
+    """Parameters for the bandwidth modulation figure."""
+
+    legal_pressure: float = 1.0
+    ops_pressure: float = 0.777
+    legal_demand: float = 0.9
+    ops_demand: float = 0.2
+    penalty_threshold: float = 0.5
+    penalty_scale: float = 0.8
+    crossover_text_dx: float = 0.12
+    crossover_text_dy: float = -0.08
+
+
+@dataclass
+class BaselineScenario:
+    """Parameters for the baseline comparison figure."""
+
+    linear_horizon: float = 30.0
+    step_threshold_days: float = 7.0
+    y_margin_low: float = -0.05
+    y_margin_high: float = 1.1
+
+
+DECOMP = DecompositionScenario()
+BW = BandwidthScenario()
+BASE = BaselineScenario()
+
+# Sensitivity k values to compare
+SENSITIVITY_K_VALUES = [2, 3, 4, 5]
+SENSITIVITY_K_COLORS = [COLORS["green"], COLORS["blue"], COLORS["orange"], COLORS["red"]]
+
+# Axis limits
+PRESSURE_CURVE_T_MAX = 60.0
+PRESSURE_CURVE_Y_MAX = 1.05
+ZONE_LABEL_X = 55.0
+
+
+# ── Domain functions (from tidewatch core) ────────────────────────────────────
+
+def p_time(t: float, k: float = RATE_CONSTANT) -> float:
     """Time pressure component."""
     if t <= 0:
         return OVERDUE_PRESSURE
     return 1.0 - math.exp(-k / t)
 
 
-def pressure(t, deps=0, material=False, completion=0.0, k=RATE_CONSTANT):
+def pressure_score(
+    t: float,
+    deps: int = 0,
+    material: bool = False,
+    completion: float = 0.0,
+    k: float = RATE_CONSTANT,
+) -> float:
     """Full pressure equation."""
     pt = p_time(t, k)
     m = MATERIALITY_WEIGHTS["material"] if material else MATERIALITY_WEIGHTS["routine"]
-    a = 1.0 + deps * 0.1
+    a = 1.0 + deps * DEPENDENCY_AMPLIFICATION
     d = 1.0 - completion * COMPLETION_DAMPENING
     return saturate(pt * m * a * d)
 
 
-def zone_color(p):
-    if p < ZONE_YELLOW:
-        return COLORS["green"]
-    elif p < ZONE_ORANGE:
-        return COLORS["yellow"]
-    elif p < ZONE_RED:
-        return COLORS["orange"]
-    return COLORS["red"]
+# ── Figure 1: Pressure Curve ─────────────────────────────────────────────────
 
-
-# =========================================================================
-# Figure 1: Pressure Curve P_time(t)
-# =========================================================================
-def fig_pressure_curve():
-    t = np.linspace(0.1, 60, 500)
+def fig_pressure_curve() -> None:
+    t = np.linspace(0.1, PRESSURE_CURVE_T_MAX, STYLE.sample_points_fine)
     p = [p_time(ti) for ti in t]
 
     fig, ax = plt.subplots()
 
-    # Zone backgrounds
-    ax.axhspan(0, ZONE_YELLOW, color=COLORS["green"], alpha=0.08)
-    ax.axhspan(ZONE_YELLOW, ZONE_ORANGE, color=COLORS["yellow"], alpha=0.08)
-    ax.axhspan(ZONE_ORANGE, ZONE_RED, color=COLORS["orange"], alpha=0.08)
-    ax.axhspan(ZONE_RED, 1.0, color=COLORS["red"], alpha=0.08)
+    ax.axhspan(0, ZONE_YELLOW, color=COLORS["green"], alpha=STYLE.zone_bg_alpha)
+    ax.axhspan(ZONE_YELLOW, ZONE_ORANGE, color=COLORS["yellow"], alpha=STYLE.zone_bg_alpha)
+    ax.axhspan(ZONE_ORANGE, ZONE_RED, color=COLORS["orange"], alpha=STYLE.zone_bg_alpha)
+    ax.axhspan(ZONE_RED, 1.0, color=COLORS["red"], alpha=STYLE.zone_bg_alpha)
 
-    ax.plot(t, p, color=COLORS["blue"], linewidth=2)
+    ax.plot(t, p, color=COLORS["blue"], linewidth=STYLE.line_width_primary)
     ax.set_xlabel("Days until deadline ($t$)")
     ax.set_ylabel("Time pressure $P_{\\mathrm{time}}(t)$")
-    ax.set_xlim(0, 60)
-    ax.set_ylim(0, 1.05)
+    ax.set_xlim(0, PRESSURE_CURVE_T_MAX)
+    ax.set_ylim(0, PRESSURE_CURVE_Y_MAX)
     ax.invert_xaxis()
 
-    # Zone labels
-    ax.text(55, 0.15, "Green", fontsize=8, color=COLORS["green"], fontweight="bold")
-    ax.text(55, 0.45, "Yellow", fontsize=8, color="#b8860b", fontweight="bold")
-    ax.text(55, 0.70, "Orange", fontsize=8, color=COLORS["orange"], fontweight="bold")
-    ax.text(55, 0.90, "Red", fontsize=8, color=COLORS["red"], fontweight="bold")
+    zone_label_positions = {"Green": 0.15, "Yellow": 0.45, "Orange": 0.70, "Red": 0.90}
+    zone_label_colors = {"Green": COLORS["green"], "Yellow": COLORS["dark_yellow"],
+                         "Orange": COLORS["orange"], "Red": COLORS["red"]}
+    for label, y in zone_label_positions.items():
+        ax.text(ZONE_LABEL_X, y, label, fontsize=STYLE.annotation_fontsize,
+                color=zone_label_colors[label], fontweight="bold")
 
-    # Zone lines
     for threshold in [ZONE_YELLOW, ZONE_ORANGE, ZONE_RED]:
-        ax.axhline(threshold, color="gray", linestyle="--", linewidth=0.5, alpha=0.5)
+        ax.axhline(threshold, color="gray", linestyle="--",
+                   linewidth=STYLE.zone_line_width, alpha=STYLE.zone_line_alpha)
 
     ax.set_title("Exponential Decay Pressure: $P_{\\mathrm{time}} = 1 - e^{-k/t}$, $k=3$")
     fig.savefig(os.path.join(OUTDIR, "pressure_curve.pdf"))
@@ -125,17 +208,15 @@ def fig_pressure_curve():
     print("  pressure_curve.pdf")
 
 
-# =========================================================================
-# Figure 2: Factor Decomposition
-# =========================================================================
-def fig_factor_decomposition():
-    t = np.linspace(0.5, 30, 200)
+# ── Figure 2: Factor Decomposition ───────────────────────────────────────────
 
-    # Scenario: material obligation, 2 deps, 40% complete
+def fig_factor_decomposition() -> None:
+    t = np.linspace(DECOMP.t_min, DECOMP.t_max, STYLE.sample_points_coarse)
+
     pt_vals = [p_time(ti) for ti in t]
     m_factor = MATERIALITY_WEIGHTS["material"]
-    a_factor = 1.0 + 2 * 0.1  # 2 deps
-    d_factor = 1.0 - 0.4 * COMPLETION_DAMPENING  # 40% complete
+    a_factor = 1.0 + DECOMP.dependency_count * DEPENDENCY_AMPLIFICATION
+    d_factor = 1.0 - DECOMP.completion_pct * COMPLETION_DAMPENING
 
     p_base = np.array(pt_vals)
     p_mat = np.clip(p_base * m_factor, 0, 1)
@@ -143,150 +224,138 @@ def fig_factor_decomposition():
     p_full = np.clip(p_base * m_factor * a_factor * d_factor, 0, 1)
 
     fig, ax = plt.subplots()
-    ax.plot(t, p_base, label="$P_{\\mathrm{time}}$ only", color=COLORS["blue"], linewidth=1.5)
-    ax.plot(t, p_mat, label="+ Materiality ($M=1.5$)", color=COLORS["orange"], linewidth=1.5)
-    ax.plot(t, p_dep, label="+ Dependencies ($A=1.2$)", color=COLORS["red"], linewidth=1.5)
-    ax.plot(t, p_full, label="+ Completion 40\\% ($D=0.76$)", color=COLORS["purple"],
-            linewidth=1.5, linestyle="--")
+    lw = STYLE.line_width_secondary
+    ax.plot(t, p_base, label="$P_{\\mathrm{time}}$ only", color=COLORS["blue"], linewidth=lw)
+    ax.plot(t, p_mat, label=f"+ Materiality ($M={m_factor}$)", color=COLORS["orange"], linewidth=lw)
+    ax.plot(t, p_dep, label=f"+ Dependencies ($A={a_factor}$)", color=COLORS["red"], linewidth=lw)
+    ax.plot(t, p_full, label=f"+ Completion {DECOMP.completion_pct:.0%} ($D={d_factor:.2f}$)",
+            color=COLORS["purple"], linewidth=lw, linestyle="--")
 
     ax.set_xlabel("Days until deadline")
     ax.set_ylabel("Composite pressure $P$")
-    ax.set_xlim(0.5, 30)
-    ax.set_ylim(0, 1.05)
+    ax.set_xlim(DECOMP.t_min, DECOMP.t_max)
+    ax.set_ylim(0, PRESSURE_CURVE_Y_MAX)
     ax.invert_xaxis()
-    ax.legend(loc="lower left", framealpha=0.9)
-    ax.set_title("Factor Decomposition: Material Obligation, 2 Deps, 40\\% Complete")
+    ax.legend(loc="lower left", framealpha=STYLE.legend_alpha)
+    ax.set_title(f"Factor Decomposition: Material, {DECOMP.dependency_count} Deps, "
+                 f"{DECOMP.completion_pct:.0%} Complete")
     fig.savefig(os.path.join(OUTDIR, "factor_decomposition.pdf"))
     plt.close(fig)
     print("  factor_decomposition.pdf")
 
 
-# =========================================================================
-# Figure 3: Sensitivity Analysis (k values)
-# =========================================================================
-def fig_sensitivity():
-    t = np.linspace(0.5, 30, 300)
-    k_values = [2, 3, 4, 5]
-    colors = [COLORS["green"], COLORS["blue"], COLORS["orange"], COLORS["red"]]
+# ── Figure 3: Sensitivity Analysis ───────────────────────────────────────────
+
+def fig_sensitivity() -> None:
+    t = np.linspace(DECOMP.t_min, DECOMP.t_max, STYLE.sample_points_normal)
 
     fig, ax = plt.subplots()
 
-    for k, c in zip(k_values, colors, strict=True):
+    for k, c in zip(SENSITIVITY_K_VALUES, SENSITIVITY_K_COLORS, strict=True):
         p = [p_time(ti, k=k) for ti in t]
-        ax.plot(t, p, label=f"$k = {k}$", color=c, linewidth=1.5)
+        ax.plot(t, p, label=f"$k = {k}$", color=c, linewidth=STYLE.line_width_secondary)
 
-    # Zone thresholds
-    for threshold, _label in [(ZONE_YELLOW, "Yellow"), (ZONE_ORANGE, "Orange"), (ZONE_RED, "Red")]:
-        ax.axhline(threshold, color="gray", linestyle=":", linewidth=0.5, alpha=0.6)
+    for threshold in [ZONE_YELLOW, ZONE_ORANGE, ZONE_RED]:
+        ax.axhline(threshold, color="gray", linestyle=":",
+                   linewidth=STYLE.zone_line_width, alpha=STYLE.zone_line_alpha + 0.1)
 
     ax.set_xlabel("Days until deadline ($t$)")
     ax.set_ylabel("Time pressure $P_{\\mathrm{time}}(t)$")
-    ax.set_xlim(0.5, 30)
-    ax.set_ylim(0, 1.05)
+    ax.set_xlim(DECOMP.t_min, DECOMP.t_max)
+    ax.set_ylim(0, PRESSURE_CURVE_Y_MAX)
     ax.invert_xaxis()
-    ax.legend(loc="lower left", framealpha=0.9)
+    ax.legend(loc="lower left", framealpha=STYLE.legend_alpha)
     ax.set_title("Sensitivity: Rate Constant $k$")
     fig.savefig(os.path.join(OUTDIR, "sensitivity_k.pdf"))
     plt.close(fig)
     print("  sensitivity_k.pdf")
 
 
-# =========================================================================
-# Figure 4: Baseline Comparison
-# =========================================================================
-def fig_baselines():
-    t = np.linspace(0.5, 30, 300)
+# ── Figure 4: Baseline Comparison ────────────────────────────────────────────
 
-    # Tidewatch
+def fig_baselines() -> None:
+    t = np.linspace(DECOMP.t_min, DECOMP.t_max, STYLE.sample_points_normal)
+
     tw = [p_time(ti) for ti in t]
 
-    # EDF: binary step at deadline (1 if overdue, else 1/t normalized)
-    # Actually: EDF priority = 1/t (closer deadline = higher priority)
     edf = [1.0 / ti for ti in t]
-    edf_max = max(edf)
-    edf = [e / edf_max for e in edf]  # normalize to [0, 1]
+    edf_peak = edf[0]
+    edf = [e / edf_peak for e in edf]
 
-    # Linear decay: P = 1 - t/t_max
-    t_max = 30
-    linear = [clamp_unit(1.0 - ti / t_max) for ti in t]
-
-    # Step function: binary at 7 days
-    step = [1.0 if ti <= 7 else 0.0 for ti in t]
+    linear = [clamp_unit(1.0 - ti / BASE.linear_horizon) for ti in t]
+    step = [OVERDUE_PRESSURE if ti <= BASE.step_threshold_days else 0.0 for ti in t]
 
     fig, ax = plt.subplots()
-    ax.plot(t, tw, label="Tidewatch ($1 - e^{-3/t}$)", color=COLORS["blue"], linewidth=2)
+    lw1 = STYLE.line_width_primary
+    lw2 = STYLE.line_width_secondary
+    ax.plot(t, tw, label="Tidewatch ($1 - e^{-3/t}$)", color=COLORS["blue"], linewidth=lw1)
     ax.plot(t, edf, label="EDF ($1/t$, normalized)", color=COLORS["orange"],
-            linewidth=1.5, linestyle="--")
-    ax.plot(t, linear, label="Linear ($1 - t/30$)", color=COLORS["green"],
-            linewidth=1.5, linestyle="-.")
-    ax.plot(t, step, label="Binary (overdue at $t=7$)", color=COLORS["red"],
-            linewidth=1.5, linestyle=":")
+            linewidth=lw2, linestyle="--")
+    ax.plot(t, linear, label=f"Linear ($1 - t/{BASE.linear_horizon:.0f}$)",
+            color=COLORS["green"], linewidth=lw2, linestyle="-.")
+    ax.plot(t, step, label=f"Binary (overdue at $t={BASE.step_threshold_days:.0f}$)",
+            color=COLORS["red"], linewidth=lw2, linestyle=":")
 
     ax.set_xlabel("Days until deadline ($t$)")
     ax.set_ylabel("Urgency / pressure signal")
-    ax.set_xlim(0.5, 30)
-    ax.set_ylim(-0.05, 1.1)
+    ax.set_xlim(DECOMP.t_min, DECOMP.t_max)
+    ax.set_ylim(BASE.y_margin_low, BASE.y_margin_high)
     ax.invert_xaxis()
-    ax.legend(loc="center left", framealpha=0.9)
+    ax.legend(loc="center left", framealpha=STYLE.legend_alpha)
     ax.set_title("Baseline Comparison: Urgency Models")
     fig.savefig(os.path.join(OUTDIR, "baseline_comparison.pdf"))
     plt.close(fig)
     print("  baseline_comparison.pdf")
 
 
-# =========================================================================
-# Figure 5: Bandwidth Modulation
-# =========================================================================
-def fig_bandwidth():
-    bandwidths = np.linspace(0.0, 1.0, 100)
+# ── Figure 5: Bandwidth Modulation ───────────────────────────────────────────
 
-    # Two tasks: legal (high demand=0.9) and ops (low demand=0.2)
-    # Pressure: legal=1.0, ops=0.777
-    p_legal = 1.0
-    p_ops = 0.777
-    demand_legal = 0.9
-    demand_ops = 0.2
+def fig_bandwidth() -> None:
+    bandwidths = np.linspace(0.0, 1.0, STYLE.sample_points_bandwidth)
 
-    def adjusted_score(p, demand, b):
+    def adjusted_score(p: float, demand: float, b: float) -> float:
         """Bandwidth-adjusted score: penalize high-demand at low bandwidth."""
-        if b < 0.5:
+        if b < BW.penalty_threshold:
             penalty = (1.0 - b) * demand
-            return p * (1.0 - penalty * 0.8)
+            return p * (1.0 - penalty * BW.penalty_scale)
         return p
 
-    legal_scores = [adjusted_score(p_legal, demand_legal, b) for b in bandwidths]
-    ops_scores = [adjusted_score(p_ops, demand_ops, b) for b in bandwidths]
+    legal_scores = [adjusted_score(BW.legal_pressure, BW.legal_demand, b) for b in bandwidths]
+    ops_scores = [adjusted_score(BW.ops_pressure, BW.ops_demand, b) for b in bandwidths]
 
     fig, ax = plt.subplots()
-    ax.plot(bandwidths, legal_scores, label="Legal brief ($P=1.0$, demand=0.9)",
-            color=COLORS["red"], linewidth=2)
-    ax.plot(bandwidths, ops_scores, label="Config update ($P=0.78$, demand=0.2)",
-            color=COLORS["blue"], linewidth=2)
+    lw = STYLE.line_width_primary
+    ax.plot(bandwidths, legal_scores,
+            label=f"Legal brief ($P={BW.legal_pressure}$, demand={BW.legal_demand})",
+            color=COLORS["red"], linewidth=lw)
+    ax.plot(bandwidths, ops_scores,
+            label=f"Config update ($P={BW.ops_pressure:.2f}$, demand={BW.ops_demand})",
+            color=COLORS["blue"], linewidth=lw)
 
-    # Mark crossover
     for i in range(len(bandwidths) - 1):
         if legal_scores[i] > ops_scores[i] and legal_scores[i + 1] <= ops_scores[i + 1]:
             cross_b = bandwidths[i]
             cross_v = legal_scores[i]
-            ax.axvline(cross_b, color="gray", linestyle="--", linewidth=0.5)
-            ax.annotate("Crossover", xy=(cross_b, cross_v), xytext=(cross_b + 0.12, cross_v - 0.08),
-                        fontsize=8, arrowprops=dict(arrowstyle="->", color="gray"))
+            ax.axvline(cross_b, color="gray", linestyle="--", linewidth=STYLE.zone_line_width)
+            ax.annotate("Crossover", xy=(cross_b, cross_v),
+                        xytext=(cross_b + BW.crossover_text_dx, cross_v + BW.crossover_text_dy),
+                        fontsize=STYLE.annotation_fontsize,
+                        arrowprops={"arrowstyle": "->", "color": "gray"})
             break
 
     ax.set_xlabel("Cognitive bandwidth $b$")
     ax.set_ylabel("Adjusted priority score")
     ax.set_xlim(0, 1)
-    ax.set_ylim(0, 1.1)
-    ax.legend(loc="lower right", framealpha=0.9)
+    ax.set_ylim(0, BASE.y_margin_high)
+    ax.legend(loc="lower right", framealpha=STYLE.legend_alpha)
     ax.set_title("Bandwidth Modulation: Task Priority vs. Operator Capacity")
     fig.savefig(os.path.join(OUTDIR, "bandwidth_modulation.pdf"))
     plt.close(fig)
     print("  bandwidth_modulation.pdf")
 
 
-# =========================================================================
-# Main
-# =========================================================================
+# ── Main ──────────────────────────────────────────────────────────────────────
+
 if __name__ == "__main__":
     print("Generating paper figures...")
     fig_pressure_curve()
