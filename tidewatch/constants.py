@@ -11,8 +11,8 @@ import os
 # These enforce the probability domain [0, 1] inherent to pressure scores,
 # bandwidth values, and demand dimensions. They are not editorial clamps.
 
-_SATURATE_FLOOR = 0.0
-_SATURATE_CEIL = 1.0
+_SATURATE_FLOOR = 0.0  # Pressure domain lower bound — P is a probability-like quantity
+_SATURATE_CEIL = 1.0   # Pressure domain upper bound — defined by Equation 1
 
 
 def saturate(value: float) -> float:
@@ -77,7 +77,7 @@ DEPENDENCY_AMPLIFICATION = 0.1  # Per-dependency amplifier (junction multiplier)
 # --- Completion ---
 COMPLETION_DAMPENING = 0.6  # Max dampening at 100% completion (relief valve)
 COMPLETION_DAMPENING_MODE = "logistic"  # "linear" or "logistic"
-COMPLETION_LOGISTIC_K = 8.0   # Steepness of logistic curve
+COMPLETION_LOGISTIC_K = 8.0   # Steepness of logistic curve — k=8 gives sharp transition near mid, see §3.1
 COMPLETION_LOGISTIC_MID = 0.5 # Midpoint of logistic curve (50% completion)
 
 # --- Zone thresholds ---
@@ -136,13 +136,13 @@ MATERIAL_DECISION_BOOST = 0.1      # Added to decision_weight for material items
 
 # --- Hard floor auto-detection ---
 HARD_FLOOR_DOMAINS: frozenset[str] = frozenset({"legal", "financial"})
-HARD_FLOOR_DAYS_THRESHOLD = 1.0    # Auto-detect hard floor within this many days
+HARD_FLOOR_DAYS_THRESHOLD = 1.0    # 24h window — binding deadlines (court filings) within 1 day bypass bandwidth
 
 # --- Speculative planner ---
 PLANNER_MIN_ZONES: frozenset[str] = frozenset({"yellow", "orange", "red"})
 PLANNER_TOP_N = 3           # Max obligations to plan per cycle
 PLANNER_MAX_STEPS = 3       # Steps per plan
-PLANNER_MAX_TOKENS = 500    # Token budget per plan prompt
+PLANNER_MAX_TOKENS = 500    # ~2000 chars at 4 chars/token — fits a 3-step action plan
 
 # --- Delivery urgency mapping (zone -> urgency level) ---
 def _build_urgency_map() -> dict[str, str]:
@@ -164,8 +164,8 @@ FIT_SCORE_MISMATCH_COMPONENTS = 3  # Number of demand components averaged for mi
 # --- Timing amplification (#195) ---
 TIMING_STALE_DAYS = 7           # Days in-progress before first amplification tier
 TIMING_CRITICAL_DAYS = 14       # Days in-progress before second amplification tier
-TIMING_STALE_MULTIPLIER = 1.1   # 10% amplification for stale obligations
-TIMING_CRITICAL_MULTIPLIER = 1.2  # 20% amplification for critically stuck obligations
+TIMING_STALE_MULTIPLIER = 1.1   # 10% boost — empirically tuned: 7d stale should nudge, not dominate
+TIMING_CRITICAL_MULTIPLIER = 1.2  # 20% boost — 14d stuck needs stronger signal but still bounded by saturate()
 
 # --- Violation amplification (#99) ---
 VIOLATION_AMPLIFICATION = 0.05  # Per-violation pressure amplifier (additive to dep_amp)

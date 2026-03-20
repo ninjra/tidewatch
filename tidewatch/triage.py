@@ -2,7 +2,8 @@
 """Triage queue -- stage candidate obligations for user review.
 
 In-memory queue. Caller handles persistence.
-No database, no filesystem, no async.
+No database, no filesystem, no async. Uses uuid4() for candidate IDs —
+non-deterministic by design (IDs are opaque handles, not scoring inputs).
 
 Usage:
   queue = TriageQueue()

@@ -5,8 +5,10 @@ Computes a continuous pressure score (0.0-1.0) for each obligation
 based on deadline proximity, materiality, dependencies, and
 completion progress.
 
-This is DETERMINISTIC MATH. No LLM. No inference. No database.
-No async. Every score is reproducible and auditable.
+Reproducibility contract: given the same (obligation, now) inputs, the output
+is fully deterministic — no randomness, no LLM, no database, no async.
+The `now` parameter defaults to `datetime.now(UTC)` for convenience; callers
+requiring reproducibility must pass an explicit `now` value.
 
 Equation (Section 3.1):
   P = min(1.0, P_time * M * A * D)
@@ -158,6 +160,9 @@ def calculate_pressure(
     timing_amp = _timing_amplifier(obligation.days_in_status)
     violation_amp = _violation_amplifier(obligation.violation_count)
 
+    # Six-factor multiplication — bounded to [0, 1] by saturate() per Equation 1.
+    # Individual factors are unbounded by design: the saturation bound is the
+    # equation's defined ceiling, not a post-hoc clamp. See paper §3.1.
     from tidewatch.constants import saturate
     pressure = saturate(time_p * mat_mult * dep_amp * comp_damp * timing_amp * violation_amp)
 

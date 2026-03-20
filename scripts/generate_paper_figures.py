@@ -174,7 +174,7 @@ DECOMP = DecompositionScenario()
 BW = BandwidthScenario()
 BASE = BaselineScenario()
 
-# Sensitivity k values to compare
+# Sensitivity k values (§4.2) — each mapped to a distinct zone color for visual clarity
 SENSITIVITY_K_VALUES = [2, 3, 4, 5]
 SENSITIVITY_K_COLORS = [COLORS["green"], COLORS["blue"], COLORS["orange"], COLORS["red"]]
 
@@ -196,12 +196,12 @@ def pressure_score(
     completion: float = 0.0,
     k: float = RATE_CONSTANT,
 ) -> float:
-    """Full pressure equation."""
+    """Full pressure equation — 4-factor multiplication bounded by saturate() (§3.1)."""
     pt = p_time(t, k)
     m = MATERIALITY_WEIGHTS["material"] if material else MATERIALITY_WEIGHTS["routine"]
     a = 1.0 + deps * DEPENDENCY_AMPLIFICATION
     d = 1.0 - completion * COMPLETION_DAMPENING
-    return saturate(pt * m * a * d)
+    return saturate(pt * m * a * d)  # saturation is the equation's ceiling, not a clamp
 
 
 # ── Figure 1: Pressure Curve ─────────────────────────────────────────────────

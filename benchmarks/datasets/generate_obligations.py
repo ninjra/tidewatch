@@ -2,7 +2,8 @@
 """Generate Synthetic Obligation Benchmark (SOB).
 
 1,000 obligations across 5 domains with realistic deadline distributions,
-dependency graphs, and completion trajectories.
+dependency graphs, and completion trajectories. Uses seeded random.Random
+for reproducibility — same seed produces identical output.
 
 Usage:
     python -m benchmarks.datasets.generate_obligations --output sob.json

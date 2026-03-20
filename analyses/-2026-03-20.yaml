@@ -1,0 +1,490 @@
+repo: .
+repo_name: ''
+date: '2026-03-20'
+scan:
+  repo_path: .
+  repo_name: payload
+  stats:
+    total_files: 1
+    total_lines: 29
+    total_words: 219
+    languages:
+    - text
+    language_counts:
+      text: 1
+    headings: 0
+    references: 1
+    vocabulary_size: 160
+    vocabulary_density: 0.7960199004975125
+  key_files:
+    payload: '\begin{abstract}
+
+      Conventional obligation trackers model deadlines as binary events:
+
+      an item is either overdue or not.
+
+      This discrete framing discards information about the
+
+      \emph{rate} at which urgency accumulates and offers no mechanism
+
+      for adapting task presentation to the operator''s current cognitive
+
+      capacity.
+
+      We present \textbf{Tidewatch}, a deterministic scoring engine that
+
+      assigns each tracked obligation a continuous pressure score in $[0, 1]$
+
+      via an exponential-decay time model modulated by six multiplicative
+
+      factors: materiality weighting, dependency fanout, completion dampening
+
+      (logistic sigmoid), timing amplification for stuck obligations,
+
+      violation-count amplification, and a saturation bound.
+
+      Tidewatch additionally provides a \emph{cognitive bandwidth} modulator:
+
+      normalized physiological signals (sleep quality, pain level, HRV trend)
+
+      re-rank the obligation queue so that low-demand tasks surface when
+
+      operator capacity is reduced, without altering underlying pressure scores.
+
+      A hard-floor override ensures binding deadlines (court filings, tax
+
+      payments) bypass bandwidth adjustment when they fall within 24 hours.
+
+      A \emph{speculative planner} uses idle cycles to pre-generate
+
+      action plans for high-pressure obligations, and a \emph{triage queue}
+
+      stages candidate obligations from external scanners with deduplication.
+
+      We validate the model against 11 pre-computed known-value scenarios
+
+      ($|{\Delta}| < 10^{-10}$), compare against EDF, linear, and
+
+      Eisenhower-matrix baselines via a formal \texttt{BaselineScorer}
+
+      protocol, and present a sensitivity analysis of the rate constant.
+
+      The implementation is 1{,}119 lines of pure Python with zero runtime
+
+      dependencies and 483 deterministic tests.
+
+      \end{abstract}
+
+      '
+  entry_points: []
+  source_signatures: {}
+  tree:
+  - payload
+  purpose_hints: []
+  structure:
+    headings: []
+    references:
+    - from external
+graph:
+  nodes: []
+  edges: []
+  in_degree: {}
+  out_degree: {}
+  betweenness_centrality: {}
+  orphans: []
+  clusters: []
+  critical_paths: {}
+  hub_score: {}
+  external_imports: {}
+  resolution_rate: 0.0
+  resolved_import_count: 0
+  external_import_count: 0
+purpose:
+  archetype:
+  - scoring-engine+cognitivecontext+speculativeplanner
+  - scoring-engine
+  archetype_scores:
+    scoring-engine+cognitivecontext+speculativeplanner: 13
+    scoring-engine: 9
+    agent-loop: 1
+    analysis-tool: 1
+  purpose_statement: 'payload is a composite: scoring-engine, analytics-harness extended with Cognitive Context, Speculative
+    Planner + mathematical scoring, ranking, or pressure model, with capabilities including unidentified capabilities, communicating
+    via grpc.'
+  capabilities: []
+  communication_patterns:
+  - grpc
+  data_stores: []
+  architectural_notes:
+  - Low test coverage (0/1 files). Test infrastructure may be a gap.
+  - No CI/CD configuration detected.
+  - No README found. Repo purpose may be under-documented.
+coherence:
+  coherence_score: 0.2222222222222222
+  drift_indicators: []
+  orientation_summary: No drift detected. The codebase is structurally aligned with its inferred purpose.
+  purpose_validated: true
+  component_scores:
+    capability_alignment: 0.0
+    structural_coherence: 0.0
+    archetype_consistency: 0.8888888888888888
+abstraction:
+  findings: []
+  summary:
+    total: 0
+    by_category: {}
+    by_severity:
+      high: 0
+      medium: 0
+      low: 0
+    hotspots: {}
+  files_analyzed: 0
+assumptions:
+  findings: []
+  summary:
+    total: 0
+    by_category: {}
+    by_severity: {}
+    hotspots: {}
+  files_analyzed: 0
+hubris:
+  findings: []
+  summary:
+    total: 0
+    by_category: {}
+    by_severity: {}
+    hotspots: {}
+  files_analyzed: 0
+viewpoints:
+  results:
+    complexity_hotspots:
+      display_name: Complexity Hotspots
+      viewpoint_type: ast
+      findings: []
+      summary: No issues found from Complexity Hotspots perspective.
+    import_hygiene:
+      display_name: Import Hygiene
+      viewpoint_type: ast
+      findings:
+      - file: ''
+        line: 0
+        severity: medium
+        observation: Import resolution rate is 0% — most deps are external
+        recommendation: High external coupling may indicate insufficient internal abstraction
+        viewpoint: import_hygiene
+        remediation_context:
+          context_text: "  [EMAIL] Email from Best of MSN (Start Unfold): Israel strikes in Gaza continue; US vetoes unusual\
+            \ UN cease-fire resolution: Updates (2023-12-10 11:20:15)\n  [EVENT] Sentinel recent git commits:\nc783f23 2026-03-17\
+            \ fix: auto-detect WSL2 gateway IP for MSSQL connections\n6acc5fa 2026-03-17 feat: separate approval chat\n  [EVENT]\
+            \ Sentinel recent git commits:\ne742135 2026-03-17 feat: redesign autobot approval Telegram notifications\n89f01f1\
+            \ 2026-03-17 fix: hook decorator supports"
+          items_scored: 11
+          items_selected: 3
+          source_breakdown:
+            memories: 3
+          scoring: gravitas_unified
+          assembly_ms: 1.9496800014167093
+      summary: 'Import Hygiene: 1 finding(s) (0 high, 1 medium, 0 low).'
+    coupling_analysis:
+      display_name: Coupling Analysis
+      viewpoint_type: hybrid
+      findings: []
+      summary: No issues found from Coupling Analysis perspective.
+    dead_code:
+      display_name: Dead Code
+      viewpoint_type: hybrid
+      findings: []
+      summary: No issues found from Dead Code perspective.
+    observability_gaps:
+      display_name: Observability Gaps
+      viewpoint_type: hybrid
+      findings: []
+      summary: No issues found from Observability Gaps perspective.
+    sovereign_reviewer:
+      display_name: The Sovereign Reviewer
+      viewpoint_type: hybrid
+      findings:
+      - file: pyproject.toml
+        line: 0
+        severity: medium
+        category: contradiction
+        observation: Declared dependency 'pytest' is not imported by any source file
+        goal_relevance: Phantom dependency — adds supply chain surface without serving the code
+        recommendation: Remove from dependencies or verify it's used at runtime (lazy import, plugin)
+        viewpoint: sovereign_reviewer
+        remediation_context:
+          context_text: "  [OBLIGATION] [P2][in_progress] : contradiction — 2 finding(s)\n  [EMAIL] Email from Dropbox: Last\
+            \ week's updates in your shared folders (2024-02-20 02:13:04). Activity in Shared Folders \r\n  Here's what happened\
+            \ in your shar\n  [EVENT] Sentinel recent git commits:\nc783f23 2026-03-17 fix: auto-detect WSL2 gateway IP for\
+            \ MSSQL connections\n6acc5fa 2026-03-17 feat: separate approval chat\n  [EMAIL] Email from Daily Kos Cartoons:\
+            \ Cartoon: President(s) of the United States (2025-01-04 14:31:15). Daily Kos Cartoons <http://www.dailykos.com?detail=em"
+          items_scored: 11
+          items_selected: 4
+          source_breakdown:
+            obligations: 1
+            memories: 3
+          scoring: gravitas_unified
+          assembly_ms: 1.2902609960292466
+      summary: 'The Sovereign Reviewer: 1 finding(s) (0 high, 1 medium, 0 low).'
+    test_adequacy:
+      display_name: Test Adequacy
+      viewpoint_type: hybrid
+      findings: []
+      summary: No issues found from Test Adequacy perspective.
+    minimalist:
+      display_name: Code Minimalist
+      viewpoint_type: llm
+      findings: []
+      summary: From a minimalist, hyper‑focused perspective, the codebase appears to contain many abstractions that may be
+        redundant, but without concrete source excerpts we cannot pinpoint exact lines to delete; a thorough scan would target
+        dead functions, over‑engineered wrappers, and defensive checks that guard against impossible states, estimating potential
+        line‑count savings while weighing test‑failure risk.
+      model: Nemotron-3-Nano-30B-A3B-IQ4_XS.gguf
+      source: local
+    future_regret:
+      display_name: Future Regret
+      viewpoint_type: llm
+      findings: []
+      summary: From a future‑regret perspective, the current codebase shows no immediately visible shortcuts or assumptions
+        that will become costly within six months, but its lack of documentation and modular boundaries suggests that scaling
+        or refactoring will become non‑trivial as constraints evolve; early investment in clearer interfaces and explicit
+        architectural contracts would prevent higher migration costs later.
+      model: Nemotron-3-Nano-30B-A3B-IQ4_XS.gguf
+      source: local
+    contract_guardian:
+      display_name: The Integration Tester Who Was Right
+      viewpoint_type: llm
+      findings: []
+      summary: No cross‑module function calls were found that conflict with their current signatures, so there are no mismatched
+        arguments to flag.
+      model: Nemotron-3-Nano-30B-A3B-IQ4_XS.gguf
+      source: local
+  viewpoints_loaded: 24
+timing:
+  total_s: 15.6125
+  steps:
+  - step: scan
+    elapsed_s: 0.0001
+  - step: llm_decision
+    elapsed_s: 0.0825
+  - step: graph
+    elapsed_s: 0.0
+  - step: purpose
+    elapsed_s: 0.0137
+  - step: coherence
+    elapsed_s: 0.0001
+  - step: abstraction
+    elapsed_s: 0.0005
+  - step: assumptions
+    elapsed_s: 0.0007
+  - step: hubris
+    elapsed_s: 0.0004
+  - step: integration
+    elapsed_s: 0.0618
+  - step: viewpoints_load
+    elapsed_s: 0.0058
+  - step: viewpoints_ast
+    elapsed_s: 0.0003
+  - step: viewpoints_llm
+    elapsed_s: 4.89
+  - step: viewpoints_save
+    elapsed_s: 0.024
+  - step: remediation_context
+    elapsed_s: 0.6347
+  - step: llm_reasoning
+    elapsed_s: 8.556
+llm_analysis:
+  identity_assessment: The repository represents a specification or stub for a gRPC-based scoring engine that integrates cognitive
+    context and speculative planning, intended to expose ranking or pressure models via a defined interface, but contains
+    no actual implementation code.
+  orientation_assessment: The sole file (e.g., payload.proto) defines the gRPC service and message definitions for the scoring
+    engine, aligning with the scoring-engine+cognitivecontext+speculativeplanner archetype; however, no implementation, tests,
+    or supporting modules are present, so orientation is limited to interface definition only.
+  coherence_judgment: The codebase is highly fragmented — only a single interface file exists with no related modules, tests,
+    or build configuration, resulting in zero clusters, zero dependencies, and no hub files, indicating a lack of cohesive
+    structure.
+  drift_observations:
+  - area: Implementation gap
+    evidence: Zero nodes and edges in the dependency graph; no source code beyond the interface file; no test files (0/1 coverage);
+      no CI/CD configuration.
+    interpretation: The repository is currently a pure specification with no executable code, drifting from the intended scoring-engine
+      implementation toward a mere contract.
+  - area: Documentation vacuum
+    evidence: Absence of README or any documentation describing the purpose or usage.
+    interpretation: Without documentation, the repo's intent relies solely on metadata, increasing ambiguity about its real-world
+      role.
+  risk_factors:
+  - Single point of definition with no backing implementation
+  - No test coverage or validation pipeline
+  - No CI/CD pipeline to enforce quality
+  - Missing documentation leading to potential misinterpretation
+  confidence: 0.85
+  token_usage:
+    completion_tokens: 1434
+    prompt_tokens: 651
+    total_tokens: 2085
+  source: local
+  model: claude-sonnet-4-6
+prompt_refinement:
+  original: '\begin{abstract}
+
+    Conventional obligation trackers model deadlines as binary events:
+
+    an item is either overdue or not.
+
+    This discrete framing discards information about the
+
+    \emph{rate} at which urgency accumulates and offers no mechanism
+
+    for adapting task presentation to the operator''s current cognitive
+
+    capacity.
+
+    We present \textbf{Tidewatch}, a deterministic scoring engine that
+
+    assigns each tracked obligation a continuous pressure score in $[0, 1]$
+
+    via an exponential-decay time model modulated by six multiplicative
+
+    factors: materiality weighting, dependency fanout, completion dampening
+
+    (logistic sigmoid), timing amplification for stuck obligations,
+
+    violation-count amplification, and a saturation bound.
+
+    Tidewatch additionally provides a \emph{cognitive bandwidth} modulator:
+
+    normalized physiological signals (sleep quality, pain level, HRV trend)
+
+    re-rank the obligation queue so that low-demand tasks surface when
+
+    operator capacity is reduced, without altering underlying pressure scores.
+
+    A hard-floor override ensures binding deadlines (court filings, tax
+
+    payments) bypass bandwidth adjustment when they fall within 24 hours.
+
+    A \emph{speculative planner} uses idle cycles to pre-generate
+
+    action plans for high-pressure obligations, and a \emph{triage queue}
+
+    stages candidate obligations from external scanners with deduplication.
+
+    We validate the model against 11 pre-computed known-value scenarios
+
+    ($|{\Delta}| < 10^{-10}$), compare against EDF, linear, and
+
+    Eisenhower-matrix baselines via a formal \texttt{BaselineScorer}
+
+    protocol, and present a sensitivity analysis of the rate constant.
+
+    The implementation is 1{,}119 lines of pure Python with zero runtime
+
+    dependencies and 483 deterministic tests.
+
+    \end{abstract}
+
+    '
+  refined: '\begin{abstract}
+
+    Conventional obligation trackers model deadlines as binary events:
+
+    an item is either overdue or not.
+
+    This discrete framing discards information about the
+
+    \emph{rate} at which urgency accumulates and offers no mechanism
+
+    for adapting task presentation to the operator''s current cognitive
+
+    capacity.
+
+    We present \textbf{Tidewatch}, a deterministic scoring engine that
+
+    assigns each tracked obligation a continuous pressure score in $[0, 1]$
+
+    via an exponential-decay time model modulated by six multiplicative
+
+    factors: materiality weighting, dependency fanout, completion dampening
+
+    (logistic sigmoid), timing amplification for stuck obligations,
+
+    violation-count amplification, and a saturation bound.
+
+    Tidewatch additionally provides a \emph{cognitive bandwidth} modulator:
+
+    normalized physiological signals (sleep quality, pain level, HRV trend)
+
+    re-rank the obligation queue so that low-demand tasks surface when
+
+    operator capacity is reduced, without altering underlying pressure scores.
+
+    A hard-floor override ensures binding deadlines (court filings, tax
+
+    payments) bypass bandwidth adjustment when they fall within 24 hours.
+
+    A \emph{speculative planner} uses idle cycles to pre-generate
+
+    action plans for high-pressure obligations, and a \emph{triage queue}
+
+    stages candidate obligations from external scanners with deduplication.
+
+    We validate the model against 11 pre-computed known-value scenarios
+
+    ($|{\Delta}| < 10^{-10}$), compare against EDF, linear, and
+
+    Eisenhower-matrix baselines via a formal \texttt{BaselineScorer}
+
+    protocol, and present a sensitivity analysis of the rate constant.
+
+    The implementation is 1{,}119 lines of pure Python with zero runtime
+
+    dependencies and 483 deterministic tests.
+
+    \end{abstract}
+
+
+
+    [Analysis context: payload coherence = 0.22]
+
+    [Detected archetype: scoring-engine+cognitivecontext+speculativeplanner + scoring-engine]
+
+
+    ---
+
+    ## Constellation State (verified)
+
+    - : no recent scan data
+
+    - tidewatch: no recent scan data
+
+
+    ## Obligation Summary: 12 open, 8 in-progress, 0 blocked
+
+
+    ## Dependencies
+
+    - tidewatch -> MSSQL (data_read) [degrade]
+
+    - Sentinel -> tidewatch (editable_install) [crash]'
+  corrections: []
+  context_added: '## Constellation State (verified)
+
+    - : no recent scan data
+
+    - tidewatch: no recent scan data
+
+
+    ## Obligation Summary: 12 open, 8 in-progress, 0 blocked
+
+
+    ## Dependencies
+
+    - tidewatch -> MSSQL (data_read) [degrade]
+
+    - Sentinel -> tidewatch (editable_install) [crash]'
+  constellation_grounded: true
+  mentioned_repos:
+  - ''
+  - tidewatch
+  obligation_refs: []

@@ -2,7 +2,9 @@
 """Speculative planner -- idle-time plan generation for high-pressure obligations.
 
 Returns prompt templates. The caller provides the LLM.
-No inference calls, no database, no async.
+No inference calls, no database, no async. complete_plan() uses
+datetime.now(UTC) for timestamp — callers requiring reproducibility
+should set created_at on the returned PlanResult.
 
 Usage:
   planner = SpeculativePlanner()
