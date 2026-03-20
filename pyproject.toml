@@ -16,11 +16,14 @@ keywords = [
     "task management", "deadline", "urgency", "pressure",
     "proactive planning", "AI agents", "obligation tracking",
 ]
-dependencies = []
+dependencies = [
+    "gravitas",
+]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0",
+    "hypothesis>=6.0",
 ]
 benchmarks = [
     "matplotlib>=3.7",

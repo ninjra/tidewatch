@@ -144,7 +144,13 @@ def calculate_pressure(
     obligation: Obligation,
     now: datetime | None = None,
 ) -> PressureResult:
-    """Compute pressure for a single obligation (§3.1)."""
+    """Compute pressure for a single obligation (§3.1).
+
+    Architecture: exponential time-decay is the BASE SIGNAL. All other factors
+    are MODULATING COMPONENTS. Factors are preserved as named dimensions in a
+    ComponentSpace (Late Collapse). The scalar .pressure field is the default
+    product collapse, saturated to [0,1].
+    """
     if now is None:
         now = datetime.now(UTC)
     if obligation.due_date is None:
@@ -160,16 +166,25 @@ def calculate_pressure(
     timing_amp = _timing_amplifier(obligation.days_in_status)
     violation_amp = _violation_amplifier(obligation.violation_count)
 
-    # Six-factor multiplication — bounded to [0, 1] by saturate() per Equation 1.
-    # Individual factors are unbounded by design: the saturation bound is the
-    # equation's defined ceiling, not a post-hoc clamp. See paper §3.1.
-    from tidewatch.constants import saturate
-    pressure = saturate(time_p * mat_mult * dep_amp * comp_damp * timing_amp * violation_amp)
+    # Build ComponentSpace — preserves factors as named dimensions (Late Collapse)
+    from tidewatch.components import build_pressure_space
+    components = build_pressure_space(
+        time_pressure=time_p, materiality=mat_mult,
+        dependency_amp=dep_amp, completion_damp=comp_damp,
+        timing_amp=timing_amp, violation_amp=violation_amp,
+        obligation_id=obligation.id,
+        raw_inputs={"days_remaining": days_rem, "completion_pct": obligation.completion_pct,
+                    "dependency_count": obligation.dependency_count},
+    )
+
+    # Scalar pressure is the default product collapse, saturated to [0,1]
+    pressure = components.pressure
 
     return PressureResult(
         obligation_id=obligation.id, pressure=pressure, zone=pressure_zone(pressure),
         time_pressure=time_p, materiality_mult=mat_mult,
         dependency_amp=dep_amp, completion_damp=comp_damp,
+        component_space=components,
     )
 
 
@@ -267,17 +282,35 @@ def export_pressure_summary(results: list[PressureResult]) -> dict:
     }
 
 
-def _is_hard_floor(ob: Obligation, now: datetime | None = None) -> bool:
-    """Binding deadline: explicit flag OR domain heuristic."""
+def _get_effective_risk_tier(ob: Obligation, now: datetime | None = None) -> int:
+    """Resolve the effective risk tier for bandwidth modulation.
+
+    Uses the explicit risk_tier field. Falls back to legacy hard_floor flag
+    and domain heuristic for backward compatibility.
+
+    Returns RiskTier int value (0=NEVER_DEMOTABLE, 1=WITH_FLOOR, 2=FULLY_DEMOTABLE).
+    """
+    from tidewatch.types import RiskTier
+
+    # Explicit risk_tier takes priority
+    if ob.risk_tier == RiskTier.NEVER_DEMOTABLE:
+        return RiskTier.NEVER_DEMOTABLE
+    if ob.risk_tier == RiskTier.DEMOTABLE_WITH_FLOOR:
+        return RiskTier.DEMOTABLE_WITH_FLOOR
+
+    # Legacy: hard_floor flag
     if ob.hard_floor:
-        return True
+        return RiskTier.NEVER_DEMOTABLE
+
+    # Domain heuristic: legal/financial within threshold → DEMOTABLE_WITH_FLOOR
     if ob.domain and ob.domain.lower() in HARD_FLOOR_DOMAINS and ob.due_date is not None:
         if now is None:
             now = datetime.now(UTC)
         days = _days_remaining(ob.due_date, now)
         if days <= HARD_FLOOR_DAYS_THRESHOLD:
-            return True
-    return False
+            return RiskTier.NEVER_DEMOTABLE
+
+    return RiskTier.FULLY_DEMOTABLE
 
 
 def _fit_score(
@@ -285,11 +318,20 @@ def _fit_score(
     ob_map: dict,
     bandwidth: float,
 ) -> tuple[int, float]:
-    """Compute bandwidth-adjusted sort key for a pressure result."""
+    """Compute bandwidth-adjusted sort key for a pressure result.
+
+    Three-tier risk classification:
+    - NEVER_DEMOTABLE (tier 2): sorts above all others, pure pressure
+    - DEMOTABLE_WITH_FLOOR (tier 1): bandwidth-adjusted but with floor
+    - FULLY_DEMOTABLE (tier 0): fully bandwidth-adjusted
+    """
+    from tidewatch.types import RiskTier
     ob = ob_map.get(result.obligation_id)
     if ob is None:
         return (_SORT_TIER_NORMAL, result.pressure)
-    if _is_hard_floor(ob):
+
+    tier = _get_effective_risk_tier(ob)
+    if tier == RiskTier.NEVER_DEMOTABLE:
         return (_SORT_TIER_HARD_FLOOR, result.pressure)
     demand = estimate_task_demand(ob)
     mismatch = (demand.complexity + demand.novelty + demand.decision_weight) / FIT_SCORE_MISMATCH_COMPONENTS

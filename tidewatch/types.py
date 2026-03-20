@@ -10,6 +10,25 @@ import enum
 from dataclasses import dataclass, field
 from datetime import datetime
 
+# --- Risk tier enum (bandwidth modulation classification) ---
+
+class RiskTier(enum.IntEnum):
+    """Classification for bandwidth modulation behavior.
+
+    Tier 0 — NEVER_DEMOTABLE: binding/safety-critical obligations bypass
+    bandwidth modulation entirely regardless of time-to-deadline.
+    Tier 1 — DEMOTABLE_WITH_FLOOR: can rerank downward but never below a
+    configurable minimum queue position.
+    Tier 2 — FULLY_DEMOTABLE: low-consequence obligations freely rerank.
+
+    Tier is an explicit, auditable property on each obligation — not inferred
+    silently. Default is FULLY_DEMOTABLE.
+    """
+    NEVER_DEMOTABLE = 0
+    DEMOTABLE_WITH_FLOOR = 1
+    FULLY_DEMOTABLE = 2
+
+
 # --- Zone enum ---
 
 class Zone(enum.Enum):
@@ -74,10 +93,11 @@ class Obligation:
     domain: str | None = None
     description: str | None = None
     status: str = "active"
-    hard_floor: bool = False  # Binding deadline — ignores bandwidth sort
+    hard_floor: bool = False  # Binding deadline — legacy, use risk_tier instead
     days_in_status: float = 0.0  # Days in current status (#195 timing amplification)
     violation_count: int = 0     # Rule violations associated with this obligation (#99)
     gravity_score: float | None = None  # Gravitational attraction score from gravitas (#635)
+    risk_tier: RiskTier = RiskTier.FULLY_DEMOTABLE  # Bandwidth modulation classification
 
 
 # --- Pressure result ---
@@ -86,7 +106,9 @@ class Obligation:
 class PressureResult:
     """Full decomposition of a pressure calculation.
 
-    Every factor is exposed for auditability.
+    Every factor is exposed for auditability. The component_space field
+    preserves all factors as named dimensions for Pareto-aware ranking.
+    The scalar .pressure field is the default product collapse.
     """
     obligation_id: int | str
     pressure: float
@@ -95,6 +117,7 @@ class PressureResult:
     materiality_mult: float
     dependency_amp: float
     completion_damp: float
+    component_space: object | None = None  # PressureComponents when available
 
 
 # --- Plan types ---
