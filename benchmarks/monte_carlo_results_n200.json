@@ -1,0 +1,66 @@
+{
+  "tidewatch": {
+    "strategy": "tidewatch",
+    "n_trials": 200,
+    "missed_deadline_rate": {
+      "mean": 0.2017,
+      "std": 0.018
+    },
+    "queue_inversion_rate": {
+      "mean": 0.0,
+      "std": 0.0
+    },
+    "attention_efficiency": {
+      "mean": 0.8174,
+      "std": 0.0369
+    }
+  },
+  "edf": {
+    "strategy": "edf",
+    "n_trials": 200,
+    "missed_deadline_rate": {
+      "mean": 0.185,
+      "std": 0.015
+    },
+    "queue_inversion_rate": {
+      "mean": 0.0985,
+      "std": 0.0
+    },
+    "attention_efficiency": {
+      "mean": 0.8369,
+      "std": 0.0339
+    }
+  },
+  "fifo": {
+    "strategy": "fifo",
+    "n_trials": 200,
+    "missed_deadline_rate": {
+      "mean": 0.3187,
+      "std": 0.0131
+    },
+    "queue_inversion_rate": {
+      "mean": 0.4947,
+      "std": 0.0
+    },
+    "attention_efficiency": {
+      "mean": 0.6919,
+      "std": 0.0289
+    }
+  },
+  "random": {
+    "strategy": "random",
+    "n_trials": 200,
+    "missed_deadline_rate": {
+      "mean": 0.3122,
+      "std": 0.0242
+    },
+    "queue_inversion_rate": {
+      "mean": 0.4983,
+      "std": 0.0244
+    },
+    "attention_efficiency": {
+      "mean": 0.6959,
+      "std": 0.0384
+    }
+  }
+}

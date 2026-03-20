@@ -148,7 +148,9 @@ COMP_COMPLETION_DAMP = "completion_damp"
 COMP_TIMING_AMP = "timing_amp"
 COMP_VIOLATION_AMP = "violation_amp"
 
-# Default bounds per component (for normalization and Pareto)
+# Default bounds per component (for normalization and Pareto).
+# Exhaustive: one entry per COMP_* factor. Bounds derived from the pressure
+# equation's algebraic range — see constants.py for the source values.
 _DEFAULT_BOUNDS: dict[str, tuple[float, float]] = {
     COMP_TIME_PRESSURE: (0.0, 1.0),
     COMP_MATERIALITY: (1.0, 1.5),
