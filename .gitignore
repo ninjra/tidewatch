@@ -14,3 +14,16 @@ build/
 venv/
 *.Zone.Identifier
 sob.json
+
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.out
+paper/*.log
+paper/*.pdf
+
+# Coverage
+.coverage
