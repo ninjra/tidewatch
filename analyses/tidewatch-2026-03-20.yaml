@@ -1699,63 +1699,63 @@ graph:
     tidewatch/pressure.py: 5
     benchmarks/baselines/__init__.py: 3
     benchmarks/run.py: 3
-    benchmarks/constants.py: 3
     tidewatch/planner.py: 3
-    benchmarks/baselines/eisenhower.py: 2
+    benchmarks/constants.py: 3
     tidewatch/triage.py: 2
-    benchmarks/baselines/linear_urgency.py: 2
     benchmarks/baselines/binary_deadline.py: 2
+    benchmarks/baselines/linear_urgency.py: 2
+    benchmarks/baselines/eisenhower.py: 2
     scripts/constants.py: 1
     scripts/generate_paper_figures.py: 1
-    tests/test_generate_paper_figures.py: 0
-    tests/test_benchmarks.py: 0
-    tests/test_triage.py: 0
-    tests/test_init.py: 0
-    tests/test_planner.py: 0
-    tests/test_baselines.py: 0
-    tests/conftest.py: 0
-    tests/test_types.py: 0
     tests/test_run.py: 0
-    tests/test_golden_pipeline.py: 0
-    tests/test_generate_obligations.py: 0
-    tests/test_constants.py: 0
+    tests/test_baselines.py: 0
     tests/test_cognitive_bandwidth.py: 0
-    tests/test_pressure.py: 0
+    tests/conftest.py: 0
     tests/test_metrics.py: 0
+    tests/test_triage.py: 0
+    tests/test_constants.py: 0
+    tests/test_golden_pipeline.py: 0
     tests/test_integration.py: 0
+    tests/test_benchmarks.py: 0
+    tests/test_planner.py: 0
+    tests/test_generate_paper_figures.py: 0
+    tests/test_generate_obligations.py: 0
+    tests/test_types.py: 0
+    tests/test_init.py: 0
+    tests/test_pressure.py: 0
   out_degree:
     tests/test_golden_pipeline.py: 102
-    tests/test_benchmarks.py: 4
     tidewatch/__init__.py: 4
+    tests/test_benchmarks.py: 4
     tests/test_pressure.py: 4
+    tidewatch/pressure.py: 3
     benchmarks/baselines/__init__.py: 3
     benchmarks/run.py: 3
-    tidewatch/pressure.py: 3
     tests/test_planner.py: 3
-    tidewatch/types.py: 2
-    tests/test_triage.py: 2
-    tidewatch/planner.py: 2
-    tests/conftest.py: 2
     tests/test_run.py: 2
-    scripts/generate_paper_figures.py: 2
+    tests/conftest.py: 2
+    tests/test_triage.py: 2
+    tidewatch/types.py: 2
     tests/test_integration.py: 2
+    tidewatch/planner.py: 2
+    scripts/generate_paper_figures.py: 2
+    tests/test_baselines.py: 1
+    tests/test_cognitive_bandwidth.py: 1
+    tidewatch/triage.py: 1
+    tests/test_metrics.py: 1
+    tests/test_constants.py: 1
+    benchmarks/baselines/linear_urgency.py: 1
+    benchmarks/metrics.py: 1
     tests/test_generate_paper_figures.py: 1
+    tests/test_generate_obligations.py: 1
+    benchmarks/datasets/generate_obligations.py: 1
+    tests/test_types.py: 1
     tests/test_init.py: 1
     benchmarks/baselines/eisenhower.py: 1
-    benchmarks/metrics.py: 1
-    tidewatch/triage.py: 1
-    tests/test_baselines.py: 1
-    tests/test_types.py: 1
-    benchmarks/datasets/generate_obligations.py: 1
-    tests/test_generate_obligations.py: 1
-    benchmarks/baselines/linear_urgency.py: 1
-    tests/test_constants.py: 1
-    tests/test_cognitive_bandwidth.py: 1
-    tests/test_metrics.py: 1
-    benchmarks/constants.py: 0
-    scripts/constants.py: 0
     benchmarks/baselines/binary_deadline.py: 0
+    scripts/constants.py: 0
     tidewatch/constants.py: 0
+    benchmarks/constants.py: 0
   betweenness_centrality:
     tidewatch/__init__.py: 32.666666666666664
     benchmarks/run.py: 16.0
@@ -1763,32 +1763,32 @@ graph:
     tidewatch/types.py: 6.583333333333334
     benchmarks/datasets/generate_obligations.py: 3.8846153846153846
     tidewatch/pressure.py: 3.4166666666666665
-    benchmarks/baselines/linear_urgency.py: 3.333333333333333
+    benchmarks/baselines/linear_urgency.py: 3.3333333333333335
     benchmarks/metrics.py: 2.0769230769230766
     benchmarks/baselines/eisenhower.py: 2.0384615384615383
     scripts/generate_paper_figures.py: 2.0
     tidewatch/planner.py: 1.6666666666666665
-    tests/test_generate_paper_figures.py: 0.0
-    tests/test_benchmarks.py: 0.0
-    benchmarks/constants.py: 0.0
-    tests/test_triage.py: 0.0
-    tests/test_init.py: 0.0
-    tests/test_planner.py: 0.0
-    tidewatch/triage.py: 0.0
-    tests/test_baselines.py: 0.0
-    tests/conftest.py: 0.0
-    tests/test_types.py: 0.0
     tests/test_run.py: 0.0
-    tests/test_golden_pipeline.py: 0.0
-    tests/test_generate_obligations.py: 0.0
-    scripts/constants.py: 0.0
-    tests/test_constants.py: 0.0
+    tests/test_baselines.py: 0.0
     tests/test_cognitive_bandwidth.py: 0.0
-    benchmarks/baselines/binary_deadline.py: 0.0
-    tests/test_pressure.py: 0.0
-    tidewatch/constants.py: 0.0
+    tests/conftest.py: 0.0
+    tidewatch/triage.py: 0.0
     tests/test_metrics.py: 0.0
+    benchmarks/baselines/binary_deadline.py: 0.0
+    tests/test_triage.py: 0.0
+    tests/test_constants.py: 0.0
+    tests/test_golden_pipeline.py: 0.0
     tests/test_integration.py: 0.0
+    tests/test_benchmarks.py: 0.0
+    scripts/constants.py: 0.0
+    tests/test_planner.py: 0.0
+    tidewatch/constants.py: 0.0
+    tests/test_generate_paper_figures.py: 0.0
+    tests/test_generate_obligations.py: 0.0
+    tests/test_types.py: 0.0
+    tests/test_init.py: 0.0
+    tests/test_pressure.py: 0.0
+    benchmarks/constants.py: 0.0
   orphans: []
   clusters:
   - - benchmarks/baselines/__init__.py
@@ -1925,28 +1925,28 @@ graph:
     tidewatch/pressure.py: 11.416666666666666
     tidewatch/constants.py: 11.0
     tidewatch/planner.py: 6.666666666666666
-    benchmarks/baselines/linear_urgency.py: 6.333333333333333
+    benchmarks/baselines/linear_urgency.py: 6.333333333333334
     benchmarks/baselines/eisenhower.py: 5.038461538461538
     scripts/generate_paper_figures.py: 5.0
     tests/test_benchmarks.py: 4.0
     tests/test_pressure.py: 4.0
-    benchmarks/constants.py: 3.0
-    tests/test_planner.py: 3.0
     tidewatch/triage.py: 3.0
-    tests/test_triage.py: 2.0
-    tests/conftest.py: 2.0
+    tests/test_planner.py: 3.0
+    benchmarks/constants.py: 3.0
     tests/test_run.py: 2.0
+    tests/conftest.py: 2.0
     benchmarks/baselines/binary_deadline.py: 2.0
+    tests/test_triage.py: 2.0
     tests/test_integration.py: 2.0
-    tests/test_generate_paper_figures.py: 1.0
-    tests/test_init.py: 1.0
     tests/test_baselines.py: 1.0
-    tests/test_types.py: 1.0
-    tests/test_generate_obligations.py: 1.0
-    scripts/constants.py: 1.0
-    tests/test_constants.py: 1.0
     tests/test_cognitive_bandwidth.py: 1.0
     tests/test_metrics.py: 1.0
+    tests/test_constants.py: 1.0
+    scripts/constants.py: 1.0
+    tests/test_generate_paper_figures.py: 1.0
+    tests/test_generate_obligations.py: 1.0
+    tests/test_types.py: 1.0
+    tests/test_init.py: 1.0
   external_imports:
     benchmarks/baselines/__init__.py:
     - __future__
@@ -2097,216 +2097,15 @@ coherence:
     structural_coherence: 0.9894729024201013
     archetype_consistency: 0.7142857142857143
 abstraction:
-  findings:
-  - file: benchmarks/baselines/eisenhower.py
-    line: 18
-    category: magic_number
-    severity: medium
-    severity_rank: 1
-    code: '(True, False): 0.75,  # Q3: urgent + not important'
-    note: Numeric literal 0.75 in '_quadrant_scores' — extract to named constant or parameter
-    remediation_context:
-      context_text: "  [EMAIL] Email from TAAFT - There's An AI For That: \U0001F9BE AI Can See You Through Walls Now (2026-03-11\
-        \ 20:22:13). ----------\r\nView image: (https://media.beehiiv.co\n  [EMAIL] Email from Brian Bengs from Brian Bengs:\
-        \ Touring South Dakota & Taking Names… Literally! (2026-01-22 00:02:03). View this post on the web at https://b\n\
-        \  [EMAIL] Email from ninjra: [ninjra/autocapture] PR run failed: CI - Phase 2: VLM-first fullscreen extraction, TRON/time\
-        \ queries, research scout scheduler, rep\n  [EMAIL] Email from ninjra: [ninjra/autocapture] PR run failed: CI - Phase\
-        \ 2: VLM-first fullscreen extraction, TRON/time queries, research scout scheduler, rep\n  [EMAIL] Email from ninjra:\
-        \ [ninjra/autocapture] PR run failed: Dev Check - Phase 2: VLM-first fullscreen extraction, TRON/time queries, research\
-        \ scout schedul\n  [EMAIL] Email from ninjra: [ninjra/autocapture] PR run failed: CI - Phase 2: VLM-first fullscreen\
-        \ extraction, TRON/time queries, research scout scheduler, rep"
-      items_scored: 11
-      items_selected: 6
-      source_breakdown:
-        memories: 6
-      scoring: gravitas_unified
-      assembly_ms: 1.6829489977681078
-  - file: benchmarks/baselines/eisenhower.py
-    line: 19
-    category: magic_number
-    severity: medium
-    severity_rank: 1
-    code: '(False, True): 0.5,   # Q2: not urgent + important'
-    note: Numeric literal 0.5 in '_quadrant_scores' — extract to named constant or parameter
-    remediation_context:
-      context_text: "  [OBLIGATION] [P1][pending_review] tidewatch: future_regret — 4 finding(s)\n  [EMAIL] Email from Brian\
-        \ Bengs from Brian Bengs: My State of the Union Takeaways (2026-02-26 00:14:43). View this post on the web at https://bengsforsouthdako\n\
-        \  [EMAIL] Email from ninjra: [ninjra/autocapture] PR run failed: CI - Phase 2: VLM-first fullscreen extraction, TRON/time\
-        \ queries, research scout scheduler, rep\n  [EMAIL] Email from Brian Bengs from Brian Bengs: Touring South Dakota\
-        \ & Taking Names… Literally! (2026-01-22 00:02:03). View this post on the web at https://b\n  [EMAIL] Email from ninjra:\
-        \ [ninjra/autocapture] PR run failed: CI - Phase 2: VLM-first fullscreen extraction, TRON/time queries, research scout\
-        \ scheduler, rep\n  [EMAIL] Email from TAAFT - There's An AI For That: \U0001F9BE Claude and Codex Go to War (2026-02-05\
-        \ 21:32:20). ----------\r\nView image: (https://media.beehiiv.com/cdn-\n  [EMAIL] Email from LinkedIn: View Alexander\
-        \ S, CTFL’s post and your next steps (2026-01-28 01:07:55). Now, take these next steps for more success\r\n\r\n  \
-        \      C\n  [EMAIL] Email from ninjra: [ninjra/autocapture] PR run failed: Dev Check - Default vision_extract to rapidocr\
-        \ (984f9b8) (2026-01-21 14:35:15). [ninjra/autocap"
-      items_scored: 11
-      items_selected: 8
-      source_breakdown:
-        obligations: 1
-        memories: 7
-      scoring: gravitas_unified
-      assembly_ms: 1.0737299962784164
-  - file: scripts/generate_paper_figures.py
-    line: 55
-    category: magic_number
-    severity: medium
-    severity_rank: 1
-    code: 'return {"Green": 0.15, "Yellow": 0.45, "Orange": 0.70, "Red": 0.90}'
-    note: Numeric literal 0.15 in '_zone_label_positions' — extract to named constant or parameter
-    remediation_context:
-      context_text: "  [OBLIGATION] [P1][pending_review] tidewatch: future_regret — 4 finding(s)\n  [EMAIL] Email from ninjra:\
-        \ [ninjra/autocapture] PR run failed: CI - Phase 2: VLM extraction + TRON + research scout (29fba7b) (2026-01-16 05:46:55).\
-        \ [ninjra/a\n  [EMAIL] Email from ninjra: [ninjra/autocapture] PR run failed: Dev Check - Phase 2: VLM-first fullscreen\
-        \ extraction, TRON/time queries, research scout schedul\n  [EMAIL] Email from ninjra: [ninjra/autocapture] PR run\
-        \ failed: Dev Check - Default vision_extract to rapidocr (984f9b8) (2026-01-21 14:35:15). [ninjra/autocap\n  [EMAIL]\
-        \ Email from ninjra: [ninjra/autocapture] PR run failed: CI - Default vision_extract to rapidocr (984f9b8) (2026-01-21\
-        \ 14:35:17). [ninjra/autocapture] C"
-      items_scored: 11
-      items_selected: 5
-      source_breakdown:
-        obligations: 1
-        memories: 4
-      scoring: gravitas_unified
-      assembly_ms: 1.03152100200532
-  - file: tidewatch/constants.py
-    line: 106
-    category: magic_number
-    severity: medium
-    severity_rank: 1
-    code: '"legal":      {"complexity": 0.8, "decision_weight": 0.9, "novelty": 0.6},'
-    note: Numeric literal 0.8 in '_build_demand_profiles' — extract to named constant or parameter
-    remediation_context:
-      context_text: "  [EMAIL] Email from ninjra: [ninjra/autocapture] PR run failed: Dev Check - Phase 2: VLM-first fullscreen\
-        \ extraction, TRON/time queries, research scout schedul\n  [EMAIL] Email from ninjra: [ninjra/autocapture] PR run\
-        \ failed: CI - Phase 2: VLM-first fullscreen extraction, TRON/time queries, research scout scheduler, rep\n  [EMAIL]\
-        \ Email from ninjra: [ninjra/autocapture] PR run failed: CI - Default vision_extract to rapidocr (984f9b8) (2026-01-21\
-        \ 14:35:17). [ninjra/autocapture] C\n  [EMAIL] Email from LinkedIn: View Alexander S, CTFL’s post and your next steps\
-        \ (2026-01-28 01:07:55). Now, take these next steps for more success\r\n\r\n        C"
-      items_scored: 11
-      items_selected: 4
-      source_breakdown:
-        memories: 4
-      scoring: gravitas_unified
-      assembly_ms: 1.0193810012424365
-  - file: tidewatch/constants.py
-    line: 107
-    category: magic_number
-    severity: medium
-    severity_rank: 1
-    code: '"financial":  {"complexity": 0.8, "decision_weight": 0.9, "novelty": 0.6},'
-    note: Numeric literal 0.8 in '_build_demand_profiles' — extract to named constant or parameter
-    remediation_context:
-      context_text: "  [EMAIL] Email from ninjra: [ninjra/autocapture] PR run failed: Dev Check - Phase 2: VLM-first fullscreen\
-        \ extraction, TRON/time queries, research scout schedul\n  [EMAIL] Email from ninjra: [ninjra/autocapture] PR run\
-        \ failed: CI - Phase 2: VLM-first fullscreen extraction, TRON/time queries, research scout scheduler, rep\n  [EMAIL]\
-        \ Email from ninjra: [ninjra/autocapture] PR run failed: CI - Default vision_extract to rapidocr (984f9b8) (2026-01-21\
-        \ 14:35:17). [ninjra/autocapture] C\n  [EMAIL] Email from LinkedIn: View Alexander S, CTFL’s post and your next steps\
-        \ (2026-01-28 01:07:55). Now, take these next steps for more success\r\n\r\n        C"
-      items_scored: 11
-      items_selected: 4
-      source_breakdown:
-        memories: 4
-      scoring: gravitas_unified
-      assembly_ms: 1.3766830015811138
-  - file: tidewatch/constants.py
-    line: 108
-    category: magic_number
-    severity: medium
-    severity_rank: 1
-    code: '"engineering": {"complexity": 0.5, "decision_weight": 0.4, "novelty": 0.5},'
-    note: Numeric literal 0.5 in '_build_demand_profiles' — extract to named constant or parameter
-    remediation_context:
-      context_text: "  [EMAIL] Email from LinkedIn: View Alexander S, CTFL’s post and your next steps (2026-01-28 01:07:55).\
-        \ Now, take these next steps for more success\r\n\r\n        C\n  [EMAIL] Email from ninjra: [ninjra/autocapture]\
-        \ PR run failed: Dev Check - Default vision_extract to rapidocr (984f9b8) (2026-01-21 14:35:15). [ninjra/autocap\n\
-        \  [EMAIL] Email from ninjra: [ninjra/autocapture] PR run failed: Dev Check - Phase 2: VLM-first fullscreen extraction,\
-        \ TRON/time queries, research scout schedul\n  [EMAIL] Email from ninjra: [ninjra/autocapture] PR run failed: CI -\
-        \ Phase 2: VLM-first fullscreen extraction, TRON/time queries, research scout scheduler, rep\n  [EMAIL] Email from\
-        \ ninjra: [ninjra/autocapture] PR run failed: CI - Default vision_extract to rapidocr (984f9b8) (2026-01-21 14:35:17).\
-        \ [ninjra/autocapture] C\n  [EMAIL] Email from ninjra: [ninjra/autocapture] PR run failed: CI - Phase 2: VLM-first\
-        \ fullscreen extraction, TRON/time queries, research scout scheduler, rep\n  [EMAIL] Email from Brian Bengs from Brian\
-        \ Bengs: My State of the Union Takeaways (2026-02-26 00:14:43). View this post on the web at https://bengsforsouthdako"
-      items_scored: 11
-      items_selected: 7
-      source_breakdown:
-        memories: 7
-      scoring: gravitas_unified
-      assembly_ms: 1.0267529942211695
-  - file: tidewatch/constants.py
-    line: 109
-    category: magic_number
-    severity: medium
-    severity_rank: 1
-    code: '"ops":        {"complexity": 0.3, "decision_weight": 0.2, "novelty": 0.2},'
-    note: Numeric literal 0.3 in '_build_demand_profiles' — extract to named constant or parameter
-    remediation_context:
-      context_text: "  [OBLIGATION] [P1][pending_review] tidewatch: future_regret — 4 finding(s)\n  [EMAIL] Email from Brian\
-        \ Bengs from Brian Bengs: My State of the Union Takeaways (2026-02-26 00:14:43). View this post on the web at https://bengsforsouthdako\n\
-        \  [EMAIL] Email from ninjra: [ninjra/autocapture] PR run failed: CI - Phase 2: VLM-first fullscreen extraction, TRON/time\
-        \ queries, research scout scheduler, rep\n  [EMAIL] Email from ninjra: [ninjra/autocapture] PR run failed: CI - Phase\
-        \ 2: VLM-first fullscreen extraction, TRON/time queries, research scout scheduler, rep"
-      items_scored: 11
-      items_selected: 4
-      source_breakdown:
-        obligations: 1
-        memories: 3
-      scoring: gravitas_unified
-      assembly_ms: 1.092464997782372
-  - file: tidewatch/constants.py
-    line: 110
-    category: magic_number
-    severity: medium
-    severity_rank: 1
-    code: '"admin":      {"complexity": 0.3, "decision_weight": 0.2, "novelty": 0.2},'
-    note: Numeric literal 0.3 in '_build_demand_profiles' — extract to named constant or parameter
-    remediation_context:
-      context_text: "  [OBLIGATION] [P1][pending_review] tidewatch: future_regret — 4 finding(s)\n  [EMAIL] Email from Brian\
-        \ Bengs from Brian Bengs: My State of the Union Takeaways (2026-02-26 00:14:43). View this post on the web at https://bengsforsouthdako\n\
-        \  [EMAIL] Email from ninjra: [ninjra/autocapture] PR run failed: CI - Phase 2: VLM-first fullscreen extraction, TRON/time\
-        \ queries, research scout scheduler, rep\n  [EMAIL] Email from ninjra: [ninjra/autocapture] PR run failed: CI - Phase\
-        \ 2: VLM-first fullscreen extraction, TRON/time queries, research scout scheduler, rep"
-      items_scored: 11
-      items_selected: 4
-      source_breakdown:
-        obligations: 1
-        memories: 3
-      scoring: gravitas_unified
-      assembly_ms: 1.1117600006400608
-  - file: tidewatch/constants.py
-    line: 116
-    category: magic_number
-    severity: medium
-    severity_rank: 1
-    code: 'return {"complexity": 0.5, "decision_weight": 0.5, "novelty": 0.5}'
-    note: Numeric literal 0.5 in '_build_demand_default' — extract to named constant or parameter
-    remediation_context:
-      context_text: "  [OBLIGATION] [P1][pending_review] tidewatch: future_regret — 4 finding(s)\n  [EMAIL] Email from TAAFT\
-        \ - There's An AI For That: \U0001F9BE AI Can See You Through Walls Now (2026-03-11 20:22:13). ----------\r\nView\
-        \ image: (https://media.beehiiv.co\n  [EMAIL] Email from ninjra: [ninjra/autocapture] PR run failed: CI - Phase 2:\
-        \ VLM-first fullscreen extraction, TRON/time queries, research scout scheduler, rep\n  [EMAIL] Email from Brian Bengs\
-        \ from Brian Bengs: My State of the Union Takeaways (2026-02-26 00:14:43). View this post on the web at https://bengsforsouthdako\n\
-        \  [EMAIL] Email from Brian Bengs from Brian Bengs: Touring South Dakota & Taking Names… Literally! (2026-01-22 00:02:03).\
-        \ View this post on the web at https://b"
-      items_scored: 11
-      items_selected: 5
-      source_breakdown:
-        obligations: 1
-        memories: 4
-      scoring: gravitas_unified
-      assembly_ms: 1.281514996662736
+  findings: []
   summary:
-    total: 9
-    by_category:
-      magic_number: 9
+    total: 0
+    by_category: {}
     by_severity:
       high: 0
-      medium: 9
+      medium: 0
       low: 0
-    hotspots:
-      tidewatch/constants.py: 6
-      benchmarks/baselines/eisenhower.py: 2
-      scripts/generate_paper_figures.py: 1
+    hotspots: {}
   files_analyzed: 14
 assumptions:
   findings: []
@@ -2338,17 +2137,20 @@ viewpoints:
         viewpoint: complexity_hotspots
         remediation_context:
           context_text: "  [EMAIL] Email from American Airlines: SHRI, how was your flight? (2025-12-30 13:23:16). American\
-            \ Airlines We value your opinion\r\n<https://americanairlines.co1\n  [EMAIL] Email from Rigzone Daily News: USA\
-            \ Pursuit of 3rd Oil Tanker Intensifies Venezuela Blockade (2025-12-22 21:18:42). RIGZONE DAILY NEWS -- MONDAY,\
-            \ DECEM\n  [EMAIL] Email from msonlineservicesteam@microsoftonline.com: Permian Resources account email verification\
-            \ code (2024-07-22 13:28:39)\n  [EMAIL] Email from Stock Analysis: Market Bullets: Alphabet leapfrogs Apple in\
-            \ market cap, Ford plans to launch self-driving EV, defense stocks on the move (2"
+            \ Airlines We value your opinion\r\n<https://americanairlines.co1\n  [EMAIL] Email from United Airlines: Tell\
+            \ us how we did (2025-12-03 21:43:16). \r\n\r\n\r\nYour feedback means the world to usHi Shri,\r\n\r\nFrom all\
+            \ of us here at Unit\n  [EMAIL] Email from msonlineservicesteam@microsoftonline.com: Permian Resources account\
+            \ email verification code (2024-07-22 13:28:39)\n  [EMAIL] Email from Rigzone Daily News: Trump Says USA Will\
+            \ Rebuild Venezuela Oil Infrastructure (2026-01-05 21:20:57). RIGZONE DAILY NEWS -- MONDAY, JANUARY 5\n  [EMAIL]\
+            \ Email from Rigzone Daily News: Trump Orders Blockade of Sanctioned Oil Tankers in Venezuela (2025-12-17 21:18:48).\
+            \ RIGZONE DAILY NEWS -- WEDNESDAY, DE\n  [EMAIL] Email from American Airlines AAdvantage Program: Get ready for\
+            \ a rewarding 2026 as an AAdvantage® member (2026-01-08 07:52:07). * * American Airlines\n"
           items_scored: 11
-          items_selected: 4
+          items_selected: 6
           source_breakdown:
-            memories: 4
+            memories: 6
           scoring: gravitas_unified
-          assembly_ms: 0.9970379978767596
+          assembly_ms: 1.0370970048825257
       - file: tests/test_golden_pipeline.py
         line: 867
         severity: medium
@@ -2367,7 +2169,7 @@ viewpoints:
             obligations: 1
             memories: 3
           scoring: gravitas_unified
-          assembly_ms: 0.9976319997804239
+          assembly_ms: 1.010931002383586
       - file: tidewatch/planner.py
         line: 127
         severity: medium
@@ -2393,7 +2195,7 @@ viewpoints:
             obligations: 1
             memories: 8
           scoring: gravitas_unified
-          assembly_ms: 1.0914489976130426
+          assembly_ms: 0.9427830009371974
       - file: tidewatch/pressure.py
         line: 99
         severity: medium
@@ -2412,7 +2214,7 @@ viewpoints:
           source_breakdown:
             memories: 4
           scoring: gravitas_unified
-          assembly_ms: 1.0725539978011511
+          assembly_ms: 1.0531650041230023
       - file: tidewatch/pressure.py
         line: 306
         severity: medium
@@ -2425,17 +2227,15 @@ viewpoints:
             \ DAILY NEWS -- TUESDAY, MARCH 3\n  [EMAIL] Email from Particle: Spring break travel is about to get ugly (2026-03-10\
             \ 22:21:26). ----------\r\n# The Highlight Reel\r\n\r\nMarch 10, 2026\r\n\r\n\r\n---------\n  [EMAIL] Email from\
             \ Business Insider: The top stories you missed this week (2026-03-10 18:05:15). BI Catch up on the biggest headlines.\
-            \ \n\n\n View in browser \n<h\n  [EMAIL] Email from Rigzone Daily News: War Creating Most Severe Energy Disruption\
-            \ Since 1970s (2026-03-11 21:18:44). RIGZONE DAILY NEWS -- WEDNESDAY, MARCH 11\n  [EMAIL] Email from Your Original\
-            \ Town neighbors: Top post: Has anyone lost power yet? I’m somehow not inside the planned... (2026-03-15 02:29:45).\
-            \ I’m somehow"
+            \ \n\n\n View in browser \n<h\n  [EMAIL] Email from Your Original Town neighbors: Top post: Has anyone lost power\
+            \ yet? I’m somehow not inside the planned... (2026-03-15 02:29:45). I’m somehow"
           items_scored: 11
-          items_selected: 6
+          items_selected: 5
           source_breakdown:
             obligations: 1
-            memories: 5
+            memories: 4
           scoring: gravitas_unified
-          assembly_ms: 1.028255996061489
+          assembly_ms: 1.0798880030051805
       summary: 'Complexity Hotspots: 5 finding(s) (0 high, 5 medium, 0 low).'
     import_hygiene:
       display_name: Import Hygiene
@@ -2478,7 +2278,7 @@ viewpoints:
             obligations: 1
             memories: 5
           scoring: gravitas_unified
-          assembly_ms: 0.9846280008787289
+          assembly_ms: 0.9669610008131713
       summary: 'Observability Gaps: 1 finding(s) (0 high, 1 medium, 0 low).'
     sovereign_reviewer:
       display_name: The Sovereign Reviewer
@@ -2506,7 +2306,7 @@ viewpoints:
           source_breakdown:
             memories: 5
           scoring: gravitas_unified
-          assembly_ms: 1.1572039948077872
+          assembly_ms: 1.2156430020695552
       - file: pyproject.toml
         line: 0
         severity: medium
@@ -2530,7 +2330,7 @@ viewpoints:
             memories: 5
             obligations: 1
           scoring: gravitas_unified
-          assembly_ms: 1.3492270009010099
+          assembly_ms: 1.1134860033052973
       - file: pyproject.toml
         line: 0
         severity: medium
@@ -2548,7 +2348,7 @@ viewpoints:
           source_breakdown:
             memories: 2
           scoring: gravitas_unified
-          assembly_ms: 1.162879001640249
+          assembly_ms: 1.134359001298435
       summary: 'The Sovereign Reviewer: 3 finding(s) (0 high, 3 medium, 0 low).'
     test_adequacy:
       display_name: Test Adequacy
@@ -2585,7 +2385,7 @@ viewpoints:
             decisions: 1
             obligations: 1
           scoring: gravitas_unified
-          assembly_ms: 1.2412599971867166
+          assembly_ms: 1.1816659971373156
       - file: benchmarks/baselines/linear_urgency.py
         line: 0
         severity: medium
@@ -2608,35 +2408,35 @@ viewpoints:
             memories: 5
             decisions: 1
           scoring: gravitas_unified
-          assembly_ms: 1.2403410000842996
+          assembly_ms: 1.213893003296107
       summary: 'Test Adequacy: 3 finding(s) (0 high, 2 medium, 1 low).'
   viewpoints_loaded: 24
 timing:
-  total_s: 6.1888
+  total_s: 3.4366
   steps:
   - step: scan
-    elapsed_s: 0.0262
+    elapsed_s: 0.0268
   - step: llm_decision
-    elapsed_s: 0.0715
+    elapsed_s: 0.0755
   - step: graph
-    elapsed_s: 0.0009
+    elapsed_s: 0.0006
   - step: purpose
-    elapsed_s: 0.0829
+    elapsed_s: 0.0827
   - step: coherence
     elapsed_s: 0.0003
   - step: abstraction
-    elapsed_s: 0.0311
+    elapsed_s: 0.0318
   - step: assumptions
-    elapsed_s: 0.0349
+    elapsed_s: 0.0356
   - step: hubris
-    elapsed_s: 0.0312
+    elapsed_s: 0.0323
   - step: integration
-    elapsed_s: 0.0515
+    elapsed_s: 0.0526
   - step: viewpoints_load
-    elapsed_s: 0.0021
+    elapsed_s: 0.0169
   - step: viewpoints_ast
-    elapsed_s: 0.139
+    elapsed_s: 0.1413
   - step: viewpoints_save
-    elapsed_s: 0.0127
+    elapsed_s: 0.0126
   - step: remediation_context
-    elapsed_s: 5.4021
+    elapsed_s: 2.564

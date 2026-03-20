@@ -28,6 +28,7 @@ Zones:
   red    = P >= 0.80
 """
 
+import logging
 import math
 from datetime import UTC, datetime
 
@@ -96,6 +97,26 @@ def _days_remaining(due_date: datetime, now: datetime) -> float:
     return delta / SECONDS_PER_DAY
 
 
+def _validate_obligation_inputs(obligation: Obligation) -> None:
+    """Validate obligation fields before pressure computation."""
+    if math.isnan(obligation.completion_pct) or math.isinf(obligation.completion_pct):
+        raise ValueError(f"completion_pct must be finite, got {obligation.completion_pct}")
+    if math.isnan(float(obligation.dependency_count)) or math.isinf(float(obligation.dependency_count)):
+        raise ValueError(f"dependency_count must be finite, got {obligation.dependency_count}")
+    if not (0.0 <= obligation.completion_pct <= 1.0):
+        raise ValueError(f"completion_pct must be in [0,1], got {obligation.completion_pct}")
+    if obligation.dependency_count < 0:
+        raise ValueError(f"dependency_count must be >= 0, got {obligation.dependency_count}")
+
+
+def _completion_dampening(completion_pct: float) -> float:
+    """Compute completion dampening factor D (§3.1)."""
+    if COMPLETION_DAMPENING_MODE == "logistic":
+        sigmoid = 1.0 / (1.0 + _exponential(-COMPLETION_LOGISTIC_K * (completion_pct - COMPLETION_LOGISTIC_MID)))
+        return 1.0 - (COMPLETION_DAMPENING * sigmoid)
+    return 1.0 - (completion_pct * COMPLETION_DAMPENING)
+
+
 def calculate_pressure(
     obligation: Obligation,
     now: datetime | None = None,
@@ -139,28 +160,7 @@ def calculate_pressure(
         )
 
     days_rem = _days_remaining(obligation.due_date, now)
-
-    # NaN/Inf guards — must precede range checks (NaN fails comparison silently)
-    if math.isnan(obligation.completion_pct) or math.isinf(obligation.completion_pct):
-        raise ValueError(f"completion_pct must be finite, got {obligation.completion_pct}")
-    if math.isnan(float(obligation.dependency_count)) or math.isinf(float(obligation.dependency_count)):
-        raise ValueError(f"dependency_count must be finite, got {obligation.dependency_count}")
-
-    # REMEDIATION: replaced editorial clamp max(0.0, min(1.0, ...)) with input validation.
-    # Was: completion_pct = max(0.0, min(1.0, obligation.completion_pct))
-    if not (0.0 <= obligation.completion_pct <= 1.0):
-        raise ValueError(
-            f"completion_pct must be in [0,1], got {obligation.completion_pct}"
-        )
-    completion_pct = obligation.completion_pct
-
-    # REMEDIATION: replaced editorial clamp max(0, ...) with input validation.
-    # Was: dependency_count = max(0, obligation.dependency_count)
-    if obligation.dependency_count < 0:
-        raise ValueError(
-            f"dependency_count must be >= 0, got {obligation.dependency_count}"
-        )
-    dependency_count = obligation.dependency_count
+    _validate_obligation_inputs(obligation)
 
     # 1. Time pressure
     time_p = OVERDUE_PRESSURE if days_rem <= 0 else 1.0 - _exponential(-RATE_CONSTANT / max(days_rem, DIVISION_GUARD))
@@ -169,17 +169,10 @@ def calculate_pressure(
     mat_mult = MATERIALITY_WEIGHTS.get(obligation.materiality, 1.0)
 
     # 3. Dependency amplifier
-    dep_amp = 1.0 + (dependency_count * DEPENDENCY_AMPLIFICATION)
+    dep_amp = 1.0 + (obligation.dependency_count * DEPENDENCY_AMPLIFICATION)
 
     # 4. Completion dampener
-    if COMPLETION_DAMPENING_MODE == "logistic":
-        # Logistic: smooth S-curve, more dampening at high completion
-        # D = 1 - max_damp * sigmoid(k * (pct - mid))
-        sigmoid = 1.0 / (1.0 + _exponential(-COMPLETION_LOGISTIC_K * (completion_pct - COMPLETION_LOGISTIC_MID)))
-        comp_damp = 1.0 - (COMPLETION_DAMPENING * sigmoid)
-    else:
-        # Linear: D = 1 - pct * max_damp (original §3.1)
-        comp_damp = 1.0 - (completion_pct * COMPLETION_DAMPENING)
+    comp_damp = _completion_dampening(obligation.completion_pct)
 
     # 5. Timing amplifier (#195) — stuck obligations get pressure boost
     timing_amp = 1.0
@@ -280,7 +273,7 @@ def recalculate_batch(
             success=True,
         )
     except ImportError:
-        pass
+        logging.getLogger(__name__).debug("sentinel_sdk not available — telemetry skipped")
 
     return results
 
@@ -301,6 +294,36 @@ def export_pressure_summary(results: list[PressureResult]) -> dict:
         "obligations_at_risk": [r.obligation_id for r in red],
         "should_pause_evolution": system_pressure >= FORGE_PRESSURE_PAUSE_THRESHOLD,
     }
+
+
+def _is_hard_floor(ob: Obligation) -> bool:
+    """Binding deadline: explicit flag OR domain heuristic."""
+    if ob.hard_floor:
+        return True
+    if ob.domain and ob.domain.lower() in HARD_FLOOR_DOMAINS and ob.due_date is not None:
+        now = datetime.now(UTC)
+        days = _days_remaining(ob.due_date, now)
+        if days <= HARD_FLOOR_DAYS_THRESHOLD:
+            return True
+    return False
+
+
+def _fit_score(
+    result: PressureResult,
+    ob_map: dict,
+    bandwidth: float,
+) -> tuple[int, float]:
+    """Compute bandwidth-adjusted sort key for a pressure result."""
+    ob = ob_map.get(result.obligation_id)
+    if ob is None:
+        return (_SORT_TIER_NORMAL, result.pressure)
+    if _is_hard_floor(ob):
+        return (_SORT_TIER_HARD_FLOOR, result.pressure)
+    demand = estimate_task_demand(ob)
+    mismatch = (demand.complexity + demand.novelty + demand.decision_weight) / FIT_SCORE_MISMATCH_COMPONENTS
+    base = result.pressure * (1.0 - mismatch * (1.0 - bandwidth))
+    gravity_bonus = (ob.gravity_score or 0.0) * GRAVITY_TIEBREAK_WEIGHT
+    return (_SORT_TIER_NORMAL, base + gravity_bonus)
 
 
 def bandwidth_adjusted_sort(
@@ -339,33 +362,9 @@ def bandwidth_adjusted_sort(
 
     ob_map = {ob.id: ob for ob in obligations}
 
-    def _is_hard_floor(ob: Obligation) -> bool:
-        """Binding deadline: explicit flag OR domain heuristic."""
-        if ob.hard_floor:
-            return True
-        if ob.domain and ob.domain.lower() in HARD_FLOOR_DOMAINS and ob.due_date is not None:
-            now = datetime.now(UTC)
-            days = _days_remaining(ob.due_date, now)
-            if days <= HARD_FLOOR_DAYS_THRESHOLD:
-                return True
-        return False
-
-    def fit_score(result: PressureResult) -> tuple[int, float]:
-        """Returns (tier, score). Hard floor tier sorts first with reverse=True."""
-        ob = ob_map.get(result.obligation_id)
-        if ob is None:
-            return (_SORT_TIER_NORMAL, result.pressure)
-        if _is_hard_floor(ob):
-            return (_SORT_TIER_HARD_FLOOR, result.pressure)
-        demand = estimate_task_demand(ob)
-        mismatch = (demand.complexity + demand.novelty + demand.decision_weight) / FIT_SCORE_MISMATCH_COMPONENTS
-        base = result.pressure * (1.0 - mismatch * (1.0 - bandwidth))
-        gravity_bonus = (ob.gravity_score or 0.0) * GRAVITY_TIEBREAK_WEIGHT  # (#635)
-        return (_SORT_TIER_NORMAL, base + gravity_bonus)
-
     sorted_results = sorted(
         results,
-        key=lambda r: fit_score(r),
+        key=lambda r: _fit_score(r, ob_map, bandwidth),
         reverse=True,
     )
     return sorted_results

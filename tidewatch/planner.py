@@ -169,14 +169,7 @@ class SpeculativePlanner:
                 continue
 
             prompt = self._build_prompt(obligation, result)
-            if result.zone in self.delivery_urgency_map:
-                urgency = self.delivery_urgency_map[result.zone]
-            else:
-                logger.warning(
-                    "Unknown zone %r for obligation %s — using default urgency %r",
-                    result.zone, result.obligation_id, self.default_delivery_urgency,
-                )
-                urgency = self.default_delivery_urgency
+            urgency = self._resolve_urgency(result)
 
             requests.append(PlanRequest(
                 obligation=obligation,
@@ -186,6 +179,16 @@ class SpeculativePlanner:
             ))
 
         return requests
+
+    def _resolve_urgency(self, result: PressureResult) -> str:
+        """Map zone to delivery urgency, with fallback logging."""
+        if result.zone in self.delivery_urgency_map:
+            return self.delivery_urgency_map[result.zone]
+        logger.warning(
+            "Unknown zone %r for obligation %s — using default urgency %r",
+            result.zone, result.obligation_id, self.default_delivery_urgency,
+        )
+        return self.default_delivery_urgency
 
     def complete_plan(
         self,

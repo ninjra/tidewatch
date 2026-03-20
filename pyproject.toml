@@ -21,9 +21,6 @@ dependencies = []
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0",
-    "pytest-cov",
-    "ruff",
-    "mypy",
 ]
 benchmarks = [
     "matplotlib>=3.7",
