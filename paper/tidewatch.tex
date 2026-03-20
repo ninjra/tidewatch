@@ -78,22 +78,21 @@ wearable-derived physiological signals (sleep quality, pain level, HRV
 trend) to surface lower-demand tasks when operator bandwidth is
 reduced, governed by a three-tier risk classification that prevents
 binding deadlines from being suppressed.  We validate the framework
-with 541 deterministic and property-based tests---including 23
+with 542 deterministic and property-based tests---including 23
 Hypothesis-driven bounds-and-monotonicity checks---factor ablation,
 and Monte Carlo scheduling simulations against earliest-deadline-first
-(EDF), FIFO, and random baselines.  Across workload scales ($N{=}50$,
-$200$), Tidewatch maintains comparable missed-deadline
-rates; against na\"{\i}ve baselines it reduces missed deadlines by
-$35$--$47\%$.  Under simulation, bandwidth reranking at reduced
-capacity ($b{=}0.5$) slightly improves deadline compliance, and
-product collapse outperforms normalized weighted-sum MCDM on
-missed deadlines.  The dependency temporal gate uses an independent
+(EDF), FIFO, and random baselines.  At $N{=}50$, Tidewatch matches EDF on missed-deadline
+rates; at $N{=}200$, EDF outperforms Tidewatch on missed
+deadlines ($18.5\%$ vs.\ $20.1\%$), reflecting the cost of
+multi-factor ranking against a deadline-only optimizer.
+Against na\"{\i}ve baselines (FIFO, Random), Tidewatch reduces
+missed deadlines by $35$--$47\%$.  The dependency temporal gate
+uses an independent
 rate constant ($k_f = 2.0$) decoupled from base time pressure
 ($k = 3.0$), the timing amplifier uses a logistic ramp replacing
 the prior step function, and violation amplification decays with a
 14-day half-life to prevent perverse feedback loops.
-The implementation comprises 1{,}704 lines of pure-stdlib Python
-with zero runtime dependencies.  All scoring functions ship with
+All scoring functions ship with
 golden-value regression tests verified to $\Delta < 10^{-10}$,
 establishing deterministic reproducibility as a first-class design
 constraint.
@@ -188,6 +187,18 @@ self-reflection.
 autonomous agents.
 None of these systems incorporate a continuous pressure signal or
 adapt task ordering to physiological operator state.
+
+\textbf{Prioritization heuristics.}
+The Eisenhower matrix classifies tasks on two binary axes
+(urgent/important).  ICE~\citep{ice2016scoring} and
+RICE~\citep{rice2018intercom} score by impact, confidence, effort,
+and reach---additive heuristics used in product management.
+Weighted Shortest Job First (WSJF)~\citep{reinertsen2009flow}
+divides cost-of-delay by duration.  All are static: they compute
+a one-time score without modeling temporal dynamics, completion
+progress, or operator capacity.  Tidewatch adds continuous
+time-decay, multiplicative factor interaction, and
+bandwidth-adaptive reranking.
 
 \textbf{Multi-criteria decision making (MCDM).}
 Weighted-sum aggregation, TOPSIS~\citep{hwang1981topsis}, and
@@ -557,13 +568,10 @@ The bandwidth-adjusted sort computes a fit score for each obligation:
 \begin{equation}
 \label{eq:fit}
 f = P \times \bigl(1 - \bar{d} \times (1 - b)\bigr)
-  + g_w \cdot s_g
 \end{equation}
 where $\bar{d} = (\text{complexity} + \text{novelty} +
-\text{decision\_weight}) / 3$ is the mean demand, $s_g$ is an
-optional gravity score for tiebreaking, and $g_w$ is the gravity
-tiebreak weight.
-At $b = 1.0$: $f \approx P$ (pure pressure ordering).
+\text{decision\_weight}) / 3$ is the mean demand.
+At $b = 1.0$: $f = P$ (pure pressure ordering).
 At $b = 0.0$: $f = P(1 - \bar{d})$, maximally penalizing
 high-demand tasks.
 
@@ -643,7 +651,7 @@ Tidewatch is implemented in Python~3.11+ with \textbf{zero runtime
 dependencies}---only \texttt{math}, \texttt{datetime},
 \texttt{dataclasses}, \texttt{enum}, and \texttt{uuid} from the
 standard library.
-The core library comprises 1{,}704 lines across seven modules:
+The core library comprises 1{,}740 lines across seven modules:
 
 \begin{table}[t]
 \centering
@@ -653,15 +661,15 @@ The core library comprises 1{,}704 lines across seven modules:
 \toprule
 \textbf{Module} & \textbf{Lines} \\
 \midrule
-\texttt{pressure.py}   & 542 \\
-\texttt{types.py}      & 294 \\
+\texttt{pressure.py}   & 575 \\
+\texttt{types.py}      & 297 \\
 \texttt{components.py} & 242 \\
 \texttt{constants.py}  & 236 \\
 \texttt{planner.py}    & 230 \\
 \texttt{triage.py}     & 114 \\
 \texttt{\_\_init\_\_.py} & 46 \\
 \midrule
-\textbf{Total}         & \textbf{1{,}704} \\
+\textbf{Total}         & \textbf{1{,}740} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -733,7 +741,7 @@ T_{\text{amp}} \times V_{\text{amp}})$ holds to $10^{-15}$ tolerance,
 confirming no hidden rounding between factor computation and final
 aggregation.
 
-The full test suite comprises 541 tests organized into 21
+The full test suite comprises 542 tests organized into 21
 deterministic gates covering the API surface, type construction,
 constant values, pressure computation, edge cases, input validation,
 zone classification, batch operations, planning, triage, and
@@ -747,7 +755,7 @@ end-to-end pipeline integration.
 
 We use the Hypothesis framework to verify algebraic properties
 of the pressure function across randomized inputs.
-The 23 property tests span six categories
+The 23 property tests span seven categories
 (Table~\ref{tab:properties}).
 
 \begin{table}[h!]
@@ -783,7 +791,7 @@ and violation amplifiers push the raw product above~$1.0$.
 \label{sec:monte_carlo}
 
 We evaluate scheduling outcomes via a Monte Carlo simulation
-comparing eight strategies across 200 trials (seed~$= 42$).
+comparing ten strategies across 200 trials (seed~$= 42$).
 
 \paragraph{Simulation model.}
 $N$ obligations with deadlines, dependencies, and
@@ -824,31 +832,24 @@ order determined by the scheduling strategy.
 \begin{table}[t]
 \centering
 \caption{Monte Carlo results ($N{=}50$, 200 trials, seed~$= 42$).
-Values are mean $\pm$ one standard deviation across trials.
-Bandwidth reranking at $b{=}0.5$ slightly \emph{improves} deadline
-compliance.  Weighted-sum MCDM underperforms product collapse on
-all metrics.  Zero inversions for Tidewatch is a design property
+Values are mean $\pm$ 1 SD [95\% bootstrap CI].
+Zero inversions for Tidewatch is a design property
 (see text), not an empirical finding.}
 \label{tab:mc50}
 \begin{tabular}{@{}lccc@{}}
 \toprule
-\textbf{Strategy} & \textbf{Missed} & \textbf{Inversions} &
-  \textbf{Efficiency} \\
+\textbf{Strategy} & \textbf{Missed} & \textbf{Inv.} &
+  \textbf{Eff.} \\
 \midrule
-Tidewatch          & $0.067 \pm 0.011$ & $\mathbf{0.000 \pm 0.000}$ &
-  $0.931 \pm 0.040$ \\
-TW+BW ($b{=}0.5$) & $\mathbf{0.064 \pm 0.010}$ & $0.044 \pm 0.000$ &
-  $\mathbf{0.932 \pm 0.039}$ \\
-TW+BW ($b{=}0.2$) & $0.064 \pm 0.010$ & $0.082 \pm 0.000$ &
-  $0.932 \pm 0.039$ \\
-Weighted-sum       & $0.082 \pm 0.008$ & $0.251 \pm 0.000$ &
-  $0.921 \pm 0.044$ \\
-EDF                & $0.067 \pm 0.011$ & $0.134 \pm 0.000$ &
-  $0.931 \pm 0.040$ \\
-FIFO               & $0.127 \pm 0.010$ & $0.505 \pm 0.000$ &
-  $0.897 \pm 0.036$ \\
-Random             & $0.130 \pm 0.022$ & $0.495 \pm 0.047$ &
-  $0.895 \pm 0.037$ \\
+Tidewatch          & $.067 {\scriptstyle\pm .011}$ {\tiny[.065,.068]} & $.000$ & $.931$ \\
+TW+BW ($b{=}0.5$) & $.064 {\scriptstyle\pm .010}$ {\tiny[.063,.066]} & $.042$ & $.932$ \\
+TW+BW ($b{=}0.2$) & $.064 {\scriptstyle\pm .010}$ {\tiny[.063,.066]} & $.080$ & $.932$ \\
+TW+BW (var.)       & $.064 {\scriptstyle\pm .010}$ {\tiny[.063,.066]} & $.057$ & $.932$ \\
+Weighted-EDF       & $.067 {\scriptstyle\pm .011}$ {\tiny[.065,.068]} & $.133$ & $.931$ \\
+Weighted-sum       & $.116 {\scriptstyle\pm .017}$ {\tiny[.113,.118]} & $.299$ & $.902$ \\
+EDF                & $.067 {\scriptstyle\pm .011}$ {\tiny[.065,.068]} & $.134$ & $.931$ \\
+FIFO               & $.127 {\scriptstyle\pm .010}$ {\tiny[.126,.128]} & $.505$ & $.897$ \\
+Random             & $.130 {\scriptstyle\pm .022}$ {\tiny[.127,.133]} & $.495$ & $.895$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -856,30 +857,22 @@ Random             & $0.130 \pm 0.022$ & $0.495 \pm 0.047$ &
 \begin{table}[t]
 \centering
 \caption{Monte Carlo results ($N{=}200$, 200 trials, seed~$= 42$).
-Values are mean $\pm$ one standard deviation.  95\% bootstrap CIs
-in brackets.  Weighted-EDF is a hybrid baseline combining zone-based
-urgency tiers with deadline ordering.  Saturation rate: fraction of
-obligations at $P \geq 0.999$.}
+Values are mean $\pm$ 1 SD [95\% bootstrap CI].  Saturation rate:
+fraction of obligations at $P \geq 0.999$.}
 \label{tab:mc200}
 \begin{tabular}{@{}lcccc@{}}
 \toprule
-\textbf{Strategy} & \textbf{Missed} & \textbf{Inversions} &
-  \textbf{Efficiency} & \textbf{Sat.} \\
+\textbf{Strategy} & \textbf{Missed} & \textbf{Inv.} &
+  \textbf{Eff.} & \textbf{Sat.} \\
 \midrule
-Tidewatch          & $0.201 \pm 0.018$ & $0.000$ &
-  $0.818$ & $9.0\%$ \\
-TW+BW ($b{=}0.5$) & $0.200 \pm 0.017$ & $0.036$ &
-  $0.816$ & $9.0\%$ \\
-Weighted-EDF       & $0.186 \pm 0.014$ & $0.097$ &
-  $0.838$ & $9.0\%$ \\
-Weighted-sum       & $0.320 \pm 0.015$ & $0.256$ &
-  $0.696$ & $9.0\%$ \\
-EDF                & $\mathbf{0.185 \pm 0.015}$ & $0.099$ &
-  $\mathbf{0.837}$ & $9.0\%$ \\
-FIFO               & $0.319 \pm 0.013$ & $0.495$ &
-  $0.692$ & $9.0\%$ \\
-Random             & $0.312 \pm 0.024$ & $0.498$ &
-  $0.696$ & $9.0\%$ \\
+Tidewatch           & $.201 {\scriptstyle\pm .018}$ {\tiny[.199,.204]} & $.000$ & $.818$ & $9\%$ \\
+TW+BW ($b{=}0.5$)  & $.200 {\scriptstyle\pm .017}$ {\tiny[.198,.202]} & $.036$ & $.816$ & $9\%$ \\
+TW+BW (var.)        & $.199 {\scriptstyle\pm .017}$ {\tiny[.196,.201]} & $.051$ & $.815$ & $9\%$ \\
+Weighted-EDF        & $.186 {\scriptstyle\pm .014}$ {\tiny[.184,.188]} & $.097$ & $.838$ & $9\%$ \\
+Weighted-sum        & $.320 {\scriptstyle\pm .015}$ {\tiny[.318,.322]} & $.256$ & $.696$ & $9\%$ \\
+EDF                 & $\mathbf{.185} {\scriptstyle\pm .015}$ {\tiny[.183,.187]} & $.099$ & $\mathbf{.837}$ & $9\%$ \\
+FIFO                & $.319 {\scriptstyle\pm .013}$ {\tiny[.317,.321]} & $.495$ & $.692$ & $9\%$ \\
+Random              & $.312 {\scriptstyle\pm .024}$ {\tiny[.309,.316]} & $.498$ & $.696$ & $9\%$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1038,13 +1031,11 @@ with explicit safety boundaries.
   \item \textbf{No feedback loop.}
         Constants are fixed.  A closed-loop system would observe
         completion patterns and adjust parameters over time.
-  \item \textbf{Gravity tiebreak placeholder.}
-        The $g_w \cdot s_g$ term in Equation~\ref{eq:fit} is a
-        placeholder for integration with the Gravitas coherence
-        scoring system.  Currently $s_g$ defaults to $0$ (no effect)
-        unless the caller provides a pre-computed gravity score.
-        This term is explicitly zeroed in all evaluation results
-        reported in this paper; it does not affect any claim.
+  \item \textbf{Gravity tiebreak (future work).}
+        The implementation includes an optional gravity tiebreak
+        score from the Gravitas coherence system, but it is not
+        part of the core pressure equation and is not evaluated
+        in this paper.  Integration remains future work.
 \end{enumerate}
 
 \paragraph{Future work.}
@@ -1073,10 +1064,9 @@ ensures that the right task surfaces for the operator's current
 capacity---not just the most urgent one, but the most urgent one
 they can execute.
 
-At 1{,}704 lines with zero dependencies and 541 deterministic tests,
+With 542 deterministic tests and zero runtime dependencies,
 Tidewatch demonstrates that useful prioritization infrastructure
-does not require complexity.
-It requires the right equation.
+does not require complexity---it requires the right equation.
 
 % ======================================================================
 % REFERENCES

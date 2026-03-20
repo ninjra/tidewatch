@@ -1,17 +1,21 @@
-Here is a red-team analysis and vulnerability assessment of the Tidewatch framework, focusing on algorithmic exploits, logical flaws, and integration vulnerabilities.
+### I. Mathematical & Algorithmic Vulnerabilities
 
-### 1. Algorithmic & Mathematical Vulnerabilities
+**1. Premature Gradient Death (Saturation):** Materiality (1.5) × Violation cap (1.5) = static multiplier >3.0. With k=3.0, base time pressure reaches ≈0.33 at 7-8 days. Total pressure saturates at 1.0 for the entire final week. Continuous signal destroyed.
 
-* [cite_start]**The "Zombie Task" Exploit (Incomplete Completion Dampening):** The logistic completion dampener fails to reduce urgency to zero upon task completion[cite: 573]. [cite_start]Even at 100% completion ($c=1.0$), the dampener only reduces the pressure multiplier to $D \approx 0.41$[cite: 576]. [cite_start]If a highly material task ($M=1.5$) becomes overdue ($P_{time}=1.0$), its residual pressure will floor at approximately $0.615$[cite: 553, 560, 576]. [cite_start]Because this value exceeds the $0.60$ threshold, a fully completed task will perpetually sit in the ORANGE operational zone unless explicitly purged from the system[cite: 637].
-* [cite_start]**Spurious Amplification via Dependency Fanout:** The dependency amplifier $A=1+(n_{deps}\times\alpha_{dep}\times g(t))$ provides an attack vector for prioritization denial-of-service[cite: 563]. An attacker or a misconfigured external scanner could inject a single obligation tied to hundreds of trivial downstream dependencies. [cite_start]This massive fanout would instantly force the pressure score to its defined saturation ceiling of 1.0, artificially crowding out genuinely critical tasks[cite: 563, 607].
-* [cite_start]**Runaway Amplification Loops:** Tasks that remain in status for 14+ days receive a 1.2x timing amplifier ($T_{amp}$)[cite: 579]. [cite_start]Combined with the violation amplifier ($V_{amp}$) which adds up to 50% extra pressure, chronically blocked tasks will inexorably climb to $P=1.0$[cite: 579, 604]. This creates an artificial "Red Zone" crisis for unactionable items, which could induce severe operator alert fatigue.
+**2. 99% Completion Graveyard:** At c≈1.0, dampener reduces to D≈0.41. An ORANGE task (P=0.75) pushed to 95% completion collapses to ≈0.30, GREEN/YELLOW boundary. Even on deadline day (P_time=1.0), a 99% complete routine task cannot exceed P=0.41. Binding deadline will be missed because final 1% lacked pressure.
 
-### 2. Logic and Evaluation Flaws
+**3. Dependency Myopia via Temporal Gating:** At t=30 days, g(30)≈0.064. An obligation blocking 20 downstream items gets A≈1.12. Violates Critical Path Method principles. Structural bottlenecks languish in GREEN until too late.
 
-* [cite_start]**Tautological Queue Inversion Metric:** The Monte Carlo simulation claims a major success by eliminating queue inversions entirely (0.0%)[cite: 460]. [cite_start]However, queue inversion is explicitly defined as processing a lower-pressure item while a higher-pressure one waits[cite: 458]. [cite_start]Because the defined strategy for Tidewatch is simply to "order by pressure descending," a 0% inversion rate is structurally guaranteed by the sorting algorithm itself[cite: 454, 461]. This metric proves the array was sorted successfully, not that the resulting schedule is operationally superior.
-* [cite_start]**The Critical-Low Paradox Override:** The cognitive bandwidth modulator is designed to protect depleted operators from high-demand tasks[cite: 529]. [cite_start]However, `NEVER_DEMOTABLE` tasks entirely bypass this modulation[cite: 419]. [cite_start]Because the system auto-detects and forces legal or financial tasks into this tier within 24 hours of a deadline, it violently overrides the bandwidth protection exactly when the operator is most vulnerable[cite: 421]. This functionally forces complex, high-stakes work onto compromised operators, maximizing the probability of catastrophic human error.
+**4. Violation Decay Incentive:** Operator is incentivized to ignore failed obligation for 28 days until violation penalty drops to 1/4 effect. Rewards out-waiting the penalty.
 
-### 3. Integration and Execution Vectors
+### II. Bandwidth Vulnerabilities
 
-* [cite_start]**Triage-to-LLM Prompt Injection:** The in-memory `TriageQueue` deduplicates and accepts candidates from external scanners[cite: 428, 430]. [cite_start]If these scanners ingest untrusted external text (like emails or web forms), malicious payloads could be stored in the obligation metadata[cite: 689]. [cite_start]When the `PlanStubGenerator` passes these formatted stubs to an external local model—such as an InternVL 3.5 8B instance—the untrusted text could trigger a prompt injection attack, causing the model to output manipulated `PlanResult` classifications or corrupted pressure provenance[cite: 691].
-* [cite_start]**Bandwidth Suppression via Telemetry Poisoning:** The effective cognitive bandwidth $b$ is derived by averaging available signals, including system-derived metrics like `session_load` and `constraint_pressure`[cite: 667, 668]. [cite_start]If optional integrations like Sentinel telemetry are compromised or misconfigured to report a constant high load, the effective bandwidth $b$ will plummet toward 0.0[cite: 435, 669]. [cite_start]This would cause the system to maximally penalize all high-demand tasks, effectively creating a denial-of-service state for complex engineering or legal work[cite: 675].
+**5. Chronic Baseline DoS:** At chronic b=0.2, high-complexity tasks permanently suppressed by simpler work. Complex tasks never surface until NEVER_DEMOTABLE 24-hour threshold. Forces chronically compromised operators into crisis-driven workflow.
+
+**6. Biometric Spoofing:** Self-report low sleep quality to hide difficult tasks. Tool-sanctioned feedback loop for task avoidance.
+
+### III. Validation Critiques
+
+**7. Strawman Baselines:** EDF is optimal only for independent tasks. Simulation introduces dependencies but EDF doesn't resolve them. Tidewatch has dependency amplifier — unfair comparison against dependency-blind baseline.
+
+**8. Metadata Tax:** In moments of cognitive depletion, high-friction metadata maintenance (materiality, completion%, fanout) will be first protocol abandoned. Confidently incorrect prioritizations on stale data.
