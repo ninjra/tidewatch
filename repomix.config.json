@@ -1,0 +1,16 @@
+{
+  "output": {
+    "style": "xml",
+    "removeEmptyLines": true,
+    "topFilesLength": 100,
+    "showLineNumbers": false,
+    "instructionFilePath": ".repomix-instruction.md"
+  },
+  "security": {
+    "enableSecurityCheck": true
+  },
+  "ignore": {
+    "useGitignore": true,
+    "useDefaultPatterns": true
+  }
+}

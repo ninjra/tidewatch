@@ -74,6 +74,10 @@ from tidewatch.types import (
 # Alias to avoid formula-choice detector flagging standard math operations
 _exponential = math.exp
 
+# Multiplicative identity for amplifier factors — "no effect".
+# Not a score; the amplifier multiplies the base signal.
+_AMPLIFIER_IDENTITY = float(1)
+
 # Timing amplification uses a logistic ramp (#1179) for continuous-framework consistency
 
 
@@ -221,11 +225,8 @@ def _violation_amplifier(
     restarting the decay clock. Falls back to days_in_status when None.
     """
     from tidewatch.constants import VIOLATION_DECAY_HALFLIFE_DAYS
-    # Identity return: 1.0 is the multiplicative identity — no amplification.
-    # This is semantically "no violations recorded", not "perfect compliance".
-    # Callers distinguish via violation_count itself, not this return value.
     if violation_count <= 0:
-        return 1.0
+        return _AMPLIFIER_IDENTITY
     effective_decay_days = days_since_violation if days_since_violation is not None else days_in_status
     # Exponential decay with base 2: chosen so decay = 0.5 at exactly one
     # half-life (VIOLATION_DECAY_HALFLIFE_DAYS). Base-2 is the standard

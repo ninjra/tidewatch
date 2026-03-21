@@ -18,7 +18,15 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from datetime import UTC, datetime
 
-from benchmarks.constants import DEFAULT_SEED, JSON_INDENT
+from benchmarks.constants import (
+    DEFAULT_SEED,
+    JSON_INDENT,
+    PAPER_DEFAULT_N,
+    PAPER_SIM_START_DAY,
+    PAPER_SIM_START_HOUR,
+    PAPER_SIM_START_MONTH,
+    PAPER_SIM_START_YEAR,
+)
 from benchmarks.datasets.generate_obligations import generate
 from benchmarks.monte_carlo import DEFAULT_TRIALS, compare_strategies
 from tidewatch.types import Obligation
@@ -57,10 +65,7 @@ def _obligations_from_sob(n: int, seed: int, sim_start: datetime) -> list[Obliga
 
 def main():
     parser = argparse.ArgumentParser(description="Generate MC benchmark results")
-    # Default N=50: small enough for quick iteration, large enough for
-    # statistically meaningful strategy comparisons (see §4.4).
-    default_n = 50
-    parser.add_argument("--n", type=int, default=default_n, help="Number of obligations")
+    parser.add_argument("--n", type=int, default=PAPER_DEFAULT_N, help="Number of obligations")
     parser.add_argument("--trials", type=int, default=DEFAULT_TRIALS)
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
     parser.add_argument("--output", type=str, default=None)
@@ -68,14 +73,15 @@ def main():
 
     if args.output is None:
         # Default N produces the "full" results file used in the paper
-        if args.n == default_n:
+        if args.n == PAPER_DEFAULT_N:
             args.output = os.path.join(os.path.dirname(__file__), "..", "benchmarks", "monte_carlo_results_full.json")
         else:
             args.output = os.path.join(os.path.dirname(__file__), "..", "benchmarks", f"monte_carlo_results_n{args.n}.json")
 
-    # Fixed simulation start: pinned for reproducibility — all paper results
-    # reference this date. Mid-year avoids quarter-boundary artifacts.
-    sim_start = datetime(2026, 6, 1, 12, 0, 0, tzinfo=UTC)
+    sim_start = datetime(
+        PAPER_SIM_START_YEAR, PAPER_SIM_START_MONTH, PAPER_SIM_START_DAY,
+        PAPER_SIM_START_HOUR, 0, 0, tzinfo=UTC,
+    )  # Pinned for reproducibility — all paper results reference this date
     obs = _obligations_from_sob(args.n, args.seed, sim_start)
 
     print(f"Running MC simulation: N={args.n}, trials={args.trials}, seed={args.seed}")

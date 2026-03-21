@@ -24,6 +24,12 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any, Protocol, runtime_checkable
 
+from tidewatch.constants import (
+    MATERIALITY_WEIGHTS,
+    TIMING_MAX_MULTIPLIER,
+    VIOLATION_MAX_AMPLIFICATION,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -181,13 +187,18 @@ COMP_VIOLATION_AMP = "violation_amp"
 #   timing_amp: [1.0, 1.2] from TIMING_MAX_MULTIPLIER
 #   violation_amp: [1.0, 1.5] from VIOLATION_MAX_AMPLIFICATION cap
 # See constants.py for the source parameter values.
+# Algebraic bounds derived from constants.py source parameters (§3.1).
+_MATERIALITY_MAX = max(MATERIALITY_WEIGHTS.values())  # 1.5
+_DEP_AMP_PRACTICAL_MAX = 5.0  # 1 + DEPENDENCY_COUNT_CAP × AMPLIFICATION × gate_max = 1 + 20 × 0.1 × 1.0 ≈ 3.0; 5.0 allows headroom
+_COMPLETION_DAMP_MIN = 0.4  # logistic D(1.0) ≈ 0.41, floored for safety
+
 _DEFAULT_BOUNDS: dict[str, tuple[float, float]] = {
-    COMP_TIME_PRESSURE: (0.0, 1.0),       # 1 - exp(-k/t) range
-    COMP_MATERIALITY: (1.0, 1.5),         # from MATERIALITY_WEIGHTS
-    COMP_DEPENDENCY_AMP: (1.0, 5.0),      # practical cap at DEPENDENCY_COUNT_CAP
-    COMP_COMPLETION_DAMP: (0.4, 1.0),     # logistic dampening range at pct=0..1
-    COMP_TIMING_AMP: (1.0, 1.2),          # from TIMING_MAX_MULTIPLIER
-    COMP_VIOLATION_AMP: (1.0, 1.5),       # from VIOLATION_MAX_AMPLIFICATION
+    COMP_TIME_PRESSURE: (0.0, 1.0),  # 1 - exp(-k/t) ∈ [0, 1] by definition
+    COMP_MATERIALITY: (1.0, _MATERIALITY_MAX),
+    COMP_DEPENDENCY_AMP: (1.0, _DEP_AMP_PRACTICAL_MAX),
+    COMP_COMPLETION_DAMP: (_COMPLETION_DAMP_MIN, 1.0),
+    COMP_TIMING_AMP: (1.0, TIMING_MAX_MULTIPLIER),
+    COMP_VIOLATION_AMP: (1.0, 1.0 + VIOLATION_MAX_AMPLIFICATION),
 }
 
 # Source equation for auditability

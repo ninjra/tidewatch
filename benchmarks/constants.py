@@ -24,6 +24,16 @@ DEFAULT_SEED = 42
 DEFAULT_OUTPUT = "sob.json"
 JSON_INDENT = 2
 
+# ── Monte Carlo simulation parameters ──
+# Standard single-operator workday — models serial attention constraint
+HOURS_PER_DAY = 8.0
+# SI definition: 60 min × 60 sec — physical constant, NOT tunable
+SECONDS_PER_HOUR = 3600.0
+# Monte Carlo replications; convergence verified at N≥100 (§4.4)
+DEFAULT_TRIALS = 200
+# Numerical guard: prevents log(0) in lognormal when sigma→0
+SIGMA_FLOOR = 1e-10
+
 # ── Monte Carlo simulation thresholds ──
 # Pressure ≥ this is effectively at the [0,1] ceiling after floating-point rounding
 SATURATION_THRESHOLD = 0.999
@@ -31,3 +41,12 @@ SATURATION_THRESHOLD = 0.999
 INVERSION_EPSILON = 1e-10
 # Bootstrap CI requires ≥ this many trials for stable percentile estimates
 CI_MIN_TRIALS = 10
+
+# ── Paper generation ──
+# Fixed simulation start for reproducibility — all paper results reference this date
+PAPER_SIM_START_YEAR = 2026
+PAPER_SIM_START_MONTH = 6
+PAPER_SIM_START_DAY = 1
+PAPER_SIM_START_HOUR = 12
+# Default N for paper results — small enough for quick iteration
+PAPER_DEFAULT_N = 50

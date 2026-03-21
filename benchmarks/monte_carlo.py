@@ -38,7 +38,15 @@ from typing import TYPE_CHECKING, NamedTuple
 
 import numpy as np
 
-from benchmarks.constants import CI_MIN_TRIALS, INVERSION_EPSILON, SATURATION_THRESHOLD
+from benchmarks.constants import (
+    CI_MIN_TRIALS,
+    DEFAULT_SEED,
+    DEFAULT_TRIALS,
+    INVERSION_EPSILON,
+    SATURATION_THRESHOLD,
+    SECONDS_PER_HOUR,
+    SIGMA_FLOOR,
+)
 from tidewatch.pressure import calculate_pressure, recalculate_batch
 from tidewatch.types import Obligation
 
@@ -82,13 +90,6 @@ _DOMAIN_DURATIONS: dict[str, LogNormalParams] = {
 # Weight rationale: mu=1.0 and sigma=0.5 are not free weights — they are
 # LogNormal distribution parameters chosen to match empirical task durations.
 _FALLBACK_DURATION = LogNormalParams(mu=1.0, sigma=0.5)  # Mirrors "engineering" — neutral midpoint domain
-
-# Simulation parameters
-HOURS_PER_DAY = 8.0           # Derivation: standard 8h single-operator workday (serial attention model)
-SECONDS_PER_HOUR = 3600.0     # SI definition: 60 min × 60 sec — physical constant, NOT tunable
-DEFAULT_TRIALS = 200          # Choice: convergence verified at N≥100 (§4.4); 200 for margin
-DEFAULT_SEED = 42             # Choice: arbitrary reproducibility seed; any integer is valid
-SIGMA_FLOOR = 1e-10           # Derivation: machine-epsilon guard preventing log(0) in lognormal
 
 
 

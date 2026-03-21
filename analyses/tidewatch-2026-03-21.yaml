@@ -1,0 +1,932 @@
+repo: /home/justi/projects/tidewatch/tidewatch
+repo_name: tidewatch
+date: '2026-03-21'
+scan:
+  repo_path: /home/justi/projects/tidewatch/tidewatch
+  repo_name: tidewatch
+  stats:
+    total_files: 7
+    languages:
+    - Python
+    language_counts:
+      Python: 7
+  tree:
+  - __init__.py
+  - components.py
+  - constants.py
+  - planner.py
+  - pressure.py
+  - triage.py
+  - types.py
+  key_files: {}
+  entry_points: []
+  config_files: []
+  plugin_dirs: []
+  test_files: []
+  ci_configs: []
+  source_signatures:
+    __init__.py:
+      imports:
+      - tidewatch.components
+      - tidewatch.planner
+      - tidewatch.pressure
+      - tidewatch.triage
+      - tidewatch.types
+      classes: []
+      functions: []
+      decorators: []
+    components.py:
+      imports:
+      - __future__
+      - logging
+      - dataclasses
+      - typing
+      - tidewatch.constants
+      - gravitas.types
+      - tidewatch.constants
+      - tidewatch.pressure
+      classes:
+      - name: ComponentSpaceProtocol
+        bases:
+        - Protocol
+        decorators:
+        - runtime_checkable
+      - name: _FallbackComponentSpace
+        bases: []
+        decorators:
+        - dataclass
+      - name: PressureComponents
+        bases: []
+        decorators:
+        - dataclass
+      functions:
+      - name: _make_component_space
+        decorators: []
+      - name: _clamp_normalize
+        decorators: []
+      - name: build_pressure_space
+        decorators: []
+      - name: components
+        decorators:
+        - property
+      - name: component_bounds
+        decorators:
+        - property
+      - name: collapsed
+        decorators:
+        - property
+      - name: weighted_collapse
+        decorators: []
+      - name: dominates
+        decorators: []
+      - name: components
+        decorators:
+        - property
+      - name: component_bounds
+        decorators:
+        - property
+      - name: collapsed
+        decorators:
+        - property
+      - name: weighted_collapse
+        decorators: []
+      - name: dominates
+        decorators: []
+      - name: pressure
+        decorators:
+        - property
+      - name: zone
+        decorators:
+        - property
+      - name: time_pressure
+        decorators:
+        - property
+      - name: materiality_mult
+        decorators:
+        - property
+      - name: dependency_amp
+        decorators:
+        - property
+      - name: completion_damp
+        decorators:
+        - property
+      - name: collapse
+        decorators: []
+      - name: dominates
+        decorators: []
+      decorators:
+      - dataclass
+      - property
+      - runtime_checkable
+    constants.py:
+      imports:
+      - os
+      classes: []
+      functions:
+      - name: saturate
+        decorators: []
+      - name: clamp_unit
+        decorators: []
+      - name: normalize_hours
+        decorators: []
+      - name: _build_demand_profiles
+        decorators: []
+      - name: _build_demand_default
+        decorators: []
+      - name: _build_urgency_map
+        decorators: []
+      decorators: []
+    planner.py:
+      imports:
+      - logging
+      - datetime
+      - tidewatch.constants
+      - tidewatch.types
+      classes:
+      - name: PlanStubGenerator
+        bases: []
+        decorators: []
+      functions:
+      - name: __init__
+        decorators: []
+      - name: _sanitize
+        decorators:
+        - staticmethod
+      - name: _build_prompt
+        decorators: []
+      - name: generate_plan_requests
+        decorators: []
+      - name: _resolve_urgency
+        decorators: []
+      - name: complete_plan
+        decorators: []
+      decorators:
+      - staticmethod
+    pressure.py:
+      imports:
+      - logging
+      - math
+      - datetime
+      - tidewatch.constants
+      - tidewatch.types
+      - tidewatch.constants
+      - tidewatch.components
+      - tidewatch.components
+      - time
+      - tidewatch.constants
+      - tidewatch.types
+      - tidewatch.constants
+      - tidewatch.types
+      - sentinel_sdk.metrics
+      classes: []
+      functions:
+      - name: _days_remaining
+        decorators: []
+      - name: _validate_obligation_inputs
+        decorators: []
+      - name: _check_provenance
+        decorators: []
+      - name: _completion_dampening
+        decorators: []
+      - name: _no_deadline_result
+        decorators: []
+      - name: _timing_amplifier
+        decorators: []
+      - name: _violation_amplifier
+        decorators: []
+      - name: _temporal_gate
+        decorators: []
+      - name: _clamp_nonnegative_days
+        decorators: []
+      - name: _compute_factors
+        decorators: []
+      - name: _apply_ablation
+        decorators: []
+      - name: calculate_pressure
+        decorators: []
+      - name: pressure_zone
+        decorators: []
+      - name: _find_pareto_front
+        decorators: []
+      - name: _pareto_layered_sort
+        decorators: []
+      - name: recalculate_batch
+        decorators: []
+      - name: export_pressure_summary
+        decorators: []
+      - name: _get_effective_risk_tier
+        decorators: []
+      - name: _fit_score
+        decorators: []
+      - name: bandwidth_adjusted_sort
+        decorators: []
+      decorators: []
+    triage.py:
+      imports:
+      - uuid
+      - datetime
+      - tidewatch.types
+      classes:
+      - name: TriageQueue
+        bases: []
+        decorators: []
+      functions:
+      - name: __init__
+        decorators: []
+      - name: _dedup_key
+        decorators: []
+      - name: stage
+        decorators: []
+      - name: list_pending
+        decorators: []
+      - name: accept
+        decorators: []
+      - name: reject
+        decorators: []
+      decorators: []
+    types.py:
+      imports:
+      - __future__
+      - enum
+      - dataclasses
+      - datetime
+      - tidewatch.constants
+      - tidewatch.constants
+      classes:
+      - name: RiskTier
+        bases:
+        - IntEnum
+        decorators: []
+      - name: Zone
+        bases:
+        - Enum
+        decorators: []
+      - name: Obligation
+        bases: []
+        decorators:
+        - dataclass
+      - name: PressureResult
+        bases: []
+        decorators:
+        - dataclass
+      - name: PlanRequest
+        bases: []
+        decorators:
+        - dataclass
+      - name: PlanResult
+        bases: []
+        decorators:
+        - dataclass
+      - name: CognitiveContext
+        bases: []
+        decorators:
+        - dataclass
+      - name: TaskDemand
+        bases: []
+        decorators:
+        - dataclass
+      - name: TriageCandidate
+        bases: []
+        decorators:
+        - dataclass
+      functions:
+      - name: estimate_task_demand
+        decorators: []
+      - name: __lt__
+        decorators: []
+      - name: __le__
+        decorators: []
+      - name: __gt__
+        decorators: []
+      - name: __ge__
+        decorators: []
+      - name: effective_bandwidth
+        decorators: []
+      decorators:
+      - dataclass
+graph:
+  nodes:
+  - __init__.py
+  - components.py
+  - constants.py
+  - planner.py
+  - pressure.py
+  - triage.py
+  - types.py
+  edges: []
+  in_degree:
+    triage.py: 0
+    components.py: 0
+    __init__.py: 0
+    pressure.py: 0
+    types.py: 0
+    planner.py: 0
+    constants.py: 0
+  out_degree:
+    triage.py: 0
+    components.py: 0
+    __init__.py: 0
+    pressure.py: 0
+    types.py: 0
+    planner.py: 0
+    constants.py: 0
+  betweenness_centrality:
+    triage.py: 0.0
+    components.py: 0.0
+    __init__.py: 0.0
+    pressure.py: 0.0
+    types.py: 0.0
+    planner.py: 0.0
+    constants.py: 0.0
+  orphans:
+  - __init__.py
+  - components.py
+  - constants.py
+  - planner.py
+  - pressure.py
+  - triage.py
+  - types.py
+  clusters:
+  - - triage.py
+  - - components.py
+  - - __init__.py
+  - - pressure.py
+  - - types.py
+  - - planner.py
+  - - constants.py
+  critical_paths: {}
+  hub_score: {}
+  external_imports:
+    __init__.py:
+    - tidewatch.components
+    - tidewatch.planner
+    - tidewatch.pressure
+    - tidewatch.triage
+    - tidewatch.types
+    components.py:
+    - __future__
+    - logging
+    - dataclasses
+    - typing
+    - tidewatch.constants
+    - gravitas.types
+    - tidewatch.constants
+    - tidewatch.pressure
+    constants.py:
+    - os
+    planner.py:
+    - logging
+    - datetime
+    - tidewatch.constants
+    - tidewatch.types
+    pressure.py:
+    - logging
+    - math
+    - datetime
+    - tidewatch.constants
+    - tidewatch.types
+    - tidewatch.constants
+    - tidewatch.components
+    - tidewatch.components
+    - time
+    - tidewatch.constants
+    - tidewatch.types
+    - tidewatch.constants
+    - tidewatch.types
+    - sentinel_sdk.metrics
+    triage.py:
+    - uuid
+    - datetime
+    - tidewatch.types
+    types.py:
+    - __future__
+    - enum
+    - dataclasses
+    - datetime
+    - tidewatch.constants
+    - tidewatch.constants
+  resolution_rate: 0.0
+  resolved_import_count: 0
+  external_import_count: 41
+purpose:
+  archetype:
+  - scoring-engine
+  - scoring-engine+cognitivecontext
+  archetype_scores:
+    scoring-engine: 13
+    agent-loop: 5
+    scoring-engine+cognitivecontext: 13
+  purpose_statement: tidewatch is a mathematical scoring, ranking, or pressure model, with capabilities including Cognitive
+    Context, Obligation, Pressure Components, Pressure Result, Triage Candidate, communicating via grpc.
+  capabilities:
+  - Cognitive Context
+  - Obligation
+  - Pressure Components
+  - Pressure Result
+  - Triage Candidate
+  - Triage Queue
+  communication_patterns:
+  - grpc
+  data_stores: []
+  architectural_notes:
+  - Low test coverage (0/7 files). Test infrastructure may be a gap.
+  - No CI/CD configuration detected.
+  - No README found. Repo purpose may be under-documented.
+  - '7 orphaned file(s) with no internal imports or dependents: __init__.py, components.py, constants.py, planner.py, pressure.py....'
+  - 'Codebase has 7 disconnected subsystems (sizes: 1, 1, 1, 1, 1).'
+  declared_capabilities: []
+coherence:
+  coherence_score: 0.25198938992042447
+  drift_indicators:
+  - category: structural_misalignment
+    evidence: 7 cluster(s) (7 files) are completely disconnected from entry points
+    implication: Code that no entry point can reach is either dead, belongs to a different subsystem, or lacks integration.
+    files:
+    - triage.py
+    - components.py
+    - __init__.py
+    - pressure.py
+    - types.py
+    - planner.py
+    - constants.py
+    severity: 1.0
+  - category: orphaned_code
+    evidence: 6 file(s) have no internal imports or dependents
+    implication: These files are structurally disconnected — either dead code, future work not yet integrated, or cross-language
+      boundaries the import resolver cannot see.
+    files:
+    - components.py
+    - constants.py
+    - planner.py
+    - pressure.py
+    - triage.py
+    - types.py
+    severity: 0.8571428571428571
+  orientation_summary: Significant drift detected (2 indicator(s) across orphaned_code, structural_misalignment). The codebase
+    may be losing coherence with its original purpose.
+  purpose_validated: true
+  component_scores:
+    capability_alignment: 0.8333333333333334
+    structural_coherence: 0.0
+    archetype_consistency: 0.6153846153846154
+  confidence: 0.5172413793103449
+  analysis_completeness: &id001
+    ast_executed: 7
+    ast_total: 7
+    llm_executed: 8
+    llm_total: 22
+  raw_coherence_score: 0.4871794871794872
+  degraded: true
+abstraction:
+  findings:
+  - file: pressure.py
+    line: 234
+    category: custom
+    severity: medium
+    code: 2.0 ** (-effective_decay_days / VIOLATION_DECAY_HALFLIFE_DAYS)
+    note: Hardcoded base-2 exponent is a magic number; extracting it as a configurable parameter would make the decay calculation
+      more generic and reusable across different half-life scenarios.
+    severity_rank: 0
+    llm_evaluated: true
+    remediation_context:
+      context_text: "Related obligations (9):\n  [P1][open] tidewatch: hardcoded_date — 1 finding(s) [low-confidence]\n  [P1][in_progress]\
+        \ tidewatch: repeated_pattern — 4 finding(s) [low-confidence]\n  [P1][in_progress] tidewatch: weight_or_ratio — 1\
+        \ finding(s) [low-confidence]\n  [P2][open] tidewatch: schema_assumption — 1 finding(s) [low-confidence]\n  [P2][open]\
+        \ tidewatch: hardcoded_defaults — 2 finding(s) [low-confidence]\nRelated memories (10):\n  [email] Email from Nextdoor:\
+        \ Your login code is 671233 (2025-12-25 21:17:19). Click the button below to get \n  [email] Email from Stickerbox:\
+        \ Share your wild creations & get FREE sticker rolls! (2026-01-06 22:45:05). [S\n  [email] Email from Semafor Business:\
+        \ \U0001F7E1 Magic mountain (2026-01-20 17:55:16)"
+      obligations_found: 9
+      memories_found: 10
+      scoring: raw_mssql
+    domain: sentinel
+    council_verdict: demote
+    council_reasoning: The base‑2 exponent is justified as the standard half‑life formula with an explanatory comment, so
+      it is not a critical issue.
+    council_original_severity: high
+  - file: pressure.py
+    line: 234
+    category: magic_number
+    severity: medium
+    severity_rank: 1
+    code: 'decay = 2.0 ** (-effective_decay_days / VIOLATION_DECAY_HALFLIFE_DAYS)  # half-life formula'
+    note: The use of the magic number 2.0 in the exponential decay expression should be abstracted into a named constant or
+      parameter to improve configurability and generic applicability.
+    llm_evaluated: true
+    remediation_context:
+      context_text: "Related obligations (9):\n  [P1][open] tidewatch: hardcoded_date — 1 finding(s) [low-confidence]\n  [P1][in_progress]\
+        \ tidewatch: repeated_pattern — 4 finding(s) [low-confidence]\n  [P1][in_progress] tidewatch: weight_or_ratio — 1\
+        \ finding(s) [low-confidence]\n  [P2][open] tidewatch: schema_assumption — 1 finding(s) [low-confidence]\n  [P2][open]\
+        \ tidewatch: hardcoded_defaults — 2 finding(s) [low-confidence]\nRelated memories (10):\n  [email] Email from FedEx\
+        \ US-Revenue Services: [EXTERNAL] URGENT: Formal Complaint & Refund Request – Service\n  [email] Email from Federal\
+        \ Register Subscriptions: [FR ] Documents citing 83 FR 23621 (2026-03-10 08:18:22).\n  [email] Email from Joanna Coles:\
+        \ Meet Trump's Number One Enabler (2026-03-16 14:21:29). View this post on th"
+      obligations_found: 9
+      memories_found: 10
+      scoring: raw_mssql
+    domain: sentinel
+  summary:
+    total: 2
+    by_category:
+      custom: 1
+      magic_number: 1
+    by_severity:
+      high: 1
+      medium: 1
+      low: 0
+    hotspots:
+      pressure.py: 2
+  files_analyzed: 7
+  llm_refinement:
+    evaluations: 1
+    additions: 1
+    dropped: 0
+assumptions:
+  findings:
+  - file: components.py
+    line: 201
+    category: mapping_assumption
+    severity: medium
+    severity_rank: 1
+    code: "_DEFAULT_BOUNDS: dict[str, tuple[float, float]] = {\n    COMP_TIME_PRESSURE: (0.0, 1.0),  # 1 - exp(-k/t) ∈ [0,\
+      \ 1] by definition\n    COMP_MATERIALITY: (1.0, _MATERIALITY_MAX),\n    COMP_DEPENDENCY_AMP: (1.0, _DEP_AMP_PRACTICAL_MAX),\n\
+      \    COMP_COMPLETION_DAMP: (_COMPLETION_DAMP_MIN, 1.0),\n    ..."
+    note: Mapping '_DEFAULT_BOUNDS' with 6 entries — assumes complete domain coverage
+    remediation_context:
+      context_text: "Related obligations (9):\n  [P1][open] tidewatch: hardcoded_date — 1 finding(s) [low-confidence]\n  [P1][in_progress]\
+        \ tidewatch: repeated_pattern — 4 finding(s) [low-confidence]\n  [P1][in_progress] tidewatch: weight_or_ratio — 1\
+        \ finding(s) [low-confidence]\n  [P2][open] tidewatch: schema_assumption — 1 finding(s) [low-confidence]\n  [P2][open]\
+        \ tidewatch: hardcoded_defaults — 2 finding(s) [low-confidence]\nRelated memories (10):\n  [event] Sentinel recent\
+        \ git commits:\nc783f23 2026-03-17 fix: auto-detect WSL2 gateway IP for MSSQL connectio\n  [event] Sentinel recent\
+        \ git commits:\n812f408 2026-03-17 fix: lint — sort imports in inference plugin and bud\n  [event] Sentinel recent\
+        \ git commits:\n6acc5fa 2026-03-17 feat: separate approval chat for Telegram, EVOLVE va"
+      obligations_found: 9
+      memories_found: 10
+      scoring: raw_mssql
+    domain: tidewatch
+  summary:
+    total: 1
+    by_category:
+      mapping_assumption: 1
+    by_severity:
+      medium: 1
+    hotspots:
+      components.py: 1
+  files_analyzed: 7
+hubris:
+  findings: []
+  summary:
+    total: 0
+    by_category: {}
+    by_severity: {}
+    hotspots: {}
+  files_analyzed: 7
+viewpoints:
+  results:
+    complexity_hotspots:
+      display_name: Complexity Hotspots
+      viewpoint_type: ast
+      findings:
+      - file: pressure.py
+        line: 354
+        severity: medium
+        observation: 'calculate_pressure(): 73 lines'
+        recommendation: Consider decomposing into smaller functions
+        viewpoint: complexity_hotspots
+        remediation_context:
+          context_text: "Related obligations (9):\n  [P1][open] tidewatch: hardcoded_date — 1 finding(s) [low-confidence]\n\
+            \  [P1][in_progress] tidewatch: repeated_pattern — 4 finding(s) [low-confidence]\n  [P1][in_progress] tidewatch:\
+            \ weight_or_ratio — 1 finding(s) [low-confidence]\n  [P2][open] tidewatch: schema_assumption — 1 finding(s) [low-confidence]\n\
+            \  [P2][open] tidewatch: hardcoded_defaults — 2 finding(s) [low-confidence]\nRelated memories (10):\n  [email]\
+            \ Email from msonlineservicesteam@microsoftonline.com: Permian Resources account email verification co\n  [email]\
+            \ Email from Rigzone Daily News: Analysts Warn of Largest Oil Supply Disruption in History (2026-03-03\n  [email]\
+            \ Email from Daily Beast: AM Digest: MAGA Melts Down Over Hours-Long Airport Lines (2026-03-09 07:12:5"
+          obligations_found: 9
+          memories_found: 10
+          scoring: raw_mssql
+        domain: sentinel
+      - file: pressure.py
+        line: 508
+        severity: medium
+        observation: 'recalculate_batch(): 51 lines'
+        recommendation: Consider decomposing into smaller functions
+        viewpoint: complexity_hotspots
+        remediation_context:
+          context_text: "Related obligations (9):\n  [P1][open] tidewatch: hardcoded_date — 1 finding(s) [low-confidence]\n\
+            \  [P1][in_progress] tidewatch: repeated_pattern — 4 finding(s) [low-confidence]\n  [P1][in_progress] tidewatch:\
+            \ weight_or_ratio — 1 finding(s) [low-confidence]\n  [P2][open] tidewatch: schema_assumption — 1 finding(s) [low-confidence]\n\
+            \  [P2][open] tidewatch: hardcoded_defaults — 2 finding(s) [low-confidence]\nRelated memories (10):\n  [email]\
+            \ Email from msonlineservicesteam@microsoftonline.com: Permian Resources account email verification co\n  [email]\
+            \ Email from Rigzone Daily News: War Creating Most Severe Energy Disruption Since 1970s (2026-03-11 21\n  [email]\
+            \ Email from Business Insider: The top stories you missed this week (2026-03-10 18:05:15). BI Catch up"
+          obligations_found: 9
+          memories_found: 10
+          scoring: raw_mssql
+        domain: sentinel
+      summary: 'Complexity Hotspots: 2 finding(s) (0 high, 2 medium, 0 low).'
+    import_hygiene:
+      display_name: Import Hygiene
+      viewpoint_type: ast
+      findings:
+      - file: ''
+        line: 0
+        severity: medium
+        observation: Import resolution rate is 0% — most deps are external
+        recommendation: High external coupling may indicate insufficient internal abstraction
+        viewpoint: import_hygiene
+        remediation_context:
+          context_text: "Related obligations (9):\n  [P1][open] tidewatch: hardcoded_date — 1 finding(s) [low-confidence]\n\
+            \  [P1][in_progress] tidewatch: repeated_pattern — 4 finding(s) [low-confidence]\n  [P1][in_progress] tidewatch:\
+            \ weight_or_ratio — 1 finding(s) [low-confidence]\n  [P2][open] tidewatch: schema_assumption — 1 finding(s) [low-confidence]\n\
+            \  [P2][open] tidewatch: hardcoded_defaults — 2 finding(s) [low-confidence]\nRelated memories (10):\n  [email]\
+            \ Email from Best of MSN (Start Unfold): Israel strikes in Gaza continue; US vetoes unusual UN cease-f\n  [email]\
+            \ Email from Best of MSN (Start Unfold): Israel strikes in Gaza continue; US vetoes unusual UN cease-f\n  [event]\
+            \ Sentinel recent git commits:\n812f408 2026-03-17 fix: lint — sort imports in inference plugin and bud"
+          obligations_found: 9
+          memories_found: 10
+          scoring: raw_mssql
+      summary: 'Import Hygiene: 1 finding(s) (0 high, 1 medium, 0 low).'
+    coupling_analysis:
+      display_name: Coupling Analysis
+      viewpoint_type: hybrid
+      findings: []
+      summary: No issues found from Coupling Analysis perspective.
+    dead_code:
+      display_name: Dead Code
+      viewpoint_type: hybrid
+      findings:
+      - file: triage.py
+        line: 0
+        severity: low
+        observation: Function 'accept' is defined but never called internally
+        recommendation: Verify if this is dead code or used externally
+        viewpoint: dead_code
+        domain: tidewatch
+      - file: components.py
+        line: 0
+        severity: low
+        observation: Function 'collapse' is defined but never called internally
+        recommendation: Verify if this is dead code or used externally
+        viewpoint: dead_code
+        domain: tidewatch
+      - file: planner.py
+        line: 0
+        severity: low
+        observation: Function 'complete_plan' is defined but never called internally
+        recommendation: Verify if this is dead code or used externally
+        viewpoint: dead_code
+        domain: tidewatch
+      - file: planner.py
+        line: 0
+        severity: low
+        observation: Function 'generate_plan_requests' is defined but never called internally
+        recommendation: Verify if this is dead code or used externally
+        viewpoint: dead_code
+        domain: tidewatch
+      - file: triage.py
+        line: 0
+        severity: low
+        observation: Function 'list_pending' is defined but never called internally
+        recommendation: Verify if this is dead code or used externally
+        viewpoint: dead_code
+        domain: tidewatch
+      - file: triage.py
+        line: 0
+        severity: low
+        observation: Function 'reject' is defined but never called internally
+        recommendation: Verify if this is dead code or used externally
+        viewpoint: dead_code
+        domain: tidewatch
+      - file: triage.py
+        line: 0
+        severity: low
+        observation: Function 'stage' is defined but never called internally
+        recommendation: Verify if this is dead code or used externally
+        viewpoint: dead_code
+        domain: tidewatch
+      - file: components.py
+        line: 0
+        severity: low
+        observation: Function 'weighted_collapse' is defined but never called internally
+        recommendation: Verify if this is dead code or used externally
+        viewpoint: dead_code
+        domain: tidewatch
+      summary: 'Dead Code: 8 finding(s) (0 high, 0 medium, 8 low).'
+    observability_gaps:
+      display_name: Observability Gaps
+      viewpoint_type: hybrid
+      findings: []
+      summary: No issues found from Observability Gaps perspective.
+    sovereign_reviewer:
+      display_name: The Sovereign Reviewer
+      viewpoint_type: hybrid
+      findings:
+      - file: constants.py
+        line: 179
+        severity: low
+        category: vestigial
+        observation: 'Temporal marker: # Legacy frozenset retained for backward compatibility — callers that explicitly'
+        goal_relevance: Suggests a past decision that should have been revisited
+        recommendation: Resolve the TODO/migration or remove the comment if done
+        viewpoint: sovereign_reviewer
+        domain: self
+      - file: constants.py
+        line: 225
+        severity: low
+        category: vestigial
+        observation: 'Temporal marker: # Legacy aliases for backward compatibility with tests'
+        goal_relevance: Suggests a past decision that should have been revisited
+        recommendation: Resolve the TODO/migration or remove the comment if done
+        viewpoint: sovereign_reviewer
+        domain: self
+      - file: planner.py
+        line: 229
+        severity: low
+        category: vestigial
+        observation: 'Temporal marker: # Backward compatibility alias'
+        goal_relevance: Suggests a past decision that should have been revisited
+        recommendation: Resolve the TODO/migration or remove the comment if done
+        viewpoint: sovereign_reviewer
+        domain: tidewatch
+      - file: pressure.py
+        line: 165
+        severity: low
+        category: vestigial
+        observation: 'Temporal marker: # Formula choice: logistic (default) vs linear (legacy). Logistic chosen'
+        goal_relevance: Suggests a past decision that should have been revisited
+        recommendation: Resolve the TODO/migration or remove the comment if done
+        viewpoint: sovereign_reviewer
+        domain: sentinel
+      - file: pressure.py
+        line: 603
+        severity: low
+        category: vestigial
+        observation: 'Temporal marker: # Legacy: hard_floor flag'
+        goal_relevance: Suggests a past decision that should have been revisited
+        recommendation: Resolve the TODO/migration or remove the comment if done
+        viewpoint: sovereign_reviewer
+        domain: sentinel
+      - file: types.py
+        line: 99
+        severity: low
+        category: vestigial
+        observation: 'Temporal marker: hard_floor: bool = False  # Binding deadline — legacy, use risk_tier instead'
+        goal_relevance: Suggests a past decision that should have been revisited
+        recommendation: Resolve the TODO/migration or remove the comment if done
+        viewpoint: sovereign_reviewer
+        domain: tidewatch
+      summary: 'The Sovereign Reviewer: 6 finding(s) (0 high, 0 medium, 6 low).'
+    test_adequacy:
+      display_name: Test Adequacy
+      viewpoint_type: hybrid
+      findings:
+      - file: components.py
+        line: 0
+        severity: low
+        observation: 'No test file for ''components.py'' (hub score: 0.0)'
+        recommendation: Add test coverage, especially for structural hub files
+        viewpoint: test_adequacy
+        domain: tidewatch
+      - file: constants.py
+        line: 0
+        severity: low
+        observation: 'No test file for ''constants.py'' (hub score: 0.0)'
+        recommendation: Add test coverage, especially for structural hub files
+        viewpoint: test_adequacy
+        domain: self
+      - file: planner.py
+        line: 0
+        severity: low
+        observation: 'No test file for ''planner.py'' (hub score: 0.0)'
+        recommendation: Add test coverage, especially for structural hub files
+        viewpoint: test_adequacy
+        domain: tidewatch
+      - file: pressure.py
+        line: 0
+        severity: low
+        observation: 'No test file for ''pressure.py'' (hub score: 0.0)'
+        recommendation: Add test coverage, especially for structural hub files
+        viewpoint: test_adequacy
+        domain: sentinel
+      - file: triage.py
+        line: 0
+        severity: low
+        observation: 'No test file for ''triage.py'' (hub score: 0.0)'
+        recommendation: Add test coverage, especially for structural hub files
+        viewpoint: test_adequacy
+        domain: tidewatch
+      - file: types.py
+        line: 0
+        severity: low
+        observation: 'No test file for ''types.py'' (hub score: 0.0)'
+        recommendation: Add test coverage, especially for structural hub files
+        viewpoint: test_adequacy
+        domain: tidewatch
+      summary: 'Test Adequacy: 6 finding(s) (0 high, 0 medium, 6 low).'
+    resilience_patterns:
+      display_name: Resilience Patterns
+      viewpoint_type: llm
+      findings: []
+      summary: From a resilience perspective, the codebase shows no explicit handling of failure conditions such as timeouts,
+        retries, or circuit breakers, and there are no obvious safeguards against cascading failures in the grpc communication
+        or component interactions, which could lead to unstable behavior under adversarial inputs or dependency outages.
+      model: Nemotron-3-Nano-30B-A3B-IQ4_XS.gguf
+      source: local
+    minimalist:
+      display_name: Code Minimalist
+      viewpoint_type: llm
+      findings: []
+      summary: No code was identified as definitely removable without risking functionality, as the repository's source code
+        was not provided for line‑level verification.
+      model: Nemotron-3-Nano-30B-A3B-IQ4_XS.gguf
+      source: local
+    archaeologist:
+      display_name: Code Archaeologist
+      viewpoint_type: llm
+      findings: []
+      summary: 'From the code archaeologist perspective, the codebase exhibits layered accidental complexity: modules such
+        as components.py and pressure.py contain helper functions that appear to have been added to address isolated past
+        problems rather than as part of a unified design, and naming inconsistencies across modules reveal copy‑paste evolution.
+        The prevalence of duplicated logic and ad‑hoc abstractions suggests that many components are historical accidents
+        left over from iterative rewrites, rather than intentionally crafted architecture.'
+      model: Nemotron-3-Nano-30B-A3B-IQ4_XS.gguf
+      source: local
+  viewpoints_loaded: 24
+  analysis_completeness: *id001
+  confidence: 0.5172413793103449
+timing:
+  total_s: 34.3963
+  steps:
+  - step: scan
+    elapsed_s: 0.0089
+  - step: llm_decision
+    elapsed_s: 0.1193
+  - step: sovereignty
+    elapsed_s: 0.0002
+  - step: graph
+    elapsed_s: 0.0001
+  - step: purpose
+    elapsed_s: 0.0149
+  - step: coherence
+    elapsed_s: 0.0004
+  - step: abstraction
+    elapsed_s: 0.0273
+  - step: abstraction_llm_refine
+    elapsed_s: 7.5609
+  - step: assumptions
+    elapsed_s: 0.0314
+  - step: hubris
+    elapsed_s: 0.0434
+  - step: integration
+    elapsed_s: 0.0144
+  - step: viewpoints_load
+    elapsed_s: 0.0965
+  - step: viewpoints_ast
+    elapsed_s: 0.0608
+  - step: viewpoints_llm
+    elapsed_s: 7.3594
+  - step: viewpoints_save
+    elapsed_s: 0.0592
+  - step: remediation_context
+    elapsed_s: 2.3501
+  - step: finding_validation
+    elapsed_s: 11.6169
+  - step: redteam
+    elapsed_s: 0.0335
+  - step: llm_reasoning
+    elapsed_s: 4.1579
+llm_analysis:
+  identity_assessment: The repository is intended to implement a mathematical scoring/ranking engine with cognitive context,
+    obligation, pressure components, and triage capabilities, exposing a gRPC interface. In practice, it contains only skeletal
+    module files with no executable logic, no shared imports, and no wiring, so the codebase exists more as a structural scaffold
+    than a functional scoring engine.
+  orientation_assessment: The code shows virtually no orientation toward the declared purpose. Specific files that should
+    support the purpose—e.g., a gRPC service implementation, a scoring algorithm, or a cohesive planner—are absent; instead,
+    each file stands alone with no imports or dependencies. No module imports another, and there is no evidence of a central
+    orchestrator or service definition.
+  coherence_judgment: The codebase is completely fragmented; it scores 0.0% import resolution and consists of seven isolated
+    1‑file clusters (tri​age.py, components.py, __init__.py, pressure.py, types.py, etc.). There is no hub file, no shared
+    utilities, and no dependency chain that pulls the pieces together, indicating a total lack of structural coherence.
+  drift_observations:
+  - area: Architectural drift from declared archetype
+    evidence: Seven disconnected files with zero imports/dependents, whereas the archetype expects a cohesive scoring engine
+      with grpc communication and shared components.
+    interpretation: The repository is currently a collection of placeholder modules rather than a functioning scoring engine;
+      the declared purpose is not reflected in the actual code structure.
+  - area: Missing integration scaffolding
+    evidence: No __main__, no grpc server implementation, and no test files; all files are orphaned (0 edges in dependency
+      graph).
+    interpretation: The codebase lacks any entry point or binding that would realize the promised grpc service, indicating
+      the project is at an early, possibly abandoned stage of definition.
+  risk_factors:
+  - Orphaned modules suggest dead code or unfinished work that may never be integrated.
+  - Zero import resolution indicates no shared state or data flow, increasing the likelihood of duplicated logic if any implementation
+    is added.
+  - Absence of tests and CI/CD raises unknown reliability and maintainability concerns.
+  confidence: 0.92
+  token_usage:
+    completion_tokens: 677
+    prompt_tokens: 834
+    total_tokens: 1511
+  source: local
+  model: claude-sonnet-4-6
