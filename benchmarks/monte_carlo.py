@@ -39,6 +39,7 @@ from typing import TYPE_CHECKING, NamedTuple
 import numpy as np
 
 from benchmarks.constants import (
+    BOOTSTRAP_CI_ALPHA,
     CI_MIN_TRIALS,
     DEFAULT_SEED,
     DEFAULT_TRIALS,
@@ -174,11 +175,10 @@ class TrialResult:
         return sum(self.pre_clamp_pressures) / len(self.pre_clamp_pressures)
 
 
-# DEFAULT: all parameters have documented defaults per statistical convention.
 def _bootstrap_ci(data: np.ndarray,
                    n_bootstrap: int = 10000,  # 10k resamples: standard for percentile CI (Efron & Tibshirani 1993)
-                   alpha: float = 0.05,       # Standard 95% CI (alpha=0.05 → 2.5th/97.5th percentiles)
-                   seed: int = 42) -> tuple[float, float]:  # Reproducibility seed — any int is valid
+                   alpha: float = BOOTSTRAP_CI_ALPHA,
+                   seed: int = DEFAULT_SEED) -> tuple[float, float]:
     """Compute bootstrap confidence interval for the mean (#1177).
 
     Returns (lower, upper) bounds of the (1-alpha) CI.

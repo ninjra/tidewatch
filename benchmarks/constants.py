@@ -42,6 +42,11 @@ INVERSION_EPSILON = 1e-10
 # Bootstrap CI requires ≥ this many trials for stable percentile estimates
 CI_MIN_TRIALS = 10
 
+# ── Bootstrap CI ──
+# Standard significance level for 95% confidence intervals (1 - alpha = 0.95)
+# This is the universal default in frequentist statistics, not a tunable parameter.
+BOOTSTRAP_CI_ALPHA = 0.05
+
 # ── Display formatting ──
 # Decimal places for metrics in JSON/table output — 4 digits matches paper table precision
 METRIC_DISPLAY_PRECISION = 4
