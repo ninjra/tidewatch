@@ -264,6 +264,39 @@ class TestBatch:
         assert result.zone in ("green", "yellow", "orange", "red")
 
 
+class TestWeightedCollapseNormalization:
+    """Weighted sum collapse normalizes by component bounds (#1185)."""
+
+    def test_equal_weights_proportional(self):
+        """With equal weights, components with different scales contribute equally.
+
+        Without normalization, dependency_amp [1,5] would dominate time_pressure [0,1].
+        With normalization, both contribute proportionally to the weighted sum.
+        """
+        from tidewatch.components import build_pressure_space
+        # Create space where dependency_amp is at its max bound (5.0)
+        # and time_pressure is at its max bound (1.0)
+        space_a = build_pressure_space(
+            time_pressure=1.0, materiality=1.0, dependency_amp=5.0,
+            completion_damp=1.0, timing_amp=1.0, violation_amp=1.0,
+            obligation_id="test_a",
+        )
+        # Create space where only time_pressure varies
+        space_b = build_pressure_space(
+            time_pressure=0.5, materiality=1.0, dependency_amp=5.0,
+            completion_damp=1.0, timing_amp=1.0, violation_amp=1.0,
+            obligation_id="test_b",
+        )
+        ws_a = space_a.collapse(weights={"time_pressure": 1.0, "dependency_amp": 1.0})
+        ws_b = space_b.collapse(weights={"time_pressure": 1.0, "dependency_amp": 1.0})
+        # The difference should come from time_pressure changing from 1.0 to 0.5
+        # which is a 50% reduction in that normalized dimension
+        assert ws_a > ws_b
+        # Normalized output should be in [0, 1]
+        assert 0.0 <= ws_a <= 1.0
+        assert 0.0 <= ws_b <= 1.0
+
+
 class TestRateConstantSensitivity:
     """Sensitivity analysis for RATE_CONSTANT (§4.2).
 
@@ -345,8 +378,46 @@ class TestNanInfGuards:
             pressure_zone(float("nan"))
 
 
+class TestViolationSublinear:
+    """Violation amplifier uses sublinear (logarithmic) scaling (#1184)."""
+
+    def test_diminishing_returns_per_violation(self):
+        """Each additional violation adds less amplification than the previous.
+
+        Logarithmic scaling: amp = 1 + min(log(1 + effective) * k, cap).
+        The marginal contribution of violation N+1 is always less than N.
+        """
+        from tidewatch.pressure import _violation_amplifier
+
+        amp_1 = _violation_amplifier(violation_count=1, days_in_status=0)
+        amp_2 = _violation_amplifier(violation_count=2, days_in_status=0)
+        amp_5 = _violation_amplifier(violation_count=5, days_in_status=0)
+        amp_10 = _violation_amplifier(violation_count=10, days_in_status=0)
+
+        # All should amplify
+        assert amp_1 > 1.0
+        assert amp_2 > amp_1
+        assert amp_5 > amp_2
+        assert amp_10 > amp_5
+
+        # Marginal contribution must decrease (sublinear)
+        marginal_1_2 = amp_2 - amp_1
+        marginal_2_5 = (amp_5 - amp_2) / 3.0  # per-violation average
+        marginal_5_10 = (amp_10 - amp_5) / 5.0
+        assert marginal_2_5 < marginal_1_2
+        assert marginal_5_10 < marginal_2_5
+
+    def test_cap_still_enforced(self):
+        """Even with many violations, amplification stays within cap."""
+        from tidewatch.constants import VIOLATION_MAX_AMPLIFICATION
+        from tidewatch.pressure import _violation_amplifier
+
+        amp_100 = _violation_amplifier(violation_count=100, days_in_status=0)
+        assert amp_100 <= 1.0 + VIOLATION_MAX_AMPLIFICATION + 1e-10
+
+
 class TestStatusToggleExploit:
-    """Anti-exploit: status-toggle cannot reset violation decay (#1261, #1267)."""
+    """Anti-exploit: status-toggle cannot reset violation/timing decay (#1261)."""
 
     def test_status_toggle_cannot_reset_violation_decay(self):
         """Violation decay anchored to violation_first_at, not days_in_status.
@@ -377,3 +448,55 @@ class TestStatusToggleExploit:
         # Both should be > 1.0 (violations still have some effect)
         assert amp_anchored > 1.0
         assert amp_reset > 1.0
+
+    def test_status_toggle_cannot_reset_timing_amplifier(self):
+        """Timing amplifier uses max(days_in_status, days_since_status_change) (#1261).
+
+        Toggling status resets days_in_status to 0, but the timing amplifier
+        falls back to days_since_status_change (computed from status_changed_at)
+        which cannot be gamed by status toggling.
+        """
+        from tidewatch.pressure import _timing_amplifier
+
+        # No status_changed_at: uses days_in_status directly
+        amp_stuck_14d = _timing_amplifier(days_in_status=14.0)
+
+        # Status toggled: days_in_status=0, but status_changed_at says 14 days
+        amp_toggled = _timing_amplifier(
+            days_in_status=0.0, days_since_status_change=14.0,
+        )
+
+        # Without exploit protection: days_in_status=0 → near-minimum amplification
+        amp_exploited = _timing_amplifier(days_in_status=0.0)
+
+        # The toggled version should match the stuck version (max(0, 14) = 14)
+        assert amp_toggled == amp_stuck_14d
+        # The exploited version (no anchor) should be lower
+        assert amp_exploited < amp_toggled
+
+    def test_full_pipeline_status_toggle_exploit(self):
+        """End-to-end: obligation with status_changed_at resists reset exploit (#1261)."""
+        now = datetime(2026, 6, 1, 12, 0, 0, tzinfo=UTC)
+
+        # Obligation stuck for 14 days, then status toggled (days_in_status reset to 0)
+        # but status_changed_at preserves the original timing
+        ob_anchored = Obligation(
+            id=1, title="Anchored", due_date=now + timedelta(days=5),
+            days_in_status=0.0,
+            status_changed_at=now - timedelta(days=14),
+            violation_count=3,
+            violation_first_at=now - timedelta(days=14),
+        )
+        # Same obligation without event anchors — exploitable
+        ob_exploitable = Obligation(
+            id=2, title="Exploitable", due_date=now + timedelta(days=5),
+            days_in_status=0.0,
+            violation_count=3,
+        )
+
+        r_anchored = calculate_pressure(ob_anchored, now=now)
+        r_exploitable = calculate_pressure(ob_exploitable, now=now)
+
+        # Anchored version should have higher pressure (timing amp + violation
+        # amp both use the event-anchored values instead of the reset ones)
+        assert r_anchored.pressure > r_exploitable.pressure

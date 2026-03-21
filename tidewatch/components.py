@@ -123,12 +123,23 @@ class _FallbackComponentSpace:
         return result
 
     def weighted_collapse(self, weights: dict[str, float]) -> float:
-        """Weighted sum collapse."""
+        """Weighted sum collapse with bound normalization (#1185).
+
+        Each component is normalized to [0, 1] using its algebraic bounds
+        before the weighted sum. This ensures components with different
+        scales (e.g., time_pressure [0,1] vs dependency_amp [1,5])
+        contribute proportionally rather than being dominated by
+        higher-magnitude components.
+        """
         total = 0.0
         weight_sum = 0.0
         for name, value in self._components.items():
             w = weights.get(name, 1.0)
-            total += w * value
+            lo, hi = self._bounds.get(name, (0.0, 1.0))
+            span = hi - lo
+            norm = (value - lo) / span if span > 0 else 0.0
+            norm = max(0.0, min(1.0, norm))
+            total += w * norm
             weight_sum += w
         return total / weight_sum if weight_sum > 0 else 0.0
 
@@ -205,9 +216,26 @@ class PressureComponents:
         return self.space.components.get(COMP_COMPLETION_DAMP, 1.0)
 
     def collapse(self, weights: dict[str, float] | None = None) -> float:
-        """Custom-weighted collapse for query-adaptive ranking."""
+        """Custom-weighted collapse for query-adaptive ranking (#1185).
+
+        When weights are provided, each component is normalized to [0,1]
+        using its algebraic bounds before the weighted sum. This ensures
+        components with different scales contribute proportionally.
+        """
         if weights:
-            return self.space.weighted_collapse(weights)
+            components = self.space.components
+            bounds = self.space.component_bounds
+            total = 0.0
+            weight_sum = 0.0
+            for name, value in components.items():
+                w = weights.get(name, 1.0)
+                lo, hi = bounds.get(name, (0.0, 1.0))
+                span = hi - lo
+                norm = (value - lo) / span if span > 0 else 0.0
+                norm = max(0.0, min(1.0, norm))
+                total += w * norm
+                weight_sum += w
+            return total / weight_sum if weight_sum > 0 else 0.0
         return self.pressure
 
     def dominates(self, other: PressureComponents) -> bool | None:

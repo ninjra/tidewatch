@@ -376,9 +376,10 @@ class TestGate05_PressureKnownValues:
 # P = min(1.0, P_time × M × A × D × T_amp × V_amp)
 _PRESSURE_CASES_6FACTOR = [
     # (days_out, materiality, deps, completion, days_stuck, violations, expected_P, expected_zone, label)
-    (5,  "routine",  0, 0.0, 10, 3, 0.566776563151741, "yellow", "stuck_10d_3viol"),
-    (7,  "material", 2, 0.2, 14, 5, 0.7005055808898023, "orange", "critical_stuck"),
-    (14, "routine",  0, 0.0,  8, 1, 0.2217730603411099, "green",  "mildly_stuck"),
+    # Values recomputed for logarithmic violation scaling (#1184): log(1+effective) replaces linear
+    (5,  "routine",  0, 0.0, 10, 3, 0.5462962707618725, "yellow", "stuck_10d_3viol"),
+    (7,  "material", 2, 0.2, 14, 5, 0.6616746252781834, "orange", "critical_stuck"),
+    (14, "routine",  0, 0.0,  8, 1, 0.220074206760284, "green",  "mildly_stuck"),
 ]
 
 

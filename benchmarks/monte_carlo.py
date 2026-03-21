@@ -114,6 +114,9 @@ class TrialResult:
     effective_attention_hours: float  # Hours on obligations that met deadline
     total_attention_hours: float     # Total hours worked
     saturated_count: int = 0   # Obligations with pressure >= 0.999 (#1210)
+    # Pre-clamp reporting (#1176): expose distribution before saturation
+    pre_clamp_pressures: list[float] = field(default_factory=list)
+    tie_count: int = 0         # Count of clamped-pressure ties (#1176)
 
     @property
     def missed_deadline_rate(self) -> float:
@@ -131,6 +134,18 @@ class TrialResult:
     def saturation_rate(self) -> float:
         """Fraction of obligations at pressure saturation (>= 0.999)."""
         return self.saturated_count / self.total if self.total > 0 else 0.0
+
+    @property
+    def pre_clamp_max(self) -> float:
+        """Maximum pre-clamp product (#1176)."""
+        return max(self.pre_clamp_pressures) if self.pre_clamp_pressures else 0.0
+
+    @property
+    def pre_clamp_mean(self) -> float:
+        """Mean pre-clamp product (#1176)."""
+        if not self.pre_clamp_pressures:
+            return 0.0
+        return sum(self.pre_clamp_pressures) / len(self.pre_clamp_pressures)
 
 
 def _bootstrap_ci(data: np.ndarray, n_bootstrap: int = 10000, alpha: float = 0.05,
@@ -171,7 +186,7 @@ class MonteCarloResult:
     trial_results: list[TrialResult] = field(default_factory=list, repr=False)
 
     def to_dict(self) -> dict:
-        return {
+        result: dict = {
             "strategy": self.strategy,
             "n_trials": self.n_trials,
             "missed_deadline_rate": {
@@ -192,7 +207,23 @@ class MonteCarloResult:
                 "ci_95": [round(self.attention_efficiency_ci[0], 4),
                           round(self.attention_efficiency_ci[1], 4)],
             },
+            # Saturation and tie-break reporting (#1176)
+            "saturation_rate": {
+                "mean": round(self.saturation_rate_mean, 4),
+                "std": round(self.saturation_rate_std, 4),
+            },
         }
+        # Pre-clamp distribution from trial results (#1176)
+        if self.trial_results:
+            all_pre_clamp = [p for t in self.trial_results for p in t.pre_clamp_pressures]
+            total_ties = sum(t.tie_count for t in self.trial_results)
+            result["pre_clamp_distribution"] = {
+                "max": round(max(all_pre_clamp), 4) if all_pre_clamp else 0.0,
+                "mean": round(sum(all_pre_clamp) / len(all_pre_clamp), 4) if all_pre_clamp else 0.0,
+                "above_1_count": sum(1 for p in all_pre_clamp if p > 1.0),
+                "total_ties_at_ceiling": total_ties,
+            }
+        return result
 
 
 # ── Scheduling strategies ────────────────────────────────────────────────────
@@ -391,6 +422,13 @@ def _run_trial(
     The operator works HOURS_PER_DAY hours per day, processing obligations
     sequentially in the specified order. Each obligation takes its sampled
     duration. Track whether each obligation finishes before its deadline.
+
+    Queue inversion detection (#1175): pressures are recalculated at the
+    current simulation clock time, not the stale sim_start snapshot. This
+    makes inversions empirically meaningful — an inversion means the strategy
+    is processing a lower-pressure item while a higher-pressure item waits
+    *at the current point in time*, accounting for deadline approach during
+    processing.
     """
     clock_hours = 0.0
     completed_on_time = 0
@@ -400,14 +438,21 @@ def _run_trial(
     inversions = 0
     inversion_checks = 0
 
-    # Track pressure for inversion detection and saturation counting (#1210)
-    remaining_pressures: dict[int, float] = {}
+    # Count saturation and pre-clamp distribution at sim_start (#1176, #1210)
     saturated_count = 0
-    for i, sob in enumerate(sim_obs):
+    pre_clamp_pressures: list[float] = []
+    clamped_values: list[float] = []
+    for _i, sob in enumerate(sim_obs):
         r = calculate_pressure(sob.obligation, now=sim_start)
-        remaining_pressures[i] = r.pressure
+        # Extract raw product before saturation for pre-clamp reporting (#1176)
+        cs = r.component_space
+        raw = cs.space.collapsed if hasattr(cs, 'space') and hasattr(cs.space, 'collapsed') else r.pressure
+        pre_clamp_pressures.append(raw)
+        clamped_values.append(r.pressure)
         if r.pressure >= 0.999:
             saturated_count += 1
+    # Count ties at clamped pressure = 1.0 (#1176)
+    tie_count = max(0, sum(1 for p in clamped_values if p >= 1.0 - 1e-10) - 1)
 
     completed: set[int] = set()
 
@@ -416,11 +461,17 @@ def _run_trial(
         ob = sob.obligation
         duration = sob.duration_hours
 
-        # Check for queue inversions: is there a higher-pressure item waiting?
-        current_pressure = remaining_pressures.get(idx, 0.0)
-        for other_idx, other_p in remaining_pressures.items():
+        # Inversion detection (#1175): recalculate pressures at current sim clock
+        # so that deadline approach during processing is reflected. A stale
+        # snapshot at sim_start was tautological for pressure-ordered strategies.
+        sim_now = sim_start + timedelta(hours=clock_hours)
+        current_pressure = calculate_pressure(ob, now=sim_now).pressure
+        for other_idx in range(len(sim_obs)):
             if other_idx != idx and other_idx not in completed:
                 inversion_checks += 1
+                other_p = calculate_pressure(
+                    sim_obs[other_idx].obligation, now=sim_now,
+                ).pressure
                 if other_p > current_pressure + 1e-10:
                     inversions += 1
 
@@ -442,7 +493,6 @@ def _run_trial(
             effective_hours += duration
 
         completed.add(idx)
-        remaining_pressures.pop(idx, None)
 
     total = completed_on_time + completed_late
     return TrialResult(
@@ -454,6 +504,8 @@ def _run_trial(
         effective_attention_hours=effective_hours,
         total_attention_hours=total_hours,
         saturated_count=saturated_count,
+        pre_clamp_pressures=pre_clamp_pressures,
+        tie_count=tie_count,
     )
 
 

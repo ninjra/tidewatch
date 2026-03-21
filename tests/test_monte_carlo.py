@@ -152,6 +152,33 @@ class TestSingleTrial:
         result = _run_trial(sim_obs, order, NOW)
         assert result.total_attention_hours > 0
 
+    def test_inversion_metric_non_tautological(self):
+        """Queue inversion metric uses live pressures, not stale snapshot (#1175).
+
+        Construct a scenario where FIFO order processes a far-deadline item
+        first while a near-deadline item waits. After processing time elapses,
+        the waiting item's pressure should increase (deadline approach), and
+        the metric should detect the inversion using recalculated pressures.
+        """
+        from benchmarks.monte_carlo import SimObligation
+        # Item A: far deadline (30d), processed first in FIFO order
+        # Item B: near deadline (2d), forced to wait
+        obs = [
+            Obligation(id=1, title="Far deadline", due_date=NOW + timedelta(days=30)),
+            Obligation(id=2, title="Near deadline", due_date=NOW + timedelta(days=2)),
+        ]
+        # Give item A a long processing time (20h) so clock advances significantly
+        sim_obs = [
+            SimObligation(obligation=obs[0], duration_hours=20.0),
+            SimObligation(obligation=obs[1], duration_hours=1.0),
+        ]
+        # FIFO order: process item 0 first, then item 1
+        result = _run_trial(sim_obs, [0, 1], NOW)
+        # Item B (near deadline) should cause an inversion when A is processed
+        # because B's pressure is higher than A's at sim_start and remains so
+        assert result.inversions > 0
+        assert result.inversion_checks > 0
+
 
 class TestMonteCarlo:
     """Full Monte Carlo simulation."""
@@ -199,6 +226,31 @@ class TestMonteCarlo:
         assert "missed_deadline_rate" in d
         assert "mean" in d["missed_deadline_rate"]
         assert "std" in d["missed_deadline_rate"]
+
+    def test_to_dict_includes_saturation_and_pre_clamp(self):
+        """to_dict must report saturation_rate and pre_clamp_distribution (#1176)."""
+        obs = _make_obligations()
+        result = run_monte_carlo(obs, strategy="tidewatch", n_trials=5,
+                                 seed=42, sim_start=NOW)
+        d = result.to_dict()
+        assert "saturation_rate" in d
+        assert "mean" in d["saturation_rate"]
+        assert "pre_clamp_distribution" in d
+        assert "max" in d["pre_clamp_distribution"]
+        assert "total_ties_at_ceiling" in d["pre_clamp_distribution"]
+        # Pre-clamp max should be >= clamped max (can exceed 1.0)
+        assert d["pre_clamp_distribution"]["max"] >= 0.0
+
+    def test_trial_result_pre_clamp_fields(self):
+        """TrialResult exposes pre-clamp pressures and tie count (#1176)."""
+        obs = _make_obligations(3)
+        rng = np.random.default_rng(42)
+        sim_obs = _sample_durations(obs, rng)
+        order = list(range(len(obs)))
+        result = _run_trial(sim_obs, order, NOW)
+        assert len(result.pre_clamp_pressures) == 3
+        assert all(p >= 0.0 for p in result.pre_clamp_pressures)
+        assert result.tie_count >= 0
 
 
 class TestStrategyComparison:

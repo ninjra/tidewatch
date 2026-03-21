@@ -160,9 +160,15 @@ def _violation_amplifier(
 ) -> float:
     """Compute violation-based pressure amplification (#99, #1184, #1261).
 
-    Violations decay over time to prevent perverse feedback loops where
-    a missed deadline permanently amplifies an already-difficult obligation.
-    Decay uses exponential half-life: effective_count = count * 2^(-d/halflife).
+    Three-layer damping prevents perverse feedback loops where a missed
+    deadline permanently amplifies an already-difficult obligation:
+
+    1. Temporal decay: effective_count = count * 2^(-d/halflife)
+       Violations lose potency over time (half-life = 14 days).
+    2. Sublinear scaling (#1184): log(1 + effective) instead of linear.
+       Each additional violation contributes less than the previous one,
+       preventing runaway amplification cascades.
+    3. Hard cap: total amplification cannot exceed VIOLATION_MAX_AMPLIFICATION.
 
     Anti-exploit (#1261): when violation_first_at is available (passed as
     days_since_violation), decay is anchored to the first violation event
@@ -175,7 +181,11 @@ def _violation_amplifier(
     effective_decay_days = days_since_violation if days_since_violation is not None else days_in_status
     decay = 2.0 ** (-effective_decay_days / VIOLATION_DECAY_HALFLIFE_DAYS)
     effective = violation_count * decay
-    return 1.0 + min(effective * VIOLATION_AMPLIFICATION, VIOLATION_MAX_AMPLIFICATION)
+    # Sublinear scaling (#1184): log(1+x) gives diminishing returns per violation.
+    # At effective=1: log(2) ≈ 0.693, at effective=5: log(6) ≈ 1.79,
+    # at effective=10: log(11) ≈ 2.40 — sublinear growth prevents runaway amplification.
+    damped = math.log(1.0 + effective)
+    return 1.0 + min(damped * VIOLATION_AMPLIFICATION, VIOLATION_MAX_AMPLIFICATION)
 
 
 def _temporal_gate(days_remaining: float) -> float:
