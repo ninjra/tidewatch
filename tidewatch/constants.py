@@ -244,3 +244,9 @@ PLANNER_TITLE_MAX_LEN = 200
 PLANNER_DESC_MAX_LEN = 500
 PLANNER_DOMAIN_MAX_LEN = 50
 PLANNER_ASCII_PRINTABLE_MIN = 32
+
+# --- Provenance thresholds (#1182) ---
+# 0.3: a 30% completion jump is unlikely without an audit trail — detectable gaming point.
+PROVENANCE_COMPLETION_JUMP_THRESHOLD = 0.3
+# 0.8: obligations reported 80%+ complete without source are high-risk for completion inflation.
+PROVENANCE_HIGH_COMPLETION = 0.8

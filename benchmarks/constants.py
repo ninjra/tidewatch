@@ -23,3 +23,11 @@ DEFAULT_N = 1000
 DEFAULT_SEED = 42
 DEFAULT_OUTPUT = "sob.json"
 JSON_INDENT = 2
+
+# ── Monte Carlo simulation thresholds ──
+# Pressure ≥ this is effectively at the [0,1] ceiling after floating-point rounding
+SATURATION_THRESHOLD = 0.999
+# Floating-point epsilon for inversion detection — noise below this is not meaningful
+INVERSION_EPSILON = 1e-10
+# Bootstrap CI requires ≥ this many trials for stable percentile estimates
+CI_MIN_TRIALS = 10

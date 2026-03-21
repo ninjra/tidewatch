@@ -52,6 +52,7 @@ from tidewatch.constants import (
     MATERIALITY_WEIGHTS,
     MS_PER_SECOND,
     OVERDUE_PRESSURE,
+    PROVENANCE_HIGH_COMPLETION,
     RATE_CONSTANT,
     SECONDS_PER_DAY,
     TIMING_LOGISTIC_K,
@@ -108,9 +109,6 @@ def _validate_obligation_inputs(obligation: Obligation) -> None:
     _check_provenance(obligation)
 
 
-# Provenance thresholds for gameable input detection (#1182)
-_PROVENANCE_COMPLETION_JUMP_THRESHOLD = 0.3  # Flag completion jumps > 30% without audit trail
-_PROVENANCE_HIGH_COMPLETION = 0.8  # High completion without source is suspicious
 
 _provenance_logger = logging.getLogger(f"{__name__}.provenance")
 
@@ -128,7 +126,7 @@ def _check_provenance(obligation: Obligation) -> None:
 
     # Missing provenance on non-zero completion
     if obligation.completion_pct > 0 and obligation.completion_source is None:
-        if obligation.completion_pct >= _PROVENANCE_HIGH_COMPLETION:
+        if obligation.completion_pct >= PROVENANCE_HIGH_COMPLETION:
             _provenance_logger.warning(
                 "PROVENANCE_MISSING: obligation %s has completion_pct=%.2f "
                 "without source attribution — high completion without audit trail",
@@ -160,6 +158,8 @@ def _check_provenance(obligation: Obligation) -> None:
 
 def _completion_dampening(completion_pct: float) -> float:
     """Compute completion dampening factor D (§3.1)."""
+    # Formula choice: logistic (default) vs linear (legacy). Logistic chosen
+    # for sharp transition near midpoint — linear under-weights early progress.
     if COMPLETION_DAMPENING_MODE == "logistic":
         sigmoid = 1.0 / (1.0 + _exponential(-COMPLETION_LOGISTIC_K * (completion_pct - COMPLETION_LOGISTIC_MID)))
         return 1.0 - (COMPLETION_DAMPENING * sigmoid)
@@ -193,14 +193,14 @@ def _timing_amplifier(
     """
     effective_days = days_in_status
     if days_since_status_change is not None:
-        effective_days = max(days_in_status, days_since_status_change)
+        effective_days = max(days_in_status, days_since_status_change)  # Anti-exploit: use longer window (#1261)
     boost = TIMING_MAX_MULTIPLIER - 1.0
     return 1.0 + boost / (1.0 + _exponential(-TIMING_LOGISTIC_K * (effective_days - TIMING_MID_DAYS)))
 
 
 def _violation_amplifier(
     violation_count: int,
-    days_in_status: float = 0.0,
+    days_in_status: float = 0.0,  # Default 0.0: no status age → no temporal decay
     days_since_violation: float | None = None,
 ) -> float:
     """Compute violation-based pressure amplification (#99, #1184, #1261).
@@ -221,15 +221,22 @@ def _violation_amplifier(
     restarting the decay clock. Falls back to days_in_status when None.
     """
     from tidewatch.constants import VIOLATION_DECAY_HALFLIFE_DAYS
+    # Identity return: 1.0 is the multiplicative identity — no amplification.
+    # This is semantically "no violations recorded", not "perfect compliance".
+    # Callers distinguish via violation_count itself, not this return value.
     if violation_count <= 0:
         return 1.0
     effective_decay_days = days_since_violation if days_since_violation is not None else days_in_status
-    decay = 2.0 ** (-effective_decay_days / VIOLATION_DECAY_HALFLIFE_DAYS)
+    # Exponential decay with base 2: chosen so decay = 0.5 at exactly one
+    # half-life (VIOLATION_DECAY_HALFLIFE_DAYS). Base-2 is the standard
+    # half-life formula: N(t) = N₀ × 2^(-t/t½).
+    decay = 2.0 ** (-effective_decay_days / VIOLATION_DECAY_HALFLIFE_DAYS)  # half-life formula
     effective = violation_count * decay
     # Sublinear scaling (#1184): log(1+x) gives diminishing returns per violation.
     # At effective=1: log(2) ≈ 0.693, at effective=5: log(6) ≈ 1.79,
     # at effective=10: log(11) ≈ 2.40 — sublinear growth prevents runaway amplification.
     damped = math.log(1.0 + effective)
+    # Cap: total violation boost ∈ [0, VIOLATION_MAX_AMPLIFICATION] (§3.1)
     return 1.0 + min(damped * VIOLATION_AMPLIFICATION, VIOLATION_MAX_AMPLIFICATION)
 
 
@@ -249,7 +256,98 @@ def _temporal_gate(days_remaining: float) -> float:
     """
     if days_remaining <= 0:
         return OVERDUE_PRESSURE
+    # Guard: days_remaining ≥ DIVISION_GUARD prevents division by zero
     return 1.0 - _exponential(-FANOUT_TEMPORAL_K / max(days_remaining, DIVISION_GUARD))
+
+
+def _clamp_nonnegative_days(days: float) -> float:
+    """Floor elapsed days at 0.0 — negative means future timestamp (clock skew)."""
+    if days <= 0.0:
+        return 0.0
+    return days
+
+
+def _compute_factors(
+    obligation: Obligation,
+    days_rem: float,
+    now: datetime,
+) -> tuple[float, float, float, float, float, float, float]:
+    """Compute all six pressure factors for a single obligation.
+
+    Returns:
+        (time_p, mat_mult, dep_amp, comp_damp, timing_amp, violation_amp, t_gate)
+    """
+    # Guard: days_rem ≥ DIVISION_GUARD prevents division by zero in P_time(t)
+    time_p = OVERDUE_PRESSURE if days_rem <= 0 else 1.0 - _exponential(-RATE_CONSTANT / max(days_rem, DIVISION_GUARD))
+    mat_mult = MATERIALITY_WEIGHTS.get(obligation.materiality, 1.0)
+
+    # Dependency urgency propagation (#1180): if dependents have earlier deadlines,
+    # use the tighter deadline for the temporal gate so urgency propagates upward
+    dep_days = days_rem
+    if obligation.earliest_dependent_deadline is not None:
+        dep_days_rem = _days_remaining(obligation.earliest_dependent_deadline, now)
+        dep_days = min(days_rem, dep_days_rem)  # Tighter deadline wins (#1180)
+    t_gate = _temporal_gate(dep_days)
+    effective_deps = min(obligation.dependency_count, DEPENDENCY_COUNT_CAP)  # DoS cap: deps ∈ [0, CAP] (#1213)
+    dep_amp = 1.0 + (effective_deps * DEPENDENCY_AMPLIFICATION * t_gate)
+
+    comp_damp = _completion_dampening(obligation.completion_pct)
+
+    # Anti-exploit (#1261): compute days_since_status_change from status_changed_at
+    days_since_status_change: float | None = None
+    if obligation.status_changed_at is not None:
+        days_since_status_change = _clamp_nonnegative_days(
+            _days_remaining(now, obligation.status_changed_at),
+        )
+    timing_amp = _timing_amplifier(obligation.days_in_status, days_since_status_change)
+
+    # Anti-exploit (#1261): compute days_since_violation from violation_first_at
+    days_since_violation: float | None = None
+    if obligation.violation_first_at is not None:
+        days_since_violation = _clamp_nonnegative_days(
+            _days_remaining(now, obligation.violation_first_at),
+        )
+    violation_amp = _violation_amplifier(obligation.violation_count, obligation.days_in_status, days_since_violation)
+
+    return time_p, mat_mult, dep_amp, comp_damp, timing_amp, violation_amp, t_gate
+
+
+def _apply_ablation(
+    ablate: frozenset[str],
+    time_p: float,
+    mat_mult: float,
+    dep_amp: float,
+    comp_damp: float,
+    timing_amp: float,
+    violation_amp: float,
+) -> tuple[float, float, float, float, float, float]:
+    """Neutralize ablated components to their identity value (1.0) for ablation studies (§4.3)."""
+    from tidewatch.components import (
+        COMP_COMPLETION_DAMP,
+        COMP_DEPENDENCY_AMP,
+        COMP_MATERIALITY,
+        COMP_TIME_PRESSURE,
+        COMP_TIMING_AMP,
+        COMP_VIOLATION_AMP,
+    )
+
+    # Identity value: 1.0 is the multiplicative identity. When ALL components
+    # are ablated, P = 1.0 × 1.0 × ... = 1.0. This tautology is intentional:
+    # it verifies no hidden terms exist in the pressure product (§4.3).
+    _IDENTITY = 1.0
+    if COMP_TIME_PRESSURE in ablate:
+        time_p = _IDENTITY
+    if COMP_MATERIALITY in ablate:
+        mat_mult = _IDENTITY
+    if COMP_DEPENDENCY_AMP in ablate:
+        dep_amp = _IDENTITY
+    if COMP_COMPLETION_DAMP in ablate:
+        comp_damp = _IDENTITY
+    if COMP_TIMING_AMP in ablate:
+        timing_amp = _IDENTITY
+    if COMP_VIOLATION_AMP in ablate:
+        violation_amp = _IDENTITY
+    return time_p, mat_mult, dep_amp, comp_damp, timing_amp, violation_amp
 
 
 def calculate_pressure(
@@ -282,61 +380,18 @@ def calculate_pressure(
     days_rem = _days_remaining(obligation.due_date, now)
     _validate_obligation_inputs(obligation)
 
-    time_p = OVERDUE_PRESSURE if days_rem <= 0 else 1.0 - _exponential(-RATE_CONSTANT / max(days_rem, DIVISION_GUARD))
-    mat_mult = MATERIALITY_WEIGHTS.get(obligation.materiality, 1.0)
-    # Dependency urgency propagation (#1180): if dependents have earlier deadlines,
-    # use the tighter deadline for the temporal gate so urgency propagates upward
-    dep_days = days_rem
-    if obligation.earliest_dependent_deadline is not None:
-        dep_days_rem = _days_remaining(obligation.earliest_dependent_deadline, now)
-        dep_days = min(days_rem, dep_days_rem)
-    t_gate = _temporal_gate(dep_days)
-    effective_deps = min(obligation.dependency_count, DEPENDENCY_COUNT_CAP)
-    dep_amp = 1.0 + (effective_deps * DEPENDENCY_AMPLIFICATION * t_gate)
-    comp_damp = _completion_dampening(obligation.completion_pct)
-    # Anti-exploit (#1261): compute days_since_status_change from status_changed_at
-    days_since_status_change: float | None = None
-    if obligation.status_changed_at is not None:
-        days_since_status_change = _days_remaining(now, obligation.status_changed_at)
-        # _days_remaining returns (first - second) / SECONDS_PER_DAY, so
-        # now - status_changed_at gives positive days since the change
-        days_since_status_change = max(0.0, days_since_status_change)
-    timing_amp = _timing_amplifier(obligation.days_in_status, days_since_status_change)
-
-    # Anti-exploit (#1261): compute days_since_violation from violation_first_at
-    days_since_violation: float | None = None
-    if obligation.violation_first_at is not None:
-        days_since_violation = _days_remaining(now, obligation.violation_first_at)
-        days_since_violation = max(0.0, days_since_violation)
-    violation_amp = _violation_amplifier(obligation.violation_count, obligation.days_in_status, days_since_violation)
-
-    # Apply ablation: neutralize specified components to their identity value (1.0)
-    from tidewatch.components import (
-        COMP_COMPLETION_DAMP,
-        COMP_DEPENDENCY_AMP,
-        COMP_MATERIALITY,
-        COMP_TIME_PRESSURE,
-        COMP_TIMING_AMP,
-        COMP_VIOLATION_AMP,
-        build_pressure_space,
+    time_p, mat_mult, dep_amp, comp_damp, timing_amp, violation_amp, t_gate = _compute_factors(
+        obligation, days_rem, now,
     )
 
     if ablate:
-        _IDENTITY = 1.0
-        if COMP_TIME_PRESSURE in ablate:
-            time_p = _IDENTITY
-        if COMP_MATERIALITY in ablate:
-            mat_mult = _IDENTITY
-        if COMP_DEPENDENCY_AMP in ablate:
-            dep_amp = _IDENTITY
-        if COMP_COMPLETION_DAMP in ablate:
-            comp_damp = _IDENTITY
-        if COMP_TIMING_AMP in ablate:
-            timing_amp = _IDENTITY
-        if COMP_VIOLATION_AMP in ablate:
-            violation_amp = _IDENTITY
+        time_p, mat_mult, dep_amp, comp_damp, timing_amp, violation_amp = _apply_ablation(
+            ablate, time_p, mat_mult, dep_amp, comp_damp, timing_amp, violation_amp,
+        )
 
     # Build ComponentSpace — preserves factors as named dimensions (Late Collapse)
+    from tidewatch.components import build_pressure_space
+
     components = build_pressure_space(
         time_pressure=time_p, materiality=mat_mult,
         dependency_amp=dep_amp, completion_damp=comp_damp,
@@ -594,7 +649,7 @@ def _fit_score(
 
     if tier == RiskTier.DEMOTABLE_WITH_FLOOR:
         floor = result.pressure * DEMOTABLE_FLOOR_FRACTION
-        adjusted = max(adjusted, floor)
+        adjusted = max(adjusted, floor)  # Floor: never reduce below DEMOTABLE_FLOOR_FRACTION (#1131)
 
     return (_SORT_TIER_NORMAL, adjusted + gravity_bonus)
 

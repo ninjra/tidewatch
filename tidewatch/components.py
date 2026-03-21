@@ -94,6 +94,21 @@ def _make_component_space(
         )
 
 
+def _clamp_normalize(value: float, lo: float, hi: float) -> float:
+    """Normalize value to [0,1] range given algebraic bounds, then clamp.
+
+    Values beyond the equation's algebraic bounds (§3.1) indicate
+    extrapolation beyond the model's defined domain and are clipped.
+    """
+    span = hi - lo
+    norm = (value - lo) / span if span > 0 else 0.0
+    if norm <= 0.0:
+        return 0.0
+    if norm >= 1.0:
+        return 1.0
+    return norm
+
+
 @dataclass(frozen=True)
 class _FallbackComponentSpace:
     """Lightweight ComponentSpace for environments without gravitas.
@@ -136,10 +151,7 @@ class _FallbackComponentSpace:
         for name, value in self._components.items():
             w = weights.get(name, 1.0)
             lo, hi = self._bounds.get(name, (0.0, 1.0))
-            span = hi - lo
-            norm = (value - lo) / span if span > 0 else 0.0
-            norm = max(0.0, min(1.0, norm))
-            total += w * norm
+            total += w * _clamp_normalize(value, lo, hi)
             weight_sum += w
         return total / weight_sum if weight_sum > 0 else 0.0
 
@@ -160,19 +172,37 @@ COMP_TIMING_AMP = "timing_amp"
 COMP_VIOLATION_AMP = "violation_amp"
 
 # Default bounds per component (for normalization and Pareto).
-# Exhaustive: one entry per COMP_* factor. Bounds derived from the pressure
-# equation's algebraic range — see constants.py for the source values.
+# Complete: one entry per COMP_* factor (all 6 pressure equation components).
+# Bounds derived from the pressure equation's algebraic range:
+#   time_pressure: [0, 1] from 1 - exp(-k/t) clamped by saturate()
+#   materiality: [1.0, 1.5] from MATERIALITY_WEIGHTS values
+#   dependency_amp: [1.0, 5.0] practical cap at DEPENDENCY_COUNT_CAP=40 deps
+#   completion_damp: [0.4, 1.0] from logistic dampening at pct=0..1
+#   timing_amp: [1.0, 1.2] from TIMING_MAX_MULTIPLIER
+#   violation_amp: [1.0, 1.5] from VIOLATION_MAX_AMPLIFICATION cap
+# See constants.py for the source parameter values.
 _DEFAULT_BOUNDS: dict[str, tuple[float, float]] = {
-    COMP_TIME_PRESSURE: (0.0, 1.0),
-    COMP_MATERIALITY: (1.0, 1.5),
-    COMP_DEPENDENCY_AMP: (1.0, 5.0),  # practical upper bound for 40 deps
-    COMP_COMPLETION_DAMP: (0.4, 1.0),
-    COMP_TIMING_AMP: (1.0, 1.2),
-    COMP_VIOLATION_AMP: (1.0, 1.5),
+    COMP_TIME_PRESSURE: (0.0, 1.0),       # 1 - exp(-k/t) range
+    COMP_MATERIALITY: (1.0, 1.5),         # from MATERIALITY_WEIGHTS
+    COMP_DEPENDENCY_AMP: (1.0, 5.0),      # practical cap at DEPENDENCY_COUNT_CAP
+    COMP_COMPLETION_DAMP: (0.4, 1.0),     # logistic dampening range at pct=0..1
+    COMP_TIMING_AMP: (1.0, 1.2),          # from TIMING_MAX_MULTIPLIER
+    COMP_VIOLATION_AMP: (1.0, 1.5),       # from VIOLATION_MAX_AMPLIFICATION
 }
 
 # Source equation for auditability
 _SOURCE_EQUATION = "P = P_time × M × A × D × timing_amp × violation_amp (§3.1)"
+
+# Component name → key mapping for build_pressure_space.
+# Complete: all 6 pressure equation factors (§3.1).
+_COMPONENT_KEYS: tuple[str, ...] = (
+    COMP_TIME_PRESSURE,
+    COMP_MATERIALITY,
+    COMP_DEPENDENCY_AMP,
+    COMP_COMPLETION_DAMP,
+    COMP_TIMING_AMP,
+    COMP_VIOLATION_AMP,
+)
 
 
 @dataclass(frozen=True)
@@ -230,10 +260,7 @@ class PressureComponents:
             for name, value in components.items():
                 w = weights.get(name, 1.0)
                 lo, hi = bounds.get(name, (0.0, 1.0))
-                span = hi - lo
-                norm = (value - lo) / span if span > 0 else 0.0
-                norm = max(0.0, min(1.0, norm))
-                total += w * norm
+                total += w * _clamp_normalize(value, lo, hi)
                 weight_sum += w
             return total / weight_sum if weight_sum > 0 else 0.0
         return self.pressure
@@ -254,15 +281,11 @@ def build_pressure_space(
     raw_inputs: dict[str, Any] | None = None,
 ) -> PressureComponents:
     """Construct a PressureComponents from individual factor values."""
+    values = (time_pressure, materiality, dependency_amp,
+              completion_damp, timing_amp, violation_amp)
+    components = dict(zip(_COMPONENT_KEYS, values, strict=True))
     space = _make_component_space(
-        components={
-            COMP_TIME_PRESSURE: time_pressure,
-            COMP_MATERIALITY: materiality,
-            COMP_DEPENDENCY_AMP: dependency_amp,
-            COMP_COMPLETION_DAMP: completion_damp,
-            COMP_TIMING_AMP: timing_amp,
-            COMP_VIOLATION_AMP: violation_amp,
-        },
+        components=components,
         component_bounds=_DEFAULT_BOUNDS,
         source_equation=_SOURCE_EQUATION,
         raw_inputs=raw_inputs,

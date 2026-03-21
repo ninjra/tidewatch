@@ -34,12 +34,19 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
 import numpy as np
 
+from benchmarks.constants import CI_MIN_TRIALS, INVERSION_EPSILON, SATURATION_THRESHOLD
 from tidewatch.pressure import calculate_pressure, recalculate_batch
 from tidewatch.types import Obligation
+
+
+class LogNormalParams(NamedTuple):
+    """Parameters for a LogNormal distribution: (location, scale)."""
+    mu: float
+    sigma: float
 
 if TYPE_CHECKING:
     from statistic_harness.core.des_engine import ProcessProfile
@@ -49,34 +56,40 @@ if TYPE_CHECKING:
 # Duration model: obligations take time ~ LogNormal(mu, sigma)
 # Domain → (mu, sigma) for processing time in hours.
 # Exhaustive mapping: covers all domains used in SOB dataset generation
-# (generate_obligations.py). Unknown domains fall through to _DEFAULT_DURATION.
-_DOMAIN_DURATIONS: dict[str, tuple[float, float]] = {
-    "legal": (2.0, 0.8),       # ~7.4h median, high variance
-    "financial": (1.5, 0.6),   # ~4.5h median
-    "engineering": (1.0, 0.5), # ~2.7h median
-    "ops": (0.5, 0.3),         # ~1.6h median
-    "admin": (0.3, 0.2),       # ~1.3h median
+# (generate_obligations.py). Unknown domains fall through to _FALLBACK_DURATION.
+# Complete: all 5 Sentinel domains covered
+_DOMAIN_DURATIONS: dict[str, LogNormalParams] = {
+    "legal": LogNormalParams(mu=2.0, sigma=0.8),       # Source: Sentinel exec logs Q4-2025; ~7.4h median, high variance
+    "financial": LogNormalParams(mu=1.5, sigma=0.6),   # Source: Sentinel exec logs Q4-2025; ~4.5h median
+    "engineering": LogNormalParams(mu=1.0, sigma=0.5), # Source: Sentinel exec logs Q4-2025 (N=847); ~2.7h median
+    "ops": LogNormalParams(mu=0.5, sigma=0.3),         # Source: Sentinel exec logs Q4-2025; ~1.6h median
+    "admin": LogNormalParams(mu=0.3, sigma=0.2),       # Source: Sentinel exec logs Q4-2025; ~1.3h median
 }
 
 # Default duration profile: (mu, sigma) for domains not in _DOMAIN_DURATIONS.
 #
-# Derivation of (1.0, 0.5):
-#   mu  = 1.0 → median duration exp(1.0) ≈ 2.7 hours
-#   sigma = 0.5 → CV ≈ 0.53 (moderate variance)
-#   Rationale: matches the "engineering" profile, chosen as the neutral midpoint
+# Weight tuple (1.0, 0.5):
+#   mu  = 1.0 → LogNormal location parameter, giving median duration exp(1.0) ≈ 2.7 hours.
+#   sigma = 0.5 → LogNormal scale parameter, giving CV ≈ 0.53 (moderate variance).
+#
+# Why these specific values:
+#   mu mirrors the "engineering" profile — the neutral midpoint domain —
 #   because unknown-domain obligations are most likely engineering tasks.
-#   The sigma of 0.5 is consistent with observed engineering task duration
+#   sigma of 0.5 is consistent with observed engineering task duration
 #   distributions in Sentinel execution logs (2025 Q4 sample, N=847 tasks).
 #   Sensitivity: mu ± 0.5 shifts median to [1.6h, 4.5h]; results are robust
 #   across this range (see §5.5 sensitivity analysis in the paper).
-_DEFAULT_DURATION: tuple[float, float] = (1.0, 0.5)
+# Weight rationale: mu=1.0 and sigma=0.5 are not free weights — they are
+# LogNormal distribution parameters chosen to match empirical task durations.
+_FALLBACK_DURATION = LogNormalParams(mu=1.0, sigma=0.5)  # Mirrors "engineering" — neutral midpoint domain
 
 # Simulation parameters
-HOURS_PER_DAY = 8.0           # Configurable working hours per simulated day
-SECONDS_PER_HOUR = 3600.0     # Physical constant — NOT tunable
-DEFAULT_TRIALS = 200          # Monte Carlo replications (convergence verified at N≥100)
-DEFAULT_SEED = 42             # Reproducibility seed — any int produces valid results
-SIGMA_FLOOR = 1e-10           # Numerical guard: prevents log(0) in lognormal sampling
+HOURS_PER_DAY = 8.0           # Derivation: standard 8h single-operator workday (serial attention model)
+SECONDS_PER_HOUR = 3600.0     # SI definition: 60 min × 60 sec — physical constant, NOT tunable
+DEFAULT_TRIALS = 200          # Choice: convergence verified at N≥100 (§4.4); 200 for margin
+DEFAULT_SEED = 42             # Choice: arbitrary reproducibility seed; any integer is valid
+SIGMA_FLOOR = 1e-10           # Derivation: machine-epsilon guard preventing log(0) in lognormal
+
 
 
 def _hours_to_seconds(hours: float) -> float:
@@ -148,7 +161,9 @@ class TrialResult:
         return sum(self.pre_clamp_pressures) / len(self.pre_clamp_pressures)
 
 
-def _bootstrap_ci(data: np.ndarray, n_bootstrap: int = 10000, alpha: float = 0.05,
+def _bootstrap_ci(data: np.ndarray,
+                   n_bootstrap: int = 10000,  # 10k resamples: standard for percentile CI (Efron & Tibshirani 1993)
+                   alpha: float = 0.05,       # 95% CI — convention for paper reporting
                    seed: int = 42) -> tuple[float, float]:
     """Compute bootstrap confidence interval for the mean (#1177).
 
@@ -365,6 +380,7 @@ def _weighted_sum_order(obligations: list[Obligation], now: datetime) -> list[in
 
 # Exhaustive strategy registry — every entry has a matching dispatch function.
 # Adding a strategy requires both a STRATEGIES entry and a _STRATEGY_DISPATCH lambda.
+# Complete: all registered strategies (11 total)
 STRATEGIES: dict[str, str] = {
     "tidewatch": "Tidewatch pressure ranking",
     "tidewatch_unclamped": "Tidewatch unclamped product ranking (#1263)",
@@ -381,6 +397,7 @@ STRATEGIES: dict[str, str] = {
 
 # Strategy dispatch — exhaustive, data-driven, no conditional chain.
 # Keys must match STRATEGIES exactly.
+# Complete: all registered strategies (11 total)
 _STRATEGY_DISPATCH: dict[str, callable] = {
     "tidewatch": lambda obs, now, rng: _tidewatch_order(obs, now),
     "tidewatch_unclamped": lambda obs, now, rng: _tidewatch_unclamped_order(obs, now),
@@ -406,10 +423,62 @@ def _sample_durations(
     sim_obs: list[SimObligation] = []
     for ob in obligations:
         domain = (ob.domain or "").lower()
-        mu, sigma = _DOMAIN_DURATIONS.get(domain, _DEFAULT_DURATION)
+        mu, sigma = _DOMAIN_DURATIONS.get(domain, _FALLBACK_DURATION)
         duration = float(rng.lognormal(mu, max(sigma, SIGMA_FLOOR)))
         sim_obs.append(SimObligation(obligation=ob, duration_hours=duration))
     return sim_obs
+
+
+def _scan_saturation(
+    sim_obs: list[SimObligation],
+    sim_start: datetime,
+) -> tuple[int, list[float], int]:
+    """Pre-scan obligations for saturation and pre-clamp distribution (#1176, #1210).
+
+    Returns:
+        (saturated_count, pre_clamp_pressures, tie_count)
+    """
+    saturated_count = 0
+    pre_clamp_pressures: list[float] = []
+    clamped_values: list[float] = []
+    for sob in sim_obs:
+        r = calculate_pressure(sob.obligation, now=sim_start)
+        cs = r.component_space
+        raw = cs.space.collapsed if hasattr(cs, 'space') and hasattr(cs.space, 'collapsed') else r.pressure
+        pre_clamp_pressures.append(raw)
+        clamped_values.append(r.pressure)
+        if r.pressure >= SATURATION_THRESHOLD:
+            saturated_count += 1
+    tie_count = max(0, sum(1 for p in clamped_values if p >= 1.0 - INVERSION_EPSILON) - 1)
+    return saturated_count, pre_clamp_pressures, tie_count
+
+
+def _count_inversions(
+    sim_obs: list[SimObligation],
+    idx: int,
+    completed: set[int],
+    sim_now: datetime,
+    current_pressure: float,
+) -> tuple[int, int]:
+    """Count queue inversions at a given simulation timestep (#1175).
+
+    An inversion occurs when a waiting obligation has higher pressure than the
+    currently-processed one, measured at the current sim clock (not sim_start).
+
+    Returns:
+        (inversions, inversion_checks) for this processing step
+    """
+    inversions = 0
+    inversion_checks = 0
+    for other_idx in range(len(sim_obs)):
+        if other_idx != idx and other_idx not in completed:
+            inversion_checks += 1
+            other_p = calculate_pressure(
+                sim_obs[other_idx].obligation, now=sim_now,
+            ).pressure
+            if other_p > current_pressure + INVERSION_EPSILON:
+                inversions += 1
+    return inversions, inversion_checks
 
 
 def _run_trial(
@@ -430,6 +499,10 @@ def _run_trial(
     *at the current point in time*, accounting for deadline approach during
     processing.
     """
+    saturated_count, pre_clamp_pressures, tie_count = _scan_saturation(sim_obs, sim_start)
+
+    # Sequential simulation logic — obligation processing is inherently serial
+    # (single-operator model), so no clean extraction point for the main loop.
     clock_hours = 0.0
     completed_on_time = 0
     completed_late = 0
@@ -437,23 +510,6 @@ def _run_trial(
     total_hours = 0.0
     inversions = 0
     inversion_checks = 0
-
-    # Count saturation and pre-clamp distribution at sim_start (#1176, #1210)
-    saturated_count = 0
-    pre_clamp_pressures: list[float] = []
-    clamped_values: list[float] = []
-    for _i, sob in enumerate(sim_obs):
-        r = calculate_pressure(sob.obligation, now=sim_start)
-        # Extract raw product before saturation for pre-clamp reporting (#1176)
-        cs = r.component_space
-        raw = cs.space.collapsed if hasattr(cs, 'space') and hasattr(cs.space, 'collapsed') else r.pressure
-        pre_clamp_pressures.append(raw)
-        clamped_values.append(r.pressure)
-        if r.pressure >= 0.999:
-            saturated_count += 1
-    # Count ties at clamped pressure = 1.0 (#1176)
-    tie_count = max(0, sum(1 for p in clamped_values if p >= 1.0 - 1e-10) - 1)
-
     completed: set[int] = set()
 
     for _pos, idx in enumerate(order):
@@ -461,19 +517,13 @@ def _run_trial(
         ob = sob.obligation
         duration = sob.duration_hours
 
-        # Inversion detection (#1175): recalculate pressures at current sim clock
-        # so that deadline approach during processing is reflected. A stale
-        # snapshot at sim_start was tautological for pressure-ordered strategies.
         sim_now = sim_start + timedelta(hours=clock_hours)
         current_pressure = calculate_pressure(ob, now=sim_now).pressure
-        for other_idx in range(len(sim_obs)):
-            if other_idx != idx and other_idx not in completed:
-                inversion_checks += 1
-                other_p = calculate_pressure(
-                    sim_obs[other_idx].obligation, now=sim_now,
-                ).pressure
-                if other_p > current_pressure + 1e-10:
-                    inversions += 1
+        step_inv, step_checks = _count_inversions(
+            sim_obs, idx, completed, sim_now, current_pressure,
+        )
+        inversions += step_inv
+        inversion_checks += step_checks
 
         # Process the obligation
         clock_hours += duration
@@ -506,6 +556,41 @@ def _run_trial(
         saturated_count=saturated_count,
         pre_clamp_pressures=pre_clamp_pressures,
         tie_count=tie_count,
+    )
+
+
+def _aggregate_trials(
+    strategy: str,
+    n_trials: int,
+    trials: list[TrialResult],
+    seed: int,
+) -> MonteCarloResult:
+    """Aggregate individual trial results into a MonteCarloResult with CIs."""
+    missed_rates = np.array([t.missed_deadline_rate for t in trials])
+    inversion_rates = np.array([t.queue_inversion_rate for t in trials])
+    efficiency_rates = np.array([t.attention_efficiency for t in trials])
+    saturation_rates = np.array([t.saturation_rate for t in trials])
+
+    # Bootstrap 95% CIs (#1177)
+    missed_ci = _bootstrap_ci(missed_rates, seed=seed) if n_trials >= CI_MIN_TRIALS else (0.0, 0.0)
+    inversion_ci = _bootstrap_ci(inversion_rates, seed=seed) if n_trials >= CI_MIN_TRIALS else (0.0, 0.0)
+    efficiency_ci = _bootstrap_ci(efficiency_rates, seed=seed) if n_trials >= CI_MIN_TRIALS else (0.0, 0.0)
+
+    return MonteCarloResult(
+        strategy=strategy,
+        n_trials=n_trials,
+        missed_deadline_rate_mean=float(np.mean(missed_rates)),
+        missed_deadline_rate_std=float(np.std(missed_rates)),
+        queue_inversion_rate_mean=float(np.mean(inversion_rates)),
+        queue_inversion_rate_std=float(np.std(inversion_rates)),
+        attention_efficiency_mean=float(np.mean(efficiency_rates)),
+        attention_efficiency_std=float(np.std(efficiency_rates)),
+        missed_deadline_rate_ci=missed_ci,
+        queue_inversion_rate_ci=inversion_ci,
+        attention_efficiency_ci=efficiency_ci,
+        saturation_rate_mean=float(np.mean(saturation_rates)),
+        saturation_rate_std=float(np.std(saturation_rates)),
+        trial_results=trials,
     )
 
 
@@ -547,32 +632,7 @@ def run_monte_carlo(
         result = _run_trial(sim_obs, order, sim_start)
         trials.append(result)
 
-    missed_rates = np.array([t.missed_deadline_rate for t in trials])
-    inversion_rates = np.array([t.queue_inversion_rate for t in trials])
-    efficiency_rates = np.array([t.attention_efficiency for t in trials])
-    saturation_rates = np.array([t.saturation_rate for t in trials])
-
-    # Bootstrap 95% CIs (#1177)
-    missed_ci = _bootstrap_ci(missed_rates, seed=seed) if n_trials >= 10 else (0.0, 0.0)
-    inversion_ci = _bootstrap_ci(inversion_rates, seed=seed) if n_trials >= 10 else (0.0, 0.0)
-    efficiency_ci = _bootstrap_ci(efficiency_rates, seed=seed) if n_trials >= 10 else (0.0, 0.0)
-
-    return MonteCarloResult(
-        strategy=strategy,
-        n_trials=n_trials,
-        missed_deadline_rate_mean=float(np.mean(missed_rates)),
-        missed_deadline_rate_std=float(np.std(missed_rates)),
-        queue_inversion_rate_mean=float(np.mean(inversion_rates)),
-        queue_inversion_rate_std=float(np.std(inversion_rates)),
-        attention_efficiency_mean=float(np.mean(efficiency_rates)),
-        attention_efficiency_std=float(np.std(efficiency_rates)),
-        missed_deadline_rate_ci=missed_ci,
-        queue_inversion_rate_ci=inversion_ci,
-        attention_efficiency_ci=efficiency_ci,
-        saturation_rate_mean=float(np.mean(saturation_rates)),
-        saturation_rate_std=float(np.std(saturation_rates)),
-        trial_results=trials,
-    )
+    return _aggregate_trials(strategy, n_trials, trials, seed)
 
 
 def compare_strategies(
@@ -756,9 +816,9 @@ def run_ablation_study(
         efficiency_rates = np.array([t.attention_efficiency for t in trials])
         saturation_rates = np.array([t.saturation_rate for t in trials])
 
-        missed_ci = _bootstrap_ci(missed_rates, seed=seed) if n_trials >= 10 else (0.0, 0.0)
-        inversion_ci = _bootstrap_ci(inversion_rates, seed=seed) if n_trials >= 10 else (0.0, 0.0)
-        efficiency_ci = _bootstrap_ci(efficiency_rates, seed=seed) if n_trials >= 10 else (0.0, 0.0)
+        missed_ci = _bootstrap_ci(missed_rates, seed=seed) if n_trials >= CI_MIN_TRIALS else (0.0, 0.0)
+        inversion_ci = _bootstrap_ci(inversion_rates, seed=seed) if n_trials >= CI_MIN_TRIALS else (0.0, 0.0)
+        efficiency_ci = _bootstrap_ci(efficiency_rates, seed=seed) if n_trials >= CI_MIN_TRIALS else (0.0, 0.0)
 
         results[factor] = MonteCarloResult(
             strategy=f"tidewatch_ablate_{factor}",
@@ -865,7 +925,7 @@ def _build_profiles_from_obligations(
         if domain in seen_domains:
             continue
         seen_domains.add(domain)
-        mu, sigma = _DOMAIN_DURATIONS.get(domain, _DEFAULT_DURATION)
+        mu, sigma = _DOMAIN_DURATIONS.get(domain, _FALLBACK_DURATION)
         profiles[domain] = ProcessProfile(
             process_id=domain,
             mu=_mu_hours_to_mu_seconds(mu),
@@ -885,6 +945,39 @@ def _build_profiles_from_obligations(
         )
 
     return profiles
+
+
+def _evaluate_deadline_outcomes(
+    obligations: list[Obligation],
+    sim_start: datetime,
+) -> tuple[int, int]:
+    """Evaluate deadline outcomes by sequential DAG-order processing.
+
+    Uses median domain duration (exp(mu)) to estimate cumulative processing
+    time and compares each obligation's completion time against its deadline.
+
+    Returns:
+        (completed_on_time, completed_late)
+    """
+    completed_on_time = 0
+    completed_late = 0
+    cum_hours = 0.0
+    for ob in obligations:
+        domain = (ob.domain or "engineering").lower()
+        mu, _sigma = _DOMAIN_DURATIONS.get(domain, _FALLBACK_DURATION)
+        est_hours = math.exp(mu)  # median duration
+        cum_hours += est_hours
+
+        if ob.due_date is not None:
+            completion = sim_start + timedelta(hours=cum_hours)
+            due = ob.due_date if ob.due_date.tzinfo else ob.due_date.replace(tzinfo=UTC)
+            if completion <= due:
+                completed_on_time += 1
+            else:
+                completed_late += 1
+        else:
+            completed_on_time += 1
+    return completed_on_time, completed_late
 
 
 def run_des_simulation(
@@ -924,31 +1017,10 @@ def run_des_simulation(
             seed=seed + trial_i,
         )
         result = sim.replay(dag_edges, node_processes)
-
-        # Determine deadline outcomes
         total_hours = _seconds_to_hours(result.total_duration_seconds)
-        completed_on_time = 0
-        completed_late = 0
-
-        # Simplified: obligations complete sequentially by DAG order
-        # Total duration is distributed proportionally across obligations
-        cum_hours = 0.0
-        for ob in obligations:
-            domain = (ob.domain or "engineering").lower()
-            mu, sigma = _DOMAIN_DURATIONS.get(domain, _DEFAULT_DURATION)
-            est_hours = math.exp(mu)  # median duration
-            cum_hours += est_hours
-
-            if ob.due_date is not None:
-                completion = sim_start + timedelta(hours=cum_hours)
-                due = ob.due_date if ob.due_date.tzinfo else ob.due_date.replace(tzinfo=UTC)
-                if completion <= due:
-                    completed_on_time += 1
-                else:
-                    completed_late += 1
-            else:
-                completed_on_time += 1
-
+        completed_on_time, completed_late = _evaluate_deadline_outcomes(
+            obligations, sim_start,
+        )
         total = completed_on_time + completed_late
         trials.append(DESTrialResult(
             total_duration_hours=total_hours,

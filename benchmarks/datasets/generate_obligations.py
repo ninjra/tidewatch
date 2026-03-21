@@ -53,6 +53,41 @@ def _build_obligation(
     }
 
 
+def _sample_obligation_fields(
+    rng: random.Random,
+    config: SOBConfig,
+    now: datetime,
+) -> tuple[str, str, int, str, int, float, float]:
+    """Sample random fields for a single synthetic obligation.
+
+    Returns:
+        (domain, materiality, days_out, due_date_iso, dep_count,
+         completion, optimal_attention_days)
+    """
+    domain = rng.choice(DOMAINS)
+    materiality = "material" if rng.random() < config.material_probability else "routine"
+
+    if rng.random() < config.overdue_probability:
+        days_out = -rng.randint(1, config.overdue_max_days)
+    else:
+        days_out = rng.randint(1, config.deadline_horizon_days)
+
+    due_date = (now + timedelta(days=days_out)).isoformat()
+
+    raw_dep = int(rng.paretovariate(config.dependency_pareto_alpha))
+    dep_count = raw_dep if raw_dep <= config.max_dependency_count else config.max_dependency_count
+
+    completion = round(rng.random() * rng.random(), 2)
+
+    if days_out > 0:
+        raw_attention = days_out * config.optimal_attention_fraction
+        optimal_attention_days = raw_attention if raw_attention >= config.min_attention_days else config.min_attention_days
+    else:
+        optimal_attention_days = 0.0
+
+    return domain, materiality, days_out, due_date, dep_count, completion, optimal_attention_days
+
+
 def generate(
     n: int = 1000,
     seed: int = 42,
@@ -79,27 +114,9 @@ def generate(
         now = datetime.now(UTC)
 
     for i in range(n):
-        domain = rng.choice(DOMAINS)
-        materiality = "material" if rng.random() < config.material_probability else "routine"
-
-        if rng.random() < config.overdue_probability:
-            days_out = -rng.randint(1, config.overdue_max_days)
-        else:
-            days_out = rng.randint(1, config.deadline_horizon_days)
-
-        due_date = (now + timedelta(days=days_out)).isoformat()
-
-        raw_dep = int(rng.paretovariate(config.dependency_pareto_alpha))
-        dep_count = raw_dep if raw_dep <= config.max_dependency_count else config.max_dependency_count
-
-        completion = round(rng.random() * rng.random(), 2)
-
-        if days_out > 0:
-            raw_attention = days_out * config.optimal_attention_fraction
-            optimal_attention_days = raw_attention if raw_attention >= config.min_attention_days else config.min_attention_days
-        else:
-            optimal_attention_days = 0.0
-
+        domain, materiality, days_out, due_date, dep_count, completion, optimal_attention_days = (
+            _sample_obligation_fields(rng, config, now)
+        )
         obligations.append(_build_obligation(
             i, domain, materiality, due_date,
             dep_count, completion, days_out, optimal_attention_days,
