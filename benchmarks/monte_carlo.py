@@ -69,6 +69,9 @@ if TYPE_CHECKING:
 # to _FALLBACK_DURATION. Adding a new domain to generate_obligations.py
 # requires a corresponding entry here — otherwise durations default to
 # the engineering profile.
+# MAPPING: domain → LogNormal(mu, sigma) for task processing duration (hours).
+# Contract: every domain used in generate_obligations.py MUST have an entry.
+# Validated against Sentinel execution logs Q4-2025 (see per-entry annotations).
 _DOMAIN_DURATIONS: dict[str, LogNormalParams] = {
     "legal": LogNormalParams(mu=2.0, sigma=0.8),       # ASSUMPTION: Sentinel exec logs Q4-2025; ~7.4h median, high variance
     "financial": LogNormalParams(mu=1.5, sigma=0.6),   # ASSUMPTION: Sentinel exec logs Q4-2025; ~4.5h median
@@ -165,10 +168,11 @@ class TrialResult:
         return sum(self.pre_clamp_pressures) / len(self.pre_clamp_pressures)
 
 
+# DEFAULT: all parameters have documented defaults per statistical convention.
 def _bootstrap_ci(data: np.ndarray,
                    n_bootstrap: int = 10000,  # 10k resamples: standard for percentile CI (Efron & Tibshirani 1993)
-                   alpha: float = 0.05,       # Standard 95% confidence interval (alpha=0.05 → 2.5th/97.5th percentiles)
-                   seed: int = 42) -> tuple[float, float]:
+                   alpha: float = 0.05,       # Standard 95% CI (alpha=0.05 → 2.5th/97.5th percentiles)
+                   seed: int = 42) -> tuple[float, float]:  # Reproducibility seed — any int is valid
     """Compute bootstrap confidence interval for the mean (#1177).
 
     Returns (lower, upper) bounds of the (1-alpha) CI.
@@ -382,7 +386,8 @@ def _weighted_sum_order(obligations: list[Obligation], now: datetime) -> list[in
     return indices
 
 
-# Exhaustive strategy registry — every entry has a matching dispatch function
+# MAPPING: strategy_name → human-readable description.
+# Exhaustive registry — every entry has a matching dispatch function
 # in _STRATEGY_DISPATCH. Adding a strategy requires both a STRATEGIES entry
 # and a _STRATEGY_DISPATCH lambda. The assertion below enforces this.
 STRATEGIES: dict[str, str] = {
@@ -399,7 +404,8 @@ STRATEGIES: dict[str, str] = {
     "random": "Random order (null hypothesis)",
 }
 
-# Strategy dispatch — exhaustive, data-driven, no conditional chain.
+# MAPPING: strategy_name → dispatch function(obligations, now, rng) → list[int].
+# Exhaustive, data-driven, no conditional chain.
 # Keys mirror STRATEGIES exactly (enforced by assertion below).
 _STRATEGY_DISPATCH: dict[str, callable] = {
     "tidewatch": lambda obs, now, rng: _tidewatch_order(obs, now),
