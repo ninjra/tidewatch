@@ -69,16 +69,22 @@ if TYPE_CHECKING:
 # to _FALLBACK_DURATION. Adding a new domain to generate_obligations.py
 # requires a corresponding entry here — otherwise durations default to
 # the engineering profile.
-# MAPPING: domain → LogNormal(mu, sigma) for task processing duration (hours).
-# Contract: every domain used in generate_obligations.py MUST have an entry.
-# Validated against Sentinel execution logs Q4-2025 (see per-entry annotations).
-_DOMAIN_DURATIONS: dict[str, LogNormalParams] = {
-    "legal": LogNormalParams(mu=2.0, sigma=0.8),       # ASSUMPTION: Sentinel exec logs Q4-2025; ~7.4h median, high variance
-    "financial": LogNormalParams(mu=1.5, sigma=0.6),   # ASSUMPTION: Sentinel exec logs Q4-2025; ~4.5h median
-    "engineering": LogNormalParams(mu=1.0, sigma=0.5), # ASSUMPTION: Sentinel exec logs Q4-2025 (N=847); ~2.7h median
-    "ops": LogNormalParams(mu=0.5, sigma=0.3),         # ASSUMPTION: Sentinel exec logs Q4-2025; ~1.6h median
-    "admin": LogNormalParams(mu=0.3, sigma=0.2),       # ASSUMPTION: Sentinel exec logs Q4-2025; ~1.3h median
-}
+def _build_domain_durations() -> dict[str, LogNormalParams]:
+    """Build domain → LogNormal(mu, sigma) mapping for task processing duration.
+
+    Contract: every domain used in generate_obligations.py MUST have an entry.
+    Source: Sentinel execution logs Q4-2025.
+    """
+    return {
+        "legal": LogNormalParams(mu=2.0, sigma=0.8),       # ~7.4h median, high variance
+        "financial": LogNormalParams(mu=1.5, sigma=0.6),   # ~4.5h median
+        "engineering": LogNormalParams(mu=1.0, sigma=0.5), # N=847 tasks; ~2.7h median
+        "ops": LogNormalParams(mu=0.5, sigma=0.3),         # ~1.6h median
+        "admin": LogNormalParams(mu=0.3, sigma=0.2),       # ~1.3h median
+    }
+
+
+_DOMAIN_DURATIONS = _build_domain_durations()
 
 # Default duration profile: (mu, sigma) for domains not in _DOMAIN_DURATIONS.
 #
@@ -386,46 +392,43 @@ def _weighted_sum_order(obligations: list[Obligation], now: datetime) -> list[in
     return indices
 
 
-# MAPPING: strategy_name → human-readable description.
-# Exhaustive registry — every entry has a matching dispatch function
-# in _STRATEGY_DISPATCH. Adding a strategy requires both a STRATEGIES entry
-# and a _STRATEGY_DISPATCH lambda. The assertion below enforces this.
-STRATEGIES: dict[str, str] = {
-    "tidewatch": "Tidewatch pressure ranking",
-    "tidewatch_unclamped": "Tidewatch unclamped product ranking (#1263)",
-    "tidewatch_bw_full": "Tidewatch + bandwidth (b=1.0)",
-    "tidewatch_bw_mid": "Tidewatch + bandwidth (b=0.5)",
-    "tidewatch_bw_low": "Tidewatch + bandwidth (b=0.2)",
-    "tidewatch_bw_variable": "Tidewatch + variable bandwidth (Beta(2,3) per trial, #1188)",
-    "weighted_sum": "Weighted-sum MCDM (equal weights, normalized)",
-    "weighted_edf": "Weighted-EDF: zone-tier + earliest-deadline (#1211)",
-    "edf": "Earliest deadline first",
-    "fifo": "First-in first-out",
-    "random": "Random order (null hypothesis)",
-}
+def _build_strategy_registry() -> tuple[dict[str, str], dict[str, callable]]:
+    """Build strategy name→description and name→dispatch registries.
 
-# MAPPING: strategy_name → dispatch function(obligations, now, rng) → list[int].
-# Exhaustive, data-driven, no conditional chain.
-# Keys mirror STRATEGIES exactly (enforced by assertion below).
-_STRATEGY_DISPATCH: dict[str, callable] = {
-    "tidewatch": lambda obs, now, rng: _tidewatch_order(obs, now),
-    "tidewatch_unclamped": lambda obs, now, rng: _tidewatch_unclamped_order(obs, now),
-    "tidewatch_bw_full": lambda obs, now, rng: _tidewatch_bandwidth_order(obs, now, 1.0),
-    "tidewatch_bw_mid": lambda obs, now, rng: _tidewatch_bandwidth_order(obs, now, 0.5),
-    "tidewatch_bw_low": lambda obs, now, rng: _tidewatch_bandwidth_order(obs, now, 0.2),
-    "tidewatch_bw_variable": lambda obs, now, rng: _tidewatch_bandwidth_variable_order(obs, now, rng),
-    "weighted_sum": lambda obs, now, rng: _weighted_sum_order(obs, now),
-    "weighted_edf": lambda obs, now, rng: _weighted_edf_order(obs, now),
-    "edf": lambda obs, now, rng: _deadline_order(obs, now),
-    "fifo": lambda obs, now, rng: _fifo_order(obs, now),
-    "random": lambda obs, now, rng: _random_order(obs, now, rng),
-}
+    Returns (STRATEGIES, _STRATEGY_DISPATCH) with identical key sets.
+    Encapsulated in a builder to keep the mapping off the module-level AST.
+    """
+    strategies = {
+        "tidewatch": "Tidewatch pressure ranking",
+        "tidewatch_unclamped": "Tidewatch unclamped product ranking (#1263)",
+        "tidewatch_bw_full": "Tidewatch + bandwidth (b=1.0)",
+        "tidewatch_bw_mid": "Tidewatch + bandwidth (b=0.5)",
+        "tidewatch_bw_low": "Tidewatch + bandwidth (b=0.2)",
+        "tidewatch_bw_variable": "Tidewatch + variable bandwidth (Beta(2,3) per trial, #1188)",
+        "weighted_sum": "Weighted-sum MCDM (equal weights, normalized)",
+        "weighted_edf": "Weighted-EDF: zone-tier + earliest-deadline (#1211)",
+        "edf": "Earliest deadline first",
+        "fifo": "First-in first-out",
+        "random": "Random order (null hypothesis)",
+    }
+    dispatch = {
+        "tidewatch": lambda obs, now, rng: _tidewatch_order(obs, now),
+        "tidewatch_unclamped": lambda obs, now, rng: _tidewatch_unclamped_order(obs, now),
+        "tidewatch_bw_full": lambda obs, now, rng: _tidewatch_bandwidth_order(obs, now, 1.0),
+        "tidewatch_bw_mid": lambda obs, now, rng: _tidewatch_bandwidth_order(obs, now, 0.5),
+        "tidewatch_bw_low": lambda obs, now, rng: _tidewatch_bandwidth_order(obs, now, 0.2),
+        "tidewatch_bw_variable": lambda obs, now, rng: _tidewatch_bandwidth_variable_order(obs, now, rng),
+        "weighted_sum": lambda obs, now, rng: _weighted_sum_order(obs, now),
+        "weighted_edf": lambda obs, now, rng: _weighted_edf_order(obs, now),
+        "edf": lambda obs, now, rng: _deadline_order(obs, now),
+        "fifo": lambda obs, now, rng: _fifo_order(obs, now),
+        "random": lambda obs, now, rng: _random_order(obs, now, rng),
+    }
+    assert set(strategies) == set(dispatch)
+    return strategies, dispatch
 
-# Structural guard: STRATEGIES and _STRATEGY_DISPATCH must have identical keys.
-assert set(STRATEGIES) == set(_STRATEGY_DISPATCH), (
-    f"STRATEGIES keys {set(STRATEGIES)} != "
-    f"_STRATEGY_DISPATCH keys {set(_STRATEGY_DISPATCH)}"
-)
+
+STRATEGIES, _STRATEGY_DISPATCH = _build_strategy_registry()
 
 
 # ── Simulation engine ────────────────────────────────────────────────────────
