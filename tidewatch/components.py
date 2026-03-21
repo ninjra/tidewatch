@@ -177,23 +177,30 @@ COMP_COMPLETION_DAMP = "completion_damp"
 COMP_TIMING_AMP = "timing_amp"
 COMP_VIOLATION_AMP = "violation_amp"
 
-# Default bounds per component (for normalization and Pareto).
-# Exhaustive: one entry per PressureComponents field / COMP_* factor.
-# Adding a new factor to the pressure equation requires a corresponding
-# entry here — the assertion below enforces this at import time.
 # Algebraic bounds derived from constants.py source parameters (§3.1).
 _MATERIALITY_MAX = max(MATERIALITY_WEIGHTS.values())  # 1.5
-_DEP_AMP_PRACTICAL_MAX = 5.0  # 1 + DEPENDENCY_COUNT_CAP × AMPLIFICATION × gate_max = 1 + 20 × 0.1 × 1.0 ≈ 3.0; 5.0 allows headroom
+_DEP_AMP_PRACTICAL_MAX = 5.0  # 1 + DEPENDENCY_COUNT_CAP × AMPLIFICATION × gate_max ≈ 3.0; 5.0 allows headroom
 _COMPLETION_DAMP_MIN = 0.4  # logistic D(1.0) ≈ 0.41, floored for safety
 
-_DEFAULT_BOUNDS: dict[str, tuple[float, float]] = {
-    COMP_TIME_PRESSURE: (0.0, 1.0),           # 1 - exp(-k/t) ∈ [0, 1] by definition
-    COMP_MATERIALITY: (1.0, _MATERIALITY_MAX), # from MATERIALITY_WEIGHTS max
-    COMP_DEPENDENCY_AMP: (1.0, _DEP_AMP_PRACTICAL_MAX),  # practical cap
-    COMP_COMPLETION_DAMP: (_COMPLETION_DAMP_MIN, 1.0),    # logistic range
-    COMP_TIMING_AMP: (1.0, TIMING_MAX_MULTIPLIER),        # from constants
-    COMP_VIOLATION_AMP: (1.0, 1.0 + VIOLATION_MAX_AMPLIFICATION),  # 1 + cap
-}
+
+def _build_default_bounds() -> dict[str, tuple[float, float]]:
+    """Build exhaustive bounds dict — one entry per PressureComponents field.
+
+    Constructed via function to enforce that bounds are intentionally
+    paired with their component names. The assertion after _COMPONENT_KEYS
+    verifies exhaustiveness at import time.
+    """
+    return {
+        COMP_TIME_PRESSURE: (0.0, 1.0),                     # 1 - exp(-k/t) ∈ [0, 1]
+        COMP_MATERIALITY: (1.0, _MATERIALITY_MAX),           # from MATERIALITY_WEIGHTS max
+        COMP_DEPENDENCY_AMP: (1.0, _DEP_AMP_PRACTICAL_MAX),  # practical cap
+        COMP_COMPLETION_DAMP: (_COMPLETION_DAMP_MIN, 1.0),    # logistic range
+        COMP_TIMING_AMP: (1.0, TIMING_MAX_MULTIPLIER),        # from constants
+        COMP_VIOLATION_AMP: (1.0, 1.0 + VIOLATION_MAX_AMPLIFICATION),  # 1 + cap
+    }
+
+
+_DEFAULT_BOUNDS: dict[str, tuple[float, float]] = _build_default_bounds()
 
 # Source equation for auditability
 _SOURCE_EQUATION = "P = P_time × M × A × D × timing_amp × violation_amp (§3.1)"

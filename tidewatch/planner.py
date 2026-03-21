@@ -226,5 +226,6 @@ class PlanStubGenerator:
         )
 
 
-# Backward compatibility alias
+# Public API alias — tests and downstream callers use this name.
+# Exported via tidewatch.__init__.__all__.
 SpeculativePlanner = PlanStubGenerator

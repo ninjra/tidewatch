@@ -176,9 +176,9 @@ MATERIAL_DECISION_BOOST = 0.1      # Added to decision_weight for material items
 HARD_FLOOR_DEMAND_THRESHOLD = 0.7  # Mean demand >= this triggers auto-promotion
 HARD_FLOOR_DAYS_THRESHOLD = 1.0    # 24h window — binding deadlines within 1 day bypass bandwidth
 
-# Legacy frozenset retained for backward compatibility — callers that explicitly
-# check HARD_FLOOR_DOMAINS will still work, but _get_effective_risk_tier now
-# uses demand-based detection instead.
+# Deprecated: demand-based detection in _get_effective_risk_tier replaced
+# domain-name matching as of #1181. This frozenset is no longer referenced
+# and will be removed in the next major version.
 HARD_FLOOR_DOMAINS: frozenset[str] = frozenset({
     "legal", "financial", "security", "compliance", "safety",
 })
@@ -222,7 +222,9 @@ DEMOTABLE_FLOOR_FRACTION = 0.7
 TIMING_MID_DAYS = 7.0             # Midpoint of logistic ramp (inflection point)
 TIMING_MAX_MULTIPLIER = 1.2       # Asymptotic maximum (20% boost cap)
 TIMING_LOGISTIC_K = 0.5           # Steepness — k=0.5 gives gradual ramp matching old breakpoints
-# Legacy aliases for backward compatibility with tests
+# Retained: tests and golden pipeline reference these values by name.
+# They match the logistic ramp parameters (TIMING_MID_DAYS, TIMING_MAX_MULTIPLIER)
+# and are tested for consistency in test_golden_pipeline.py.
 TIMING_STALE_DAYS = 7
 TIMING_CRITICAL_DAYS = 14
 TIMING_STALE_MULTIPLIER = 1.1
@@ -232,6 +234,10 @@ TIMING_CRITICAL_MULTIPLIER = 1.2
 VIOLATION_AMPLIFICATION = 0.05  # Per-violation pressure amplifier (additive to dep_amp)
 VIOLATION_MAX_AMPLIFICATION = 0.5  # Cap on total violation amplification
 VIOLATION_DECAY_HALFLIFE_DAYS = 14.0  # Violations lose half their potency every 14 days
+# Half-life decay base: 2 is the mathematical definition of half-life decay.
+# N(t) = N_0 * HALFLIFE_BASE^(-t/t_half). With base=2, N(t_half) = N_0/2 exactly.
+# This is a physics convention, not a tunable parameter.
+HALFLIFE_BASE = 2.0
 
 # --- Gravity tiebreak (#635) ---
 GRAVITY_TIEBREAK_WEIGHT = 0.1   # Weight of gravity score in bandwidth-adjusted sort

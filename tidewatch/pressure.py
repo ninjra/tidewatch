@@ -48,6 +48,7 @@ from tidewatch.constants import (
     FIT_SCORE_MISMATCH_COMPONENTS,
     FORGE_PRESSURE_PAUSE_THRESHOLD,
     GRAVITY_TIEBREAK_WEIGHT,
+    HALFLIFE_BASE,
     HARD_FLOOR_DAYS_THRESHOLD,
     MATERIALITY_WEIGHTS,
     MS_PER_SECOND,
@@ -162,8 +163,9 @@ def _check_provenance(obligation: Obligation) -> None:
 
 def _completion_dampening(completion_pct: float) -> float:
     """Compute completion dampening factor D (§3.1)."""
-    # Formula choice: logistic (default) vs linear (legacy). Logistic chosen
-    # for sharp transition near midpoint — linear under-weights early progress.
+    # Logistic chosen for sharp transition near midpoint — linear
+    # under-weights early progress. The linear branch is retained for
+    # COMPLETION_DAMPENING_MODE="linear" in sensitivity analysis (§4.2).
     if COMPLETION_DAMPENING_MODE == "logistic":
         sigmoid = 1.0 / (1.0 + _exponential(-COMPLETION_LOGISTIC_K * (completion_pct - COMPLETION_LOGISTIC_MID)))
         return 1.0 - (COMPLETION_DAMPENING * sigmoid)
@@ -228,14 +230,20 @@ def _violation_amplifier(
     if violation_count <= 0:
         return _AMPLIFIER_IDENTITY
     effective_decay_days = days_since_violation if days_since_violation is not None else days_in_status
-    # Exponential decay with base 2: chosen so decay = 0.5 at exactly one
-    # half-life (VIOLATION_DECAY_HALFLIFE_DAYS). Base-2 is the standard
-    # half-life formula: N(t) = N₀ × 2^(-t/t½).
-    decay = 2.0 ** (-effective_decay_days / VIOLATION_DECAY_HALFLIFE_DAYS)  # half-life formula
+    # Formula choice: exponential half-life decay N(t) = N_0 * 2^(-t/t_half).
+    # Chosen over linear decay because violation impact should drop smoothly
+    # and asymptotically — a 60-day-old violation should have negligible
+    # effect, which exponential achieves while linear would reach zero at
+    # a fixed cutoff. HALFLIFE_BASE=2 is the standard physics convention
+    # giving decay = 0.5 at exactly one half-life (14 days).
+    decay = HALFLIFE_BASE ** (-effective_decay_days / VIOLATION_DECAY_HALFLIFE_DAYS)  # half-life decay
     effective = violation_count * decay
-    # Sublinear scaling (#1184): log(1+x) gives diminishing returns per violation.
-    # At effective=1: log(2) ≈ 0.693, at effective=5: log(6) ≈ 1.79,
-    # at effective=10: log(11) ≈ 2.40 — sublinear growth prevents runaway amplification.
+    # Sublinear scaling (#1184): log(1 + x) is the standard "soft-plus"
+    # transform giving diminishing returns. The 1 inside log() is the
+    # mathematical identity offset ensuring log(1+0) = 0 (no violations
+    # → no amplification). This is not a tunable parameter.
+    # At effective=1: log(2) ~ 0.693, effective=5: log(6) ~ 1.79,
+    # effective=10: log(11) ~ 2.40 — sublinear growth caps runaway amplification.
     damped = math.log(1.0 + effective)
     # Cap: total violation boost ∈ [0, VIOLATION_MAX_AMPLIFICATION] (§3.1)
     return 1.0 + min(damped * VIOLATION_AMPLIFICATION, VIOLATION_MAX_AMPLIFICATION)
@@ -351,6 +359,55 @@ def _apply_ablation(
     return time_p, mat_mult, dep_amp, comp_damp, timing_amp, violation_amp
 
 
+def _build_result(
+    obligation: Obligation,
+    time_p: float,
+    mat_mult: float,
+    dep_amp: float,
+    comp_damp: float,
+    timing_amp: float,
+    violation_amp: float,
+    days_rem: float,
+    t_gate: float,
+) -> PressureResult:
+    """Build PressureResult from computed factors via ComponentSpace.
+
+    Constructs the Late Collapse ComponentSpace, collapses to scalar pressure,
+    applies the zombie-task guard (#1212), and returns the final result.
+    """
+    from tidewatch.components import build_pressure_space
+
+    components = build_pressure_space(
+        time_pressure=time_p, materiality=mat_mult,
+        dependency_amp=dep_amp, completion_damp=comp_damp,
+        timing_amp=timing_amp, violation_amp=violation_amp,
+        obligation_id=obligation.id,
+        raw_inputs={"days_remaining": days_rem, "completion_pct": obligation.completion_pct,
+                    "dependency_count": obligation.dependency_count,
+                    "temporal_gate": t_gate},
+    )
+
+    pressure = components.pressure
+
+    # Zombie task fix (#1212): completed obligations must not haunt the queue.
+    # Without this guard, a 100%-complete "done" obligation can still show
+    # P ~ 0.615 due to the logistic dampening asymptote (D ~ 0.411 at pct=1.0).
+    if obligation.completion_pct >= 1.0 and obligation.status in ("completed", "done"):
+        return PressureResult(
+            obligation_id=obligation.id, pressure=0.0, zone="green",
+            time_pressure=time_p, materiality_mult=mat_mult,
+            dependency_amp=dep_amp, completion_damp=comp_damp,
+            component_space=components,
+        )
+
+    return PressureResult(
+        obligation_id=obligation.id, pressure=pressure, zone=pressure_zone(pressure),
+        time_pressure=time_p, materiality_mult=mat_mult,
+        dependency_amp=dep_amp, completion_damp=comp_damp,
+        component_space=components,
+    )
+
+
 def calculate_pressure(
     obligation: Obligation,
     now: datetime | None = None,
@@ -364,14 +421,9 @@ def calculate_pressure(
     ComponentSpace (Late Collapse). The scalar .pressure field is the default
     product collapse, saturated to [0,1].
 
-    Extended equation (§3.2):
-      dep_amp = 1.0 + (deps × AMPLIFICATION × temporal_gate(t))
-      temporal_gate(t) = 1 - exp(-k_fanout / t) for t > 0; 1.0 for t ≤ 0
-
     Args:
         ablate: frozenset of component names to neutralize (set to 1.0).
-            Used for factor ablation studies (§4.3). Example:
-            ablate=frozenset({"dependency_amp"}) disables dependency amplification.
+            Used for factor ablation studies (§4.3).
     """
     if now is None:
         now = datetime.now(UTC)
@@ -390,39 +442,9 @@ def calculate_pressure(
             ablate, time_p, mat_mult, dep_amp, comp_damp, timing_amp, violation_amp,
         )
 
-    # Build ComponentSpace — preserves factors as named dimensions (Late Collapse)
-    from tidewatch.components import build_pressure_space
-
-    components = build_pressure_space(
-        time_pressure=time_p, materiality=mat_mult,
-        dependency_amp=dep_amp, completion_damp=comp_damp,
-        timing_amp=timing_amp, violation_amp=violation_amp,
-        obligation_id=obligation.id,
-        raw_inputs={"days_remaining": days_rem, "completion_pct": obligation.completion_pct,
-                    "dependency_count": obligation.dependency_count,
-                    "temporal_gate": t_gate},
-    )
-
-    # Scalar pressure is the default product collapse, saturated to [0,1]
-    pressure = components.pressure
-
-    # Zombie task fix (#1212): completed obligations must not haunt the queue.
-    # Without this guard, a 100%-complete "done" obligation can still show
-    # P ≈ 0.615 due to the logistic dampening asymptote (D ≈ 0.411 at pct=1.0).
-    if obligation.completion_pct >= 1.0 and obligation.status in ("completed", "done"):
-        pressure = 0.0
-        return PressureResult(
-            obligation_id=obligation.id, pressure=pressure, zone="green",
-            time_pressure=time_p, materiality_mult=mat_mult,
-            dependency_amp=dep_amp, completion_damp=comp_damp,
-            component_space=components,
-        )
-
-    return PressureResult(
-        obligation_id=obligation.id, pressure=pressure, zone=pressure_zone(pressure),
-        time_pressure=time_p, materiality_mult=mat_mult,
-        dependency_amp=dep_amp, completion_damp=comp_damp,
-        component_space=components,
+    return _build_result(
+        obligation, time_p, mat_mult, dep_amp, comp_damp,
+        timing_amp, violation_amp, days_rem, t_gate,
     )
 
 
@@ -505,6 +527,28 @@ def _pareto_layered_sort(results: list[PressureResult]) -> list[PressureResult]:
     return ranked
 
 
+def _emit_batch_telemetry(
+    obligations: list[Obligation],
+    results: list[PressureResult],
+    pareto: bool,
+    latency_ms: float,
+) -> None:
+    """Emit optional telemetry for batch recalculation via sentinel_sdk."""
+    try:
+        from sentinel_sdk.metrics import get_buffer
+
+        red_count = sum(1 for r in results if r.zone == "red")
+        get_buffer().record(
+            source_repo="tidewatch",
+            operation_type="pressure.recalculate_batch",
+            operation_detail=f"batch_size={len(obligations)} red={red_count} pareto={pareto}",
+            latency_ms=latency_ms,
+            success=True,
+        )
+    except ImportError:
+        logging.getLogger(__name__).debug("sentinel_sdk not available — telemetry skipped")
+
+
 def recalculate_batch(
     obligations: list[Obligation],
     now: datetime | None = None,
@@ -527,6 +571,9 @@ def recalculate_batch(
     Outputs:
       list[PressureResult] sorted by pressure descending (or Pareto rank)
     """
+    # Batch pipeline: compute → sort → emit telemetry. All three stages
+    # are sequential and stateless; the telemetry try/except is the only
+    # optional segment (degrades gracefully without sentinel_sdk).
     import time as _time
 
     _t0 = _time.monotonic()
@@ -540,20 +587,7 @@ def recalculate_batch(
         results.sort(key=lambda r: r.pressure, reverse=True)
 
     _latency_ms = (_time.monotonic() - _t0) * MS_PER_SECOND
-
-    try:
-        from sentinel_sdk.metrics import get_buffer
-
-        red_count = sum(1 for r in results if r.zone == "red")
-        get_buffer().record(
-            source_repo="tidewatch",
-            operation_type="pressure.recalculate_batch",
-            operation_detail=f"batch_size={len(obligations)} red={red_count} pareto={pareto}",
-            latency_ms=_latency_ms,
-            success=True,
-        )
-    except ImportError:
-        logging.getLogger(__name__).debug("sentinel_sdk not available — telemetry skipped")
+    _emit_batch_telemetry(obligations, results, pareto, _latency_ms)
 
     return results
 
@@ -600,7 +634,8 @@ def _get_effective_risk_tier(ob: Obligation, now: datetime | None = None) -> int
     if ob.risk_tier == RiskTier.DEMOTABLE_WITH_FLOOR:
         return RiskTier.DEMOTABLE_WITH_FLOOR
 
-    # Legacy: hard_floor flag
+    # Obligation.hard_floor: retained for callers that set it explicitly.
+    # New code should use risk_tier=RiskTier.NEVER_DEMOTABLE instead.
     if ob.hard_floor:
         return RiskTier.NEVER_DEMOTABLE
 

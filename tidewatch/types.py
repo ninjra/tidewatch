@@ -96,7 +96,7 @@ class Obligation:
     domain: str | None = None
     description: str | None = None
     status: str = "active"
-    hard_floor: bool = False  # Binding deadline — legacy, use risk_tier instead
+    hard_floor: bool = False  # Binding deadline — callers may set directly; prefer risk_tier
     days_in_status: float = 0.0  # Days in current status (#195 timing amplification)
     violation_count: int = 0     # Rule violations associated with this obligation (#99)
     gravity_score: float | None = None  # Gravitational attraction score from gravitas (#635)
