@@ -500,3 +500,86 @@ class TestStatusToggleExploit:
         # Anchored version should have higher pressure (timing amp + violation
         # amp both use the event-anchored values instead of the reset ones)
         assert r_anchored.pressure > r_exploitable.pressure
+
+
+class TestDemandBasedRiskTier:
+    """Demand-based NEVER_DEMOTABLE detection (#1181)."""
+
+    def test_legal_within_threshold_is_never_demotable(self):
+        """Legal domain has high demand — auto-promoted within 24h of deadline."""
+        from tidewatch.pressure import _get_effective_risk_tier
+        from tidewatch.types import RiskTier
+        now = datetime(2026, 6, 1, 12, 0, 0, tzinfo=UTC)
+        ob = Obligation(id=1, title="Legal brief", due_date=now + timedelta(hours=12),
+                        domain="legal")
+        assert _get_effective_risk_tier(ob, now) == RiskTier.NEVER_DEMOTABLE
+
+    def test_legal_far_deadline_is_fully_demotable(self):
+        """Legal domain with distant deadline is freely demotable."""
+        from tidewatch.pressure import _get_effective_risk_tier
+        from tidewatch.types import RiskTier
+        now = datetime(2026, 6, 1, 12, 0, 0, tzinfo=UTC)
+        ob = Obligation(id=1, title="Legal brief", due_date=now + timedelta(days=30),
+                        domain="legal")
+        assert _get_effective_risk_tier(ob, now) == RiskTier.FULLY_DEMOTABLE
+
+    def test_engineering_within_threshold_is_fully_demotable(self):
+        """Engineering domain has low demand — NOT auto-promoted even near deadline."""
+        from tidewatch.pressure import _get_effective_risk_tier
+        from tidewatch.types import RiskTier
+        now = datetime(2026, 6, 1, 12, 0, 0, tzinfo=UTC)
+        ob = Obligation(id=1, title="Code review", due_date=now + timedelta(hours=12),
+                        domain="engineering")
+        assert _get_effective_risk_tier(ob, now) == RiskTier.FULLY_DEMOTABLE
+
+    def test_explicit_risk_tier_overrides_demand(self):
+        """Explicit risk_tier takes priority over demand-based detection."""
+        from tidewatch.pressure import _get_effective_risk_tier
+        from tidewatch.types import RiskTier
+        now = datetime(2026, 6, 1, 12, 0, 0, tzinfo=UTC)
+        ob = Obligation(id=1, title="Ops task", due_date=now + timedelta(hours=12),
+                        domain="ops", risk_tier=RiskTier.NEVER_DEMOTABLE)
+        assert _get_effective_risk_tier(ob, now) == RiskTier.NEVER_DEMOTABLE
+
+    def test_unknown_domain_uses_default_demand(self):
+        """Unknown domain uses default demand (0.5 < 0.7 threshold)."""
+        from tidewatch.pressure import _get_effective_risk_tier
+        from tidewatch.types import RiskTier
+        now = datetime(2026, 6, 1, 12, 0, 0, tzinfo=UTC)
+        ob = Obligation(id=1, title="Custom", due_date=now + timedelta(hours=12),
+                        domain="custom_domain")
+        assert _get_effective_risk_tier(ob, now) == RiskTier.FULLY_DEMOTABLE
+
+
+class TestProvenanceChecks:
+    """Provenance logging for gameable inputs (#1182)."""
+
+    def test_high_completion_without_source_logs_warning(self, caplog):
+        """completion_pct >= 0.8 without source should log WARNING."""
+        import logging
+        now = datetime(2026, 6, 1, 12, 0, 0, tzinfo=UTC)
+        ob = Obligation(id=1, title="Test", due_date=now + timedelta(days=7),
+                        completion_pct=0.9)
+        with caplog.at_level(logging.WARNING, logger="tidewatch.pressure.provenance"):
+            calculate_pressure(ob, now=now)
+        assert any("PROVENANCE_MISSING" in r.message for r in caplog.records)
+
+    def test_low_completion_without_source_logs_info(self, caplog):
+        """completion_pct > 0 but < 0.8 without source should log INFO."""
+        import logging
+        now = datetime(2026, 6, 1, 12, 0, 0, tzinfo=UTC)
+        ob = Obligation(id=1, title="Test", due_date=now + timedelta(days=7),
+                        completion_pct=0.3)
+        with caplog.at_level(logging.INFO, logger="tidewatch.pressure.provenance"):
+            calculate_pressure(ob, now=now)
+        assert any("PROVENANCE_GAP" in r.message for r in caplog.records)
+
+    def test_completion_with_source_no_warning(self, caplog):
+        """completion_pct with source attribution should NOT log provenance warnings."""
+        import logging
+        now = datetime(2026, 6, 1, 12, 0, 0, tzinfo=UTC)
+        ob = Obligation(id=1, title="Test", due_date=now + timedelta(days=7),
+                        completion_pct=0.9, completion_source="sentinel:autobot")
+        with caplog.at_level(logging.WARNING, logger="tidewatch.pressure.provenance"):
+            calculate_pressure(ob, now=now)
+        assert not any("PROVENANCE_MISSING" in r.message for r in caplog.records)

@@ -49,7 +49,6 @@ from tidewatch.constants import (
     FORGE_PRESSURE_PAUSE_THRESHOLD,
     GRAVITY_TIEBREAK_WEIGHT,
     HARD_FLOOR_DAYS_THRESHOLD,
-    HARD_FLOOR_DOMAINS,
     MATERIALITY_WEIGHTS,
     MS_PER_SECOND,
     OVERDUE_PRESSURE,
@@ -106,11 +105,57 @@ def _validate_obligation_inputs(obligation: Obligation) -> None:
         raise ValueError(f"completion_pct must be in [0,1], got {obligation.completion_pct}")
     if obligation.dependency_count < 0:
         raise ValueError(f"dependency_count must be >= 0, got {obligation.dependency_count}")
-    # Provenance warning (#1182): flag gameable inputs without audit trail
-    _logger = logging.getLogger(__name__)
+    _check_provenance(obligation)
+
+
+# Provenance thresholds for gameable input detection (#1182)
+_PROVENANCE_COMPLETION_JUMP_THRESHOLD = 0.3  # Flag completion jumps > 30% without audit trail
+_PROVENANCE_HIGH_COMPLETION = 0.8  # High completion without source is suspicious
+
+_provenance_logger = logging.getLogger(f"{__name__}.provenance")
+
+
+def _check_provenance(obligation: Obligation) -> None:
+    """Check provenance of gameable inputs and log suspicious patterns (#1182).
+
+    Gameable inputs: completion_pct, dependency_count, materiality.
+    These directly affect pressure scores and can be manipulated to suppress urgency.
+
+    Logs at WARNING for missing provenance on high-impact inputs.
+    Logs at INFO for informational provenance gaps.
+    """
+    ob_id = obligation.id
+
+    # Missing provenance on non-zero completion
     if obligation.completion_pct > 0 and obligation.completion_source is None:
-        _logger.debug("obligation %s: completion_pct=%s without provenance source",
-                       obligation.id, obligation.completion_pct)
+        if obligation.completion_pct >= _PROVENANCE_HIGH_COMPLETION:
+            _provenance_logger.warning(
+                "PROVENANCE_MISSING: obligation %s has completion_pct=%.2f "
+                "without source attribution — high completion without audit trail",
+                ob_id, obligation.completion_pct,
+            )
+        else:
+            _provenance_logger.info(
+                "PROVENANCE_GAP: obligation %s has completion_pct=%.2f "
+                "without source attribution",
+                ob_id, obligation.completion_pct,
+            )
+
+    # Missing provenance on dependencies
+    if obligation.dependency_count > 0 and obligation.dependency_source is None:
+        _provenance_logger.info(
+            "PROVENANCE_GAP: obligation %s has dependency_count=%d "
+            "without source attribution",
+            ob_id, obligation.dependency_count,
+        )
+
+    # Timestamp consistency: completion_pct set but no update timestamp
+    if obligation.completion_pct > 0 and obligation.completion_updated_at is None:
+        _provenance_logger.info(
+            "PROVENANCE_GAP: obligation %s has completion_pct=%.2f "
+            "without completion_updated_at timestamp",
+            ob_id, obligation.completion_pct,
+        )
 
 
 def _completion_dampening(completion_pct: float) -> float:
@@ -479,10 +524,18 @@ def _get_effective_risk_tier(ob: Obligation, now: datetime | None = None) -> int
     """Resolve the effective risk tier for bandwidth modulation.
 
     Uses the explicit risk_tier field. Falls back to legacy hard_floor flag
-    and domain heuristic for backward compatibility.
+    and demand-based heuristic for backward compatibility.
+
+    Demand-based detection (#1181): instead of hardcoding domain names, uses
+    the domain's cognitive demand profile. Domains with mean demand >=
+    HARD_FLOOR_DEMAND_THRESHOLD within HARD_FLOOR_DAYS_THRESHOLD of deadline
+    get auto-promoted to NEVER_DEMOTABLE. This makes the detection signal-based:
+    adding a new high-stakes domain to TASK_DEMAND_PROFILES automatically
+    triggers protection without modifying the detection logic.
 
     Returns RiskTier int value (0=NEVER_DEMOTABLE, 1=WITH_FLOOR, 2=FULLY_DEMOTABLE).
     """
+    from tidewatch.constants import HARD_FLOOR_DEMAND_THRESHOLD
     from tidewatch.types import RiskTier
 
     # Explicit risk_tier takes priority
@@ -495,13 +548,18 @@ def _get_effective_risk_tier(ob: Obligation, now: datetime | None = None) -> int
     if ob.hard_floor:
         return RiskTier.NEVER_DEMOTABLE
 
-    # Domain heuristic: legal/financial within threshold → DEMOTABLE_WITH_FLOOR
-    if ob.domain and ob.domain.lower() in HARD_FLOOR_DOMAINS and ob.due_date is not None:
-        if now is None:
-            now = datetime.now(UTC)
-        days = _days_remaining(ob.due_date, now)
-        if days <= HARD_FLOOR_DAYS_THRESHOLD:
-            return RiskTier.NEVER_DEMOTABLE
+    # Demand-based heuristic (#1181): high-demand domains near deadline
+    # get auto-promoted. Detection uses cognitive demand signals, not
+    # hardcoded domain name strings.
+    if ob.due_date is not None:
+        demand = estimate_task_demand(ob)
+        mean_demand = (demand.complexity + demand.novelty + demand.decision_weight) / FIT_SCORE_MISMATCH_COMPONENTS
+        if mean_demand >= HARD_FLOOR_DEMAND_THRESHOLD:
+            if now is None:
+                now = datetime.now(UTC)
+            days = _days_remaining(ob.due_date, now)
+            if days <= HARD_FLOOR_DAYS_THRESHOLD:
+                return RiskTier.NEVER_DEMOTABLE
 
     return RiskTier.FULLY_DEMOTABLE
 

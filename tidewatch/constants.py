@@ -165,13 +165,23 @@ MATERIAL_COMPLEXITY_BOOST = 0.2    # Added to complexity for material items
 MATERIAL_DECISION_BOOST = 0.1      # Added to decision_weight for material items
 
 # --- Hard floor auto-detection (#1181) ---
-# Expanded beyond legal/financial to include safety-critical domains.
-# Any domain here with a deadline within HARD_FLOOR_DAYS_THRESHOLD gets
-# auto-promoted to NEVER_DEMOTABLE regardless of bandwidth state.
+# Signal-based: domains with mean cognitive demand >= HARD_FLOOR_DEMAND_THRESHOLD
+# get auto-promoted to NEVER_DEMOTABLE when within HARD_FLOOR_DAYS_THRESHOLD of
+# deadline. This replaces the prior hardcoded domain name frozenset, detecting
+# high-stakes domains from their demand profile rather than string matching.
+#
+# The threshold of 0.7 catches legal (mean demand 0.767) and financial (0.767)
+# but not engineering (0.467) or ops/admin (0.233). New domains added to
+# TASK_DEMAND_PROFILES are automatically detected if their demand is high enough.
+HARD_FLOOR_DEMAND_THRESHOLD = 0.7  # Mean demand >= this triggers auto-promotion
+HARD_FLOOR_DAYS_THRESHOLD = 1.0    # 24h window — binding deadlines within 1 day bypass bandwidth
+
+# Legacy frozenset retained for backward compatibility — callers that explicitly
+# check HARD_FLOOR_DOMAINS will still work, but _get_effective_risk_tier now
+# uses demand-based detection instead.
 HARD_FLOOR_DOMAINS: frozenset[str] = frozenset({
     "legal", "financial", "security", "compliance", "safety",
 })
-HARD_FLOOR_DAYS_THRESHOLD = 1.0    # 24h window — binding deadlines within 1 day bypass bandwidth
 
 # --- Speculative planner ---
 PLANNER_MIN_ZONES: frozenset[str] = frozenset({"yellow", "orange", "red"})

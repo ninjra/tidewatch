@@ -3,16 +3,120 @@
     "strategy": "tidewatch",
     "n_trials": 200,
     "missed_deadline_rate": {
-      "mean": 0.2017,
+      "mean": 0.2014,
       "std": 0.018
     },
     "queue_inversion_rate": {
-      "mean": 0.0,
-      "std": 0.0
+      "mean": 0.0403,
+      "std": 0.0031
     },
     "attention_efficiency": {
-      "mean": 0.8174,
-      "std": 0.0369
+      "mean": 0.8176,
+      "std": 0.0372
+    },
+    "saturation_rate": {
+      "mean": 0.09,
+      "std": 0.0
+    }
+  },
+  "tidewatch_bw_mid": {
+    "strategy": "tidewatch_bw_mid",
+    "n_trials": 200,
+    "missed_deadline_rate": {
+      "mean": 0.1821,
+      "std": 0.019
+    },
+    "queue_inversion_rate": {
+      "mean": 0.0481,
+      "std": 0.0021
+    },
+    "attention_efficiency": {
+      "mean": 0.827,
+      "std": 0.0379
+    },
+    "saturation_rate": {
+      "mean": 0.09,
+      "std": 0.0
+    }
+  },
+  "tidewatch_bw_low": {
+    "strategy": "tidewatch_bw_low",
+    "n_trials": 200,
+    "missed_deadline_rate": {
+      "mean": 0.1709,
+      "std": 0.018
+    },
+    "queue_inversion_rate": {
+      "mean": 0.076,
+      "std": 0.0009
+    },
+    "attention_efficiency": {
+      "mean": 0.8311,
+      "std": 0.0372
+    },
+    "saturation_rate": {
+      "mean": 0.09,
+      "std": 0.0
+    }
+  },
+  "tidewatch_bw_variable": {
+    "strategy": "tidewatch_bw_variable",
+    "n_trials": 200,
+    "missed_deadline_rate": {
+      "mean": 0.1781,
+      "std": 0.019
+    },
+    "queue_inversion_rate": {
+      "mean": 0.0598,
+      "std": 0.019
+    },
+    "attention_efficiency": {
+      "mean": 0.828,
+      "std": 0.0366
+    },
+    "saturation_rate": {
+      "mean": 0.09,
+      "std": 0.0
+    }
+  },
+  "weighted_edf": {
+    "strategy": "weighted_edf",
+    "n_trials": 200,
+    "missed_deadline_rate": {
+      "mean": 0.1858,
+      "std": 0.014
+    },
+    "queue_inversion_rate": {
+      "mean": 0.0635,
+      "std": 0.0031
+    },
+    "attention_efficiency": {
+      "mean": 0.8376,
+      "std": 0.0335
+    },
+    "saturation_rate": {
+      "mean": 0.09,
+      "std": 0.0
+    }
+  },
+  "weighted_sum": {
+    "strategy": "weighted_sum",
+    "n_trials": 200,
+    "missed_deadline_rate": {
+      "mean": 0.3201,
+      "std": 0.015
+    },
+    "queue_inversion_rate": {
+      "mean": 0.2771,
+      "std": 0.0017
+    },
+    "attention_efficiency": {
+      "mean": 0.6958,
+      "std": 0.0335
+    },
+    "saturation_rate": {
+      "mean": 0.09,
+      "std": 0.0
     }
   },
   "edf": {
@@ -23,12 +127,16 @@
       "std": 0.015
     },
     "queue_inversion_rate": {
-      "mean": 0.0985,
-      "std": 0.0
+      "mean": 0.0651,
+      "std": 0.0032
     },
     "attention_efficiency": {
       "mean": 0.8369,
       "std": 0.0339
+    },
+    "saturation_rate": {
+      "mean": 0.09,
+      "std": 0.0
     }
   },
   "fifo": {
@@ -36,15 +144,19 @@
     "n_trials": 200,
     "missed_deadline_rate": {
       "mean": 0.3187,
-      "std": 0.0131
+      "std": 0.013
     },
     "queue_inversion_rate": {
-      "mean": 0.4947,
-      "std": 0.0
+      "mean": 0.4818,
+      "std": 0.0016
     },
     "attention_efficiency": {
       "mean": 0.6919,
       "std": 0.0289
+    },
+    "saturation_rate": {
+      "mean": 0.09,
+      "std": 0.0
     }
   },
   "random": {
@@ -52,15 +164,19 @@
     "n_trials": 200,
     "missed_deadline_rate": {
       "mean": 0.3122,
-      "std": 0.0242
+      "std": 0.024
     },
     "queue_inversion_rate": {
-      "mean": 0.4983,
-      "std": 0.0244
+      "mean": 0.4848,
+      "std": 0.0231
     },
     "attention_efficiency": {
       "mean": 0.6959,
       "std": 0.0384
+    },
+    "saturation_rate": {
+      "mean": 0.09,
+      "std": 0.0
     }
   }
 }

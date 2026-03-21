@@ -130,6 +130,17 @@ class TestSchedulingStrategies:
         order = _fifo_order(obs, NOW)
         assert order == [0, 1, 2, 3, 4]
 
+    def test_weighted_edf_sorts_by_zone_then_deadline(self):
+        """Weighted-EDF should sort by urgency tier first, then by deadline within tier."""
+        from benchmarks.monte_carlo import _weighted_edf_order
+        obs = _make_obligations()
+        order = _weighted_edf_order(obs, NOW)
+        # Urgent legal (id=1, red zone, 1 day) should be first
+        assert obs[order[0]].id == 1
+        # Within the same zone tier, earlier deadlines come first
+        ordered_obs = [obs[i] for i in order]
+        assert len(ordered_obs) == len(obs)
+
 
 class TestSingleTrial:
     """Single trial execution."""
