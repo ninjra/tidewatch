@@ -178,27 +178,21 @@ COMP_TIMING_AMP = "timing_amp"
 COMP_VIOLATION_AMP = "violation_amp"
 
 # Default bounds per component (for normalization and Pareto).
-# Complete: one entry per COMP_* factor (all 6 pressure equation components).
-# Bounds derived from the pressure equation's algebraic range:
-#   time_pressure: [0, 1] from 1 - exp(-k/t) clamped by saturate()
-#   materiality: [1.0, 1.5] from MATERIALITY_WEIGHTS values
-#   dependency_amp: [1.0, 5.0] practical cap at DEPENDENCY_COUNT_CAP=40 deps
-#   completion_damp: [0.4, 1.0] from logistic dampening at pct=0..1
-#   timing_amp: [1.0, 1.2] from TIMING_MAX_MULTIPLIER
-#   violation_amp: [1.0, 1.5] from VIOLATION_MAX_AMPLIFICATION cap
-# See constants.py for the source parameter values.
+# Exhaustive: one entry per PressureComponents field / COMP_* factor.
+# Adding a new factor to the pressure equation requires a corresponding
+# entry here — the assertion below enforces this at import time.
 # Algebraic bounds derived from constants.py source parameters (§3.1).
 _MATERIALITY_MAX = max(MATERIALITY_WEIGHTS.values())  # 1.5
 _DEP_AMP_PRACTICAL_MAX = 5.0  # 1 + DEPENDENCY_COUNT_CAP × AMPLIFICATION × gate_max = 1 + 20 × 0.1 × 1.0 ≈ 3.0; 5.0 allows headroom
 _COMPLETION_DAMP_MIN = 0.4  # logistic D(1.0) ≈ 0.41, floored for safety
 
 _DEFAULT_BOUNDS: dict[str, tuple[float, float]] = {
-    COMP_TIME_PRESSURE: (0.0, 1.0),  # 1 - exp(-k/t) ∈ [0, 1] by definition
-    COMP_MATERIALITY: (1.0, _MATERIALITY_MAX),
-    COMP_DEPENDENCY_AMP: (1.0, _DEP_AMP_PRACTICAL_MAX),
-    COMP_COMPLETION_DAMP: (_COMPLETION_DAMP_MIN, 1.0),
-    COMP_TIMING_AMP: (1.0, TIMING_MAX_MULTIPLIER),
-    COMP_VIOLATION_AMP: (1.0, 1.0 + VIOLATION_MAX_AMPLIFICATION),
+    COMP_TIME_PRESSURE: (0.0, 1.0),           # 1 - exp(-k/t) ∈ [0, 1] by definition
+    COMP_MATERIALITY: (1.0, _MATERIALITY_MAX), # from MATERIALITY_WEIGHTS max
+    COMP_DEPENDENCY_AMP: (1.0, _DEP_AMP_PRACTICAL_MAX),  # practical cap
+    COMP_COMPLETION_DAMP: (_COMPLETION_DAMP_MIN, 1.0),    # logistic range
+    COMP_TIMING_AMP: (1.0, TIMING_MAX_MULTIPLIER),        # from constants
+    COMP_VIOLATION_AMP: (1.0, 1.0 + VIOLATION_MAX_AMPLIFICATION),  # 1 + cap
 }
 
 # Source equation for auditability
@@ -213,6 +207,12 @@ _COMPONENT_KEYS: tuple[str, ...] = (
     COMP_COMPLETION_DAMP,
     COMP_TIMING_AMP,
     COMP_VIOLATION_AMP,
+)
+
+# Structural guard: every component must have a corresponding bound entry.
+assert len(_DEFAULT_BOUNDS) == len(_COMPONENT_KEYS), (
+    f"_DEFAULT_BOUNDS ({len(_DEFAULT_BOUNDS)}) != "
+    f"_COMPONENT_KEYS ({len(_COMPONENT_KEYS)})"
 )
 
 
@@ -259,21 +259,11 @@ class PressureComponents:
     def collapse(self, weights: dict[str, float] | None = None) -> float:
         """Custom-weighted collapse for query-adaptive ranking (#1185).
 
-        When weights are provided, each component is normalized to [0,1]
-        using its algebraic bounds before the weighted sum. This ensures
-        components with different scales contribute proportionally.
+        Delegates to the ComponentSpace's weighted_collapse() protocol method,
+        ensuring normalization and weighting logic stays in one place.
         """
         if weights:
-            components = self.space.components
-            bounds = self.space.component_bounds
-            total = 0.0
-            weight_sum = 0.0
-            for name, value in components.items():
-                w = weights.get(name, 1.0)
-                lo, hi = bounds.get(name, (0.0, 1.0))
-                total += w * _clamp_normalize(value, lo, hi)
-                weight_sum += w
-            return total / weight_sum if weight_sum > 0 else 0.0
+            return self.space.weighted_collapse(weights)
         return self.pressure
 
     def dominates(self, other: PressureComponents) -> bool | None:

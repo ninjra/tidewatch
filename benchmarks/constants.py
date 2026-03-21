@@ -42,6 +42,10 @@ INVERSION_EPSILON = 1e-10
 # Bootstrap CI requires ≥ this many trials for stable percentile estimates
 CI_MIN_TRIALS = 10
 
+# ── Display formatting ──
+# Decimal places for metrics in JSON/table output — 4 digits matches paper table precision
+METRIC_DISPLAY_PRECISION = 4
+
 # ── Paper generation ──
 # Fixed simulation start for reproducibility — all paper results reference this date
 PAPER_SIM_START_YEAR = 2026

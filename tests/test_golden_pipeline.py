@@ -1025,7 +1025,7 @@ class TestGate16_SentinelGraceful:
         import inspect  # noqa: I001
 
         from tidewatch import pressure
-        source = inspect.getsource(pressure.recalculate_batch)
+        source = inspect.getsource(pressure._emit_batch_telemetry)
         assert "sentinel_sdk" in source
         assert "ImportError" in source
 

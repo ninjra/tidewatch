@@ -43,6 +43,7 @@ from benchmarks.constants import (
     DEFAULT_SEED,
     DEFAULT_TRIALS,
     INVERSION_EPSILON,
+    METRIC_DISPLAY_PRECISION,
     SATURATION_THRESHOLD,
     SECONDS_PER_HOUR,
     SIGMA_FLOOR,
@@ -63,9 +64,11 @@ if TYPE_CHECKING:
 
 # Duration model: obligations take time ~ LogNormal(mu, sigma)
 # Domain → (mu, sigma) for processing time in hours.
-# Exhaustive mapping: covers all domains used in SOB dataset generation
-# (generate_obligations.py). Unknown domains fall through to _FALLBACK_DURATION.
-# Complete: all 5 Sentinel domains covered
+# Exhaustive mapping: covers all Sentinel cognitive domains used in SOB
+# dataset generation (generate_obligations.py). Unknown domains fall through
+# to _FALLBACK_DURATION. Adding a new domain to generate_obligations.py
+# requires a corresponding entry here — otherwise durations default to
+# the engineering profile.
 _DOMAIN_DURATIONS: dict[str, LogNormalParams] = {
     "legal": LogNormalParams(mu=2.0, sigma=0.8),       # Source: Sentinel exec logs Q4-2025; ~7.4h median, high variance
     "financial": LogNormalParams(mu=1.5, sigma=0.6),   # Source: Sentinel exec logs Q4-2025; ~4.5h median
@@ -206,27 +209,27 @@ class MonteCarloResult:
             "strategy": self.strategy,
             "n_trials": self.n_trials,
             "missed_deadline_rate": {
-                "mean": round(self.missed_deadline_rate_mean, 4),
-                "std": round(self.missed_deadline_rate_std, 4),
-                "ci_95": [round(self.missed_deadline_rate_ci[0], 4),
-                          round(self.missed_deadline_rate_ci[1], 4)],
+                "mean": round(self.missed_deadline_rate_mean, METRIC_DISPLAY_PRECISION),
+                "std": round(self.missed_deadline_rate_std, METRIC_DISPLAY_PRECISION),
+                "ci_95": [round(self.missed_deadline_rate_ci[0], METRIC_DISPLAY_PRECISION),
+                          round(self.missed_deadline_rate_ci[1], METRIC_DISPLAY_PRECISION)],
             },
             "queue_inversion_rate": {
-                "mean": round(self.queue_inversion_rate_mean, 4),
-                "std": round(self.queue_inversion_rate_std, 4),
-                "ci_95": [round(self.queue_inversion_rate_ci[0], 4),
-                          round(self.queue_inversion_rate_ci[1], 4)],
+                "mean": round(self.queue_inversion_rate_mean, METRIC_DISPLAY_PRECISION),
+                "std": round(self.queue_inversion_rate_std, METRIC_DISPLAY_PRECISION),
+                "ci_95": [round(self.queue_inversion_rate_ci[0], METRIC_DISPLAY_PRECISION),
+                          round(self.queue_inversion_rate_ci[1], METRIC_DISPLAY_PRECISION)],
             },
             "attention_efficiency": {
-                "mean": round(self.attention_efficiency_mean, 4),
-                "std": round(self.attention_efficiency_std, 4),
-                "ci_95": [round(self.attention_efficiency_ci[0], 4),
-                          round(self.attention_efficiency_ci[1], 4)],
+                "mean": round(self.attention_efficiency_mean, METRIC_DISPLAY_PRECISION),
+                "std": round(self.attention_efficiency_std, METRIC_DISPLAY_PRECISION),
+                "ci_95": [round(self.attention_efficiency_ci[0], METRIC_DISPLAY_PRECISION),
+                          round(self.attention_efficiency_ci[1], METRIC_DISPLAY_PRECISION)],
             },
             # Saturation and tie-break reporting (#1176)
             "saturation_rate": {
-                "mean": round(self.saturation_rate_mean, 4),
-                "std": round(self.saturation_rate_std, 4),
+                "mean": round(self.saturation_rate_mean, METRIC_DISPLAY_PRECISION),
+                "std": round(self.saturation_rate_std, METRIC_DISPLAY_PRECISION),
             },
         }
         # Pre-clamp distribution from trial results (#1176)
@@ -234,8 +237,8 @@ class MonteCarloResult:
             all_pre_clamp = [p for t in self.trial_results for p in t.pre_clamp_pressures]
             total_ties = sum(t.tie_count for t in self.trial_results)
             result["pre_clamp_distribution"] = {
-                "max": round(max(all_pre_clamp), 4) if all_pre_clamp else 0.0,
-                "mean": round(sum(all_pre_clamp) / len(all_pre_clamp), 4) if all_pre_clamp else 0.0,
+                "max": round(max(all_pre_clamp), METRIC_DISPLAY_PRECISION) if all_pre_clamp else 0.0,
+                "mean": round(sum(all_pre_clamp) / len(all_pre_clamp), METRIC_DISPLAY_PRECISION) if all_pre_clamp else 0.0,
                 "above_1_count": sum(1 for p in all_pre_clamp if p > 1.0),
                 "total_ties_at_ceiling": total_ties,
             }
@@ -482,6 +485,14 @@ def _count_inversions(
     return inversions, inversion_checks
 
 
+def _check_deadline(ob: Obligation, completion_time: datetime) -> bool:
+    """Return True if obligation completed on time (or has no deadline)."""
+    if ob.due_date is None:
+        return True
+    due = ob.due_date if ob.due_date.tzinfo else ob.due_date.replace(tzinfo=UTC)
+    return completion_time <= due
+
+
 def _run_trial(
     sim_obs: list[SimObligation],
     order: list[int],
@@ -489,24 +500,19 @@ def _run_trial(
 ) -> TrialResult:
     """Execute one trial: process obligations in the given order, track outcomes.
 
-    The operator works HOURS_PER_DAY hours per day, processing obligations
-    sequentially in the specified order. Each obligation takes its sampled
-    duration. Track whether each obligation finishes before its deadline.
+    Sequential trial simulation — the operator processes obligations serially
+    in the specified order. Each obligation takes its sampled duration. The
+    main loop is an atomic operation: saturation scan, then serial processing
+    with per-step inversion detection.
 
     Queue inversion detection (#1175): pressures are recalculated at the
-    current simulation clock time, not the stale sim_start snapshot. This
-    makes inversions empirically meaningful — an inversion means the strategy
-    is processing a lower-pressure item while a higher-pressure item waits
-    *at the current point in time*, accounting for deadline approach during
-    processing.
+    current simulation clock time, not the stale sim_start snapshot.
     """
     saturated_count, pre_clamp_pressures, tie_count = _scan_saturation(sim_obs, sim_start)
 
-    # Sequential simulation logic — obligation processing is inherently serial
-    # (single-operator model), so no clean extraction point for the main loop.
     clock_hours = 0.0
-    completed_on_time = 0
-    completed_late = 0
+    on_time = 0
+    late = 0
     effective_hours = 0.0
     total_hours = 0.0
     inversions = 0
@@ -515,41 +521,32 @@ def _run_trial(
 
     for _pos, idx in enumerate(order):
         sob = sim_obs[idx]
-        ob = sob.obligation
         duration = sob.duration_hours
 
         sim_now = sim_start + timedelta(hours=clock_hours)
-        current_pressure = calculate_pressure(ob, now=sim_now).pressure
+        current_pressure = calculate_pressure(sob.obligation, now=sim_now).pressure
         step_inv, step_checks = _count_inversions(
             sim_obs, idx, completed, sim_now, current_pressure,
         )
         inversions += step_inv
         inversion_checks += step_checks
 
-        # Process the obligation
         clock_hours += duration
         total_hours += duration
         completion_time = sim_start + timedelta(hours=clock_hours)
 
-        if ob.due_date is not None:
-            due = ob.due_date if ob.due_date.tzinfo else ob.due_date.replace(tzinfo=UTC)
-            if completion_time <= due:
-                completed_on_time += 1
-                effective_hours += duration
-            else:
-                completed_late += 1
-        else:
-            # No deadline — counts as on time
-            completed_on_time += 1
+        if _check_deadline(sob.obligation, completion_time):
+            on_time += 1
             effective_hours += duration
+        else:
+            late += 1
 
         completed.add(idx)
 
-    total = completed_on_time + completed_late
     return TrialResult(
-        completed_on_time=completed_on_time,
-        completed_late=completed_late,
-        total=total,
+        completed_on_time=on_time,
+        completed_late=late,
+        total=on_time + late,
         inversions=inversions,
         inversion_checks=inversion_checks,
         effective_attention_hours=effective_hours,
@@ -746,6 +743,42 @@ def run_kf_sensitivity(
     return results
 
 
+def _run_ablated_factor(
+    factor: str,
+    obligations: list[Obligation],
+    n_trials: int,
+    seed: int,
+    sim_start: datetime,
+) -> MonteCarloResult:
+    """Run MC trials for a single ablated factor and aggregate results.
+
+    Neutralizes the named factor (sets to identity 1.0) during pressure
+    calculation, then runs n_trials simulations under tidewatch ordering
+    with the ablated ranking.
+    """
+    ablate_set = frozenset({factor})
+    trials: list[TrialResult] = []
+
+    for trial_i in range(n_trials):
+        trial_rng = np.random.default_rng(seed + trial_i)
+        sim_obs = _sample_durations(obligations, trial_rng)
+
+        # Rank obligations with the factor ablated
+        ablated_results = [
+            calculate_pressure(ob, now=sim_start, ablate=ablate_set)
+            for ob in obligations
+        ]
+        ablated_results.sort(key=lambda r: r.pressure, reverse=True)
+        id_to_rank = {r.obligation_id: i for i, r in enumerate(ablated_results)}
+        indices = list(range(len(obligations)))
+        indices.sort(key=lambda i: id_to_rank.get(obligations[i].id, i))
+
+        result = _run_trial(sim_obs, indices, sim_start)
+        trials.append(result)
+
+    return _aggregate_trials(f"tidewatch_ablate_{factor}", n_trials, trials, seed)
+
+
 def run_ablation_study(
     obligations: list[Obligation],
     n_trials: int = DEFAULT_TRIALS,
@@ -790,52 +823,10 @@ def run_ablation_study(
         seed=seed, sim_start=sim_start,
     )
 
-    # Per-factor ablation: replace calculate_pressure with ablated version
+    # Per-factor ablation
     for factor in factors:
-        ablate_set = frozenset({factor})
-        trials: list[TrialResult] = []
-
-        for trial_i in range(n_trials):
-            trial_rng = np.random.default_rng(seed + trial_i)
-            sim_obs = _sample_durations(obligations, trial_rng)
-
-            # Use tidewatch ordering with ablation
-            ablated_results = [
-                calculate_pressure(ob, now=sim_start, ablate=ablate_set)
-                for ob in obligations
-            ]
-            ablated_results.sort(key=lambda r: r.pressure, reverse=True)
-            id_to_rank = {r.obligation_id: i for i, r in enumerate(ablated_results)}
-            indices = list(range(len(obligations)))
-            indices.sort(key=lambda i: id_to_rank.get(obligations[i].id, i))
-
-            result = _run_trial(sim_obs, indices, sim_start)
-            trials.append(result)
-
-        missed_rates = np.array([t.missed_deadline_rate for t in trials])
-        inversion_rates = np.array([t.queue_inversion_rate for t in trials])
-        efficiency_rates = np.array([t.attention_efficiency for t in trials])
-        saturation_rates = np.array([t.saturation_rate for t in trials])
-
-        missed_ci = _bootstrap_ci(missed_rates, seed=seed) if n_trials >= CI_MIN_TRIALS else (0.0, 0.0)
-        inversion_ci = _bootstrap_ci(inversion_rates, seed=seed) if n_trials >= CI_MIN_TRIALS else (0.0, 0.0)
-        efficiency_ci = _bootstrap_ci(efficiency_rates, seed=seed) if n_trials >= CI_MIN_TRIALS else (0.0, 0.0)
-
-        results[factor] = MonteCarloResult(
-            strategy=f"tidewatch_ablate_{factor}",
-            n_trials=n_trials,
-            missed_deadline_rate_mean=float(np.mean(missed_rates)),
-            missed_deadline_rate_std=float(np.std(missed_rates)),
-            queue_inversion_rate_mean=float(np.mean(inversion_rates)),
-            queue_inversion_rate_std=float(np.std(inversion_rates)),
-            attention_efficiency_mean=float(np.mean(efficiency_rates)),
-            attention_efficiency_std=float(np.std(efficiency_rates)),
-            missed_deadline_rate_ci=missed_ci,
-            queue_inversion_rate_ci=inversion_ci,
-            attention_efficiency_ci=efficiency_ci,
-            saturation_rate_mean=float(np.mean(saturation_rates)),
-            saturation_rate_std=float(np.std(saturation_rates)),
-            trial_results=trials,
+        results[factor] = _run_ablated_factor(
+            factor, obligations, n_trials, seed, sim_start,
         )
 
     return results
@@ -871,10 +862,10 @@ class DESResult:
         return {
             "n_trials": self.n_trials,
             "missed_deadline_rate": {
-                "mean": round(self.missed_deadline_rate_mean, 4),
-                "std": round(self.missed_deadline_rate_std, 4),
+                "mean": round(self.missed_deadline_rate_mean, METRIC_DISPLAY_PRECISION),
+                "std": round(self.missed_deadline_rate_std, METRIC_DISPLAY_PRECISION),
             },
-            "mean_total_duration_hours": round(self.mean_total_duration_hours, 4),
+            "mean_total_duration_hours": round(self.mean_total_duration_hours, METRIC_DISPLAY_PRECISION),
         }
 
 
@@ -1007,6 +998,9 @@ def run_des_simulation(
     if sim_start is None:
         sim_start = datetime.now(UTC)
 
+    # DES trial loop: build DAG once, replay N times with different seeds.
+    # Each trial uses the same DAG topology but SimPy samples stochastic
+    # durations from the profile distributions, producing duration variance.
     dag_edges, node_processes = _build_obligation_dag(obligations)
     profiles = _build_profiles_from_obligations(obligations)
 
