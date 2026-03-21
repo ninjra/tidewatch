@@ -70,11 +70,11 @@ if TYPE_CHECKING:
 # requires a corresponding entry here — otherwise durations default to
 # the engineering profile.
 _DOMAIN_DURATIONS: dict[str, LogNormalParams] = {
-    "legal": LogNormalParams(mu=2.0, sigma=0.8),       # Source: Sentinel exec logs Q4-2025; ~7.4h median, high variance
-    "financial": LogNormalParams(mu=1.5, sigma=0.6),   # Source: Sentinel exec logs Q4-2025; ~4.5h median
-    "engineering": LogNormalParams(mu=1.0, sigma=0.5), # Source: Sentinel exec logs Q4-2025 (N=847); ~2.7h median
-    "ops": LogNormalParams(mu=0.5, sigma=0.3),         # Source: Sentinel exec logs Q4-2025; ~1.6h median
-    "admin": LogNormalParams(mu=0.3, sigma=0.2),       # Source: Sentinel exec logs Q4-2025; ~1.3h median
+    "legal": LogNormalParams(mu=2.0, sigma=0.8),       # ASSUMPTION: Sentinel exec logs Q4-2025; ~7.4h median, high variance
+    "financial": LogNormalParams(mu=1.5, sigma=0.6),   # ASSUMPTION: Sentinel exec logs Q4-2025; ~4.5h median
+    "engineering": LogNormalParams(mu=1.0, sigma=0.5), # ASSUMPTION: Sentinel exec logs Q4-2025 (N=847); ~2.7h median
+    "ops": LogNormalParams(mu=0.5, sigma=0.3),         # ASSUMPTION: Sentinel exec logs Q4-2025; ~1.6h median
+    "admin": LogNormalParams(mu=0.3, sigma=0.2),       # ASSUMPTION: Sentinel exec logs Q4-2025; ~1.3h median
 }
 
 # Default duration profile: (mu, sigma) for domains not in _DOMAIN_DURATIONS.
@@ -92,7 +92,7 @@ _DOMAIN_DURATIONS: dict[str, LogNormalParams] = {
 #   across this range (see §5.5 sensitivity analysis in the paper).
 # Weight rationale: mu=1.0 and sigma=0.5 are not free weights — they are
 # LogNormal distribution parameters chosen to match empirical task durations.
-_FALLBACK_DURATION = LogNormalParams(mu=1.0, sigma=0.5)  # Mirrors "engineering" — neutral midpoint domain
+_FALLBACK_DURATION = LogNormalParams(mu=1.0, sigma=0.5)  # ASSUMPTION: mirrors "engineering" — neutral midpoint domain
 
 
 
@@ -167,7 +167,7 @@ class TrialResult:
 
 def _bootstrap_ci(data: np.ndarray,
                    n_bootstrap: int = 10000,  # 10k resamples: standard for percentile CI (Efron & Tibshirani 1993)
-                   alpha: float = 0.05,       # 95% CI — convention for paper reporting
+                   alpha: float = 0.05,       # Standard 95% confidence interval (alpha=0.05 → 2.5th/97.5th percentiles)
                    seed: int = 42) -> tuple[float, float]:
     """Compute bootstrap confidence interval for the mean (#1177).
 
@@ -382,9 +382,9 @@ def _weighted_sum_order(obligations: list[Obligation], now: datetime) -> list[in
     return indices
 
 
-# Exhaustive strategy registry — every entry has a matching dispatch function.
-# Adding a strategy requires both a STRATEGIES entry and a _STRATEGY_DISPATCH lambda.
-# Complete: all registered strategies (11 total)
+# Exhaustive strategy registry — every entry has a matching dispatch function
+# in _STRATEGY_DISPATCH. Adding a strategy requires both a STRATEGIES entry
+# and a _STRATEGY_DISPATCH lambda. The assertion below enforces this.
 STRATEGIES: dict[str, str] = {
     "tidewatch": "Tidewatch pressure ranking",
     "tidewatch_unclamped": "Tidewatch unclamped product ranking (#1263)",
@@ -400,8 +400,7 @@ STRATEGIES: dict[str, str] = {
 }
 
 # Strategy dispatch — exhaustive, data-driven, no conditional chain.
-# Keys must match STRATEGIES exactly.
-# Complete: all registered strategies (11 total)
+# Keys mirror STRATEGIES exactly (enforced by assertion below).
 _STRATEGY_DISPATCH: dict[str, callable] = {
     "tidewatch": lambda obs, now, rng: _tidewatch_order(obs, now),
     "tidewatch_unclamped": lambda obs, now, rng: _tidewatch_unclamped_order(obs, now),
@@ -415,6 +414,12 @@ _STRATEGY_DISPATCH: dict[str, callable] = {
     "fifo": lambda obs, now, rng: _fifo_order(obs, now),
     "random": lambda obs, now, rng: _random_order(obs, now, rng),
 }
+
+# Structural guard: STRATEGIES and _STRATEGY_DISPATCH must have identical keys.
+assert set(STRATEGIES) == set(_STRATEGY_DISPATCH), (
+    f"STRATEGIES keys {set(STRATEGIES)} != "
+    f"_STRATEGY_DISPATCH keys {set(_STRATEGY_DISPATCH)}"
+)
 
 
 # ── Simulation engine ────────────────────────────────────────────────────────
@@ -498,18 +503,12 @@ def _run_trial(
     order: list[int],
     sim_start: datetime,
 ) -> TrialResult:
-    """Execute one trial: process obligations in the given order, track outcomes.
+    """Execute one trial: serial obligation processing with inversion detection.
 
-    Sequential trial simulation — the operator processes obligations serially
-    in the specified order. Each obligation takes its sampled duration. The
-    main loop is an atomic operation: saturation scan, then serial processing
-    with per-step inversion detection.
-
-    Queue inversion detection (#1175): pressures are recalculated at the
-    current simulation clock time, not the stale sim_start snapshot.
+    Atomic operation: saturation scan, then sequential processing loop.
+    Inversions are measured at current sim-clock time (#1175), not stale snapshot.
     """
     saturated_count, pre_clamp_pressures, tie_count = _scan_saturation(sim_obs, sim_start)
-
     clock_hours = 0.0
     on_time = 0
     late = 0
@@ -522,7 +521,6 @@ def _run_trial(
     for _pos, idx in enumerate(order):
         sob = sim_obs[idx]
         duration = sob.duration_hours
-
         sim_now = sim_start + timedelta(hours=clock_hours)
         current_pressure = calculate_pressure(sob.obligation, now=sim_now).pressure
         step_inv, step_checks = _count_inversions(
@@ -530,24 +528,18 @@ def _run_trial(
         )
         inversions += step_inv
         inversion_checks += step_checks
-
         clock_hours += duration
         total_hours += duration
-        completion_time = sim_start + timedelta(hours=clock_hours)
-
-        if _check_deadline(sob.obligation, completion_time):
+        if _check_deadline(sob.obligation, sim_start + timedelta(hours=clock_hours)):
             on_time += 1
             effective_hours += duration
         else:
             late += 1
-
         completed.add(idx)
 
     return TrialResult(
-        completed_on_time=on_time,
-        completed_late=late,
-        total=on_time + late,
-        inversions=inversions,
+        completed_on_time=on_time, completed_late=late,
+        total=on_time + late, inversions=inversions,
         inversion_checks=inversion_checks,
         effective_attention_hours=effective_hours,
         total_attention_hours=total_hours,
@@ -787,12 +779,8 @@ def run_ablation_study(
 ) -> dict[str, MonteCarloResult]:
     """Run 6-factor ablation study on the tidewatch strategy (#1214).
 
-    Runs the tidewatch strategy once with no ablation (baseline), then once
-    per factor with that factor neutralized (set to identity 1.0). Returns
-    a dict mapping factor name to MonteCarloResult.
-
-    The "baseline" key holds the unablated result. Each other key matches
-    a COMP_* constant from tidewatch.components.
+    Baseline (unablated) + one run per factor with that factor set to identity
+    1.0. Returns dict mapping factor name (or "baseline") to MonteCarloResult.
     """
     from tidewatch.components import (
         COMP_COMPLETION_DAMP,
@@ -807,28 +795,20 @@ def run_ablation_study(
         sim_start = datetime.now(UTC)
 
     factors = [
-        COMP_TIME_PRESSURE,
-        COMP_MATERIALITY,
-        COMP_DEPENDENCY_AMP,
-        COMP_COMPLETION_DAMP,
-        COMP_TIMING_AMP,
-        COMP_VIOLATION_AMP,
+        COMP_TIME_PRESSURE, COMP_MATERIALITY, COMP_DEPENDENCY_AMP,
+        COMP_COMPLETION_DAMP, COMP_TIMING_AMP, COMP_VIOLATION_AMP,
     ]
 
-    results: dict[str, MonteCarloResult] = {}
-
-    # Baseline: no ablation
-    results["baseline"] = run_monte_carlo(
-        obligations, strategy="tidewatch", n_trials=n_trials,
-        seed=seed, sim_start=sim_start,
-    )
-
-    # Per-factor ablation
+    results: dict[str, MonteCarloResult] = {
+        "baseline": run_monte_carlo(
+            obligations, strategy="tidewatch", n_trials=n_trials,
+            seed=seed, sim_start=sim_start,
+        ),
+    }
     for factor in factors:
         results[factor] = _run_ablated_factor(
             factor, obligations, n_trials, seed, sim_start,
         )
-
     return results
 
 
@@ -972,6 +952,29 @@ def _evaluate_deadline_outcomes(
     return completed_on_time, completed_late
 
 
+def _run_des_trial(
+    profiles: dict,
+    dag_edges: list[tuple[str, str]],
+    node_processes: dict[str, str],
+    obligations: list[Obligation],
+    sim_start: datetime,
+    seed: int,
+) -> DESTrialResult:
+    """Execute a single DES trial via CloseSimulation replay."""
+    from statistic_harness.core.des_engine import CloseSimulation
+
+    sim = CloseSimulation(profiles=profiles, resource_capacity=1, seed=seed)
+    result = sim.replay(dag_edges, node_processes)
+    total_hours = _seconds_to_hours(result.total_duration_seconds)
+    on_time, late = _evaluate_deadline_outcomes(obligations, sim_start)
+    return DESTrialResult(
+        total_duration_hours=total_hours,
+        bottleneck_obligation_id=result.bottleneck_process,
+        completed_on_time=on_time, completed_late=late,
+        total=on_time + late,
+    )
+
+
 def run_des_simulation(
     obligations: list[Obligation],
     n_trials: int = DEFAULT_TRIALS,
@@ -981,50 +984,18 @@ def run_des_simulation(
     """Run DES simulation using statistics_harness CloseSimulation engine.
 
     Models obligation processing as a DAG where dependency_count creates
-    synthetic predecessor nodes. Uses SimPy for event-driven scheduling
-    with a single resource slot (operator attention).
-
-    Args:
-        obligations: obligations to simulate
-        n_trials: number of Monte Carlo replications
-        seed: base RNG seed
-        sim_start: reference time for deadline comparison
-
-    Returns:
-        DESResult with aggregated metrics
+    synthetic predecessor nodes. Single resource slot (operator attention).
     """
-    from statistic_harness.core.des_engine import CloseSimulation
-
     if sim_start is None:
         sim_start = datetime.now(UTC)
 
-    # DES trial loop: build DAG once, replay N times with different seeds.
-    # Each trial uses the same DAG topology but SimPy samples stochastic
-    # durations from the profile distributions, producing duration variance.
     dag_edges, node_processes = _build_obligation_dag(obligations)
     profiles = _build_profiles_from_obligations(obligations)
 
-    trials: list[DESTrialResult] = []
-    for trial_i in range(n_trials):
-        sim = CloseSimulation(
-            profiles=profiles,
-            resource_capacity=1,  # single operator
-            seed=seed + trial_i,
-        )
-        result = sim.replay(dag_edges, node_processes)
-        total_hours = _seconds_to_hours(result.total_duration_seconds)
-        completed_on_time, completed_late = _evaluate_deadline_outcomes(
-            obligations, sim_start,
-        )
-        total = completed_on_time + completed_late
-        trials.append(DESTrialResult(
-            total_duration_hours=total_hours,
-            bottleneck_obligation_id=result.bottleneck_process,
-            completed_on_time=completed_on_time,
-            completed_late=completed_late,
-            total=total,
-        ))
-
+    trials = [
+        _run_des_trial(profiles, dag_edges, node_processes, obligations, sim_start, seed + i)
+        for i in range(n_trials)
+    ]
     missed_rates = np.array([t.missed_deadline_rate for t in trials])
     durations = np.array([t.total_duration_hours for t in trials])
 
