@@ -5,18 +5,33 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "tidewatch"
 version = "0.4.4"
-description = "Continuous obligation pressure with proactive idle-time planning"
+description = "Multi-factor obligation pressure scoring for agent orchestration systems"
 readme = "README.md"
 license = "Apache-2.0 OR LicenseRef-Commercial"
 requires-python = ">=3.11"
 authors = [
-    {name = "Justin Ram", email = "justin.ram@gmail.com"},
+    {name = "Shri Narayan Justin Ram", email = "justin@infoil.io"},
 ]
 keywords = [
-    "task management", "deadline", "urgency", "pressure",
-    "proactive planning", "AI agents", "obligation tracking",
+    "task prioritization", "deadline", "urgency", "pressure",
+    "agent orchestration", "AI agents", "obligation tracking",
+    "deferred scalarization",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
 ]
 dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/ninjra/tidewatch"
+Repository = "https://github.com/ninjra/tidewatch"
+Issues = "https://github.com/ninjra/tidewatch/issues"
 
 [project.optional-dependencies]
 gravitas = [

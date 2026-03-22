@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "Tidewatch: Multi-Factor Obligation Pressure with Deferred Scalarization"
+authors:
+  - family-names: Ram
+    given-names: Shri Narayan Justin
+    affiliation: Infoil LLC
+    email: justin@infoil.io
+repository-code: "https://github.com/ninjra/tidewatch"
+license: Apache-2.0
+version: 0.4.4
+date-released: "2026-03-22"
+keywords:
+  - task prioritization
+  - obligation management
+  - agent orchestration
+  - deadline pressure
+  - deferred scalarization
+preferred-citation:
+  type: article
+  title: "Tidewatch: Multi-Factor Obligation Pressure with Deferred Scalarization"
+  authors:
+    - family-names: Ram
+      given-names: Shri Narayan Justin
+      affiliation: Infoil LLC
+  year: 2026
+  doi: "10.XXXX/tidewatch"
+  url: "https://github.com/ninjra/tidewatch"

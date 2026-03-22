@@ -27,4 +27,5 @@ paper/*.pdf
 
 # Coverage
 .coverage
+htmlcov/
 .hypothesis/

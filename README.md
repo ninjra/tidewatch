@@ -1,109 +1,119 @@
+[![CI](https://github.com/ninjra/tidewatch/actions/workflows/ci.yml/badge.svg)](https://github.com/ninjra/tidewatch/actions/workflows/ci.yml)
+![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen)
+![Python](https://img.shields.io/badge/python-3.11%20|%203.12%20|%203.13-blue)
+![License](https://img.shields.io/badge/license-Apache--2.0-blue)
+![Tests](https://img.shields.io/badge/tests-659%20passed-brightgreen)
+![Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)
+
 # Tidewatch
 
-**Multi-objective task prioritization with deferred scalarization.**
+**Scores obligations by deadline pressure, dependencies, and what actually matters — so agents know what to work on next.**
 
-Tidewatch decomposes urgency into six multiplicative factors (all bounded
-away from zero) and retains them in a six-dimensional component space with
-deferred scalarization — preserving per-factor interpretability until
-ranking time.
+## Why Tidewatch?
 
-## Install
-
-```bash
-pip install -e ".[dev]"
-```
+- **Not just overdue/not-overdue** — continuous pressure scoring sees urgency accumulating days before a deadline, not just the moment it passes
+- **Knows what matters** — a legal brief blocking 50 tasks ranks above a routine config update due the same day. EDF can't make that distinction
+- **Shows its work** — deferred scalarization preserves all six scoring factors for inspection. Every ranking decision is auditable and decomposable
+- **Scales to tens of thousands** — adaptive rate constant, rank normalization, and zone capacity keep scores discriminating at N > 10,000
+- **659 tests, zero dependencies** — verified to Delta < 10^-10 against closed-form reference values. Pure Python 3.11+ stdlib
 
 ## Quick Start
 
+```bash
+pip install tidewatch
+```
+
 ```python
 from datetime import datetime, timezone, timedelta
-from tidewatch import (
-    Obligation, calculate_pressure, recalculate_batch,
-    CognitiveContext, bandwidth_adjusted_sort,
-)
+from tidewatch import Obligation, recalculate_batch
 
-# Create obligations
 now = datetime.now(timezone.utc)
 obligations = [
-    Obligation(
-        id=1, title="File Q1 taxes",
-        due_date=now + timedelta(days=3),
-        materiality="material", dependency_count=2,
-        completion_pct=0.1,
-    ),
-    Obligation(
-        id=2, title="Update project README",
-        due_date=now + timedelta(days=14),
-        materiality="routine", dependency_count=0,
-        completion_pct=0.0,
-    ),
+    Obligation(id=1, title="File Q1 taxes",
+               due_date=now + timedelta(days=3),
+               materiality="material", dependency_count=2),
+    Obligation(id=2, title="Update README",
+               due_date=now + timedelta(days=14)),
 ]
 
-# Calculate pressure (product of all six components)
 results = recalculate_batch(obligations)
 for r in results:
     print(f"{r.obligation_id}: P={r.pressure:.3f} [{r.zone}]")
-    # Access individual factors via component space
-    if r.component_space:
-        cs = r.component_space.space.components
-        print(f"  time={cs['time_pressure']:.3f} mat={cs['materiality']:.1f} "
-              f"dep={cs['dependency_amp']:.3f} comp={cs['completion_damp']:.3f}")
-
-# Bandwidth-aware reranking (specified, not empirically validated)
-ctx = CognitiveContext(sleep_quality=0.4, pain_level=0.3)
-reranked = bandwidth_adjusted_sort(results, obligations, ctx)
-for r in reranked:
-    print(f"{r.obligation_id}: P={r.pressure:.3f} (reranked)")
+# 1: P=0.952 [red]
+# 2: P=0.193 [green]
 ```
 
-## Six Factors
+## How It Works
 
-| Category | Factor | Role |
-|----------|--------|------|
-| Temporal | Exponential time-decay | Base urgency signal |
-| Temporal | Timing-sensitivity amplification | Escalation for stagnant tasks |
-| Temporal | Deadline-violation amplification | Decaying penalty for past misses |
-| State | Materiality weighting | Impact classification |
-| State | Logistic completion dampening | Urgency reduces as completion → 100% |
-| Structural | Temporally gated dependency fanout | Amplification from downstream blockers |
+Six multiplicative factors, all bounded away from zero:
 
-All factors are bounded away from zero. The product cannot collapse from
-a single factor.
-
-## Pressure Curve
-
-The exponential time-decay with k=3.0 produces:
-- 14 days out: P ≈ 0.19 (green)
-- 7 days out: P ≈ 0.35 (yellow)
-- 3 days out: P ≈ 0.63 (orange)
-- 1 day out: P ≈ 0.95 (red)
-
-## EDF Comparison
-
-EDF is theoretically optimal for deadline minimization. Tidewatch does
-not compete on that metric. At N=200, EDF achieves 18.5% missed deadlines
-vs. Tidewatch's 20.1% — an 8.6% relative cost of encoding materiality,
-dependency fanout, and completion state alongside deadline proximity.
-
-The contribution is interpretable, auditable multi-factor ranking with
-deferred scalarization, not deadline optimality.
-
-## Tests
-
-```bash
-pytest tests/ -q            # 563 tests
-ruff check .                # lint
+```
+P = min(1.0, P_time x M x A x D x T_amp x V_amp)
 ```
 
-Golden values verified to Δ < 10⁻¹⁰ against analytically computed
-reference values under pinned Python 3.11+ with zero runtime dependencies.
+| Factor | What It Captures | Default |
+|--------|-----------------|---------|
+| Time decay | Urgency acceleration as deadline approaches | k = 3.0 |
+| Materiality | Relative importance weighting | 1.5x for material |
+| Dependency fanout | Downstream impact of delays (temporally gated) | k_f = 2.0 |
+| Completion dampening | Reduced pressure as work completes | logistic, beta = 0.6 |
+| Timing sensitivity | Escalation for stagnant tasks | logistic ramp |
+| Violation amplification | Penalty for missed deadlines (14-day half-life decay) | cap = 1.5x |
+
+Factors are retained in a six-dimensional component space with **deferred scalarization** — the product collapse happens only when a consumer requests a scalar. Until then, all six dimensions are available for Pareto comparison, weighted aggregation, or per-factor inspection.
+
+## Evaluation
+
+Monte Carlo scheduling simulation (200 trials, seed=42, LogNormal durations):
+
+| Strategy | N=50 Missed | N=200 Missed | Inversions |
+|----------|------------|-------------|------------|
+| **Tidewatch** | **6.7%** | **20.1%** | **1.9%** |
+| EDF | 6.7% | 18.5% | 6.5% |
+| Weighted-EDF | 6.7% | 18.6% | 6.4% |
+| TOPSIS | 9.3% | 32.8% | 24.6% |
+| FIFO | 12.7% | 31.9% | 48.2% |
+| Random | 13.0% | 31.2% | 48.5% |
+
+EDF is theoretically optimal for deadline minimization — Tidewatch does not compete on that metric. The 8.6% relative cost at N=200 is the price of encoding materiality, dependency structure, and completion state alongside deadline proximity. Against naive baselines, Tidewatch reduces missed deadlines by 35-47%.
+
+## Architecture
+
+```
+Obligations --> Scorer (6 factors) --> ComponentSpace --> Collapse/Pareto --> Ranked Queue
+                                                              |
+                                              Bandwidth Modulator (3-tier risk)
+```
+
+**Capacity-aware reranking** adjusts presentation order by operator or system load without changing pressure scores. Three risk tiers control which obligations can be demoted. This mechanism is specified and implemented but not empirically validated.
+
+## Part of the Sentinel Constellation
+
+Tidewatch is the prioritization substrate in a family of tools for agent orchestration:
+
+- **[Sentinel](https://github.com/ninjra/Sentinel)** — orchestration kernel, session management, obligation tracking
+- **[Gravitas](https://github.com/ninjra/gravitas)** — physics-inspired memory retrieval and context assembly
+- **[Minds-Eye](https://github.com/ninjra/minds-eye)** — repo introspection, coherence analysis, red-team scanning
+- **[Forge](https://github.com/ninjra/forge)** — prompt evolution engine
 
 ## Paper
 
-> **Tidewatch: Continuous Obligation Pressure with Cognitive Bandwidth Adaptation**
-> S. N. Justin Ram, Infoil LLC (2026)
-> [SSRN link pending]
+> **Tidewatch: Multi-Factor Obligation Pressure with Deferred Scalarization**
+> Shri Narayan Justin Ram, Infoil LLC (2026)
+
+```bibtex
+@article{ram2026tidewatch,
+  title={Tidewatch: Multi-Factor Obligation Pressure with Deferred Scalarization},
+  author={Ram, Shri Narayan Justin},
+  year={2026},
+  url={https://github.com/ninjra/tidewatch}
+}
+```
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Issues and PRs welcome.
 
 ## License
 
-Apache-2.0 OR Commercial
+Apache-2.0 OR Commercial — see [LICENSE](LICENSE).
