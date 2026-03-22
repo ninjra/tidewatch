@@ -144,6 +144,7 @@ class TrialResult:
     # Pre-clamp reporting (#1176): expose distribution before saturation
     pre_clamp_pressures: list[float] = field(default_factory=list)
     tie_count: int = 0         # Count of clamped-pressure ties (#1176)
+    tie_affected_decisions: int = 0  # Obligation pairs tied at P>=0.999 (#1322)
 
     @property
     def missed_deadline_rate(self) -> float:
@@ -161,6 +162,14 @@ class TrialResult:
     def saturation_rate(self) -> float:
         """Fraction of obligations at pressure saturation (>= 0.999)."""
         return self.saturated_count / self.total if self.total > 0 else 0.0
+
+    @property
+    def tie_affected_rate(self) -> float:
+        """Fraction of obligation pairs affected by saturation ties (#1322)."""
+        # Total possible pairs: n*(n-1)/2
+        n = self.total
+        total_pairs = n * (n - 1) // 2
+        return self.tie_affected_decisions / total_pairs if total_pairs > 0 else 0.0
 
     @property
     def pre_clamp_max(self) -> float:
@@ -212,6 +221,8 @@ class MonteCarloResult:
     # Saturation frequency (#1210)
     saturation_rate_mean: float = 0.0
     saturation_rate_std: float = 0.0
+    # Saturation rank-loss (#1322)
+    tie_affected_rate_mean: float = 0.0
     trial_results: list[TrialResult] = field(default_factory=list, repr=False)
 
     def to_dict(self) -> dict:
@@ -436,6 +447,69 @@ def _tidewatch_unclamped_order(obligations: list[Obligation], now: datetime) -> 
     return [idx for idx, _ in scored]
 
 
+def _topsis_order(obligations: list[Obligation], now: datetime) -> list[int]:
+    """Order by TOPSIS score with domain-weighted profiles (#1321).
+
+    TOPSIS (Technique for Order of Preference by Similarity to Ideal Solution):
+    1. Normalize each component to [0,1] using _DEFAULT_BOUNDS
+    2. Apply domain-weighted profile (weights sum to 1.0, derived from
+       factor importance for deadline compliance)
+    3. Compute distance to ideal (all 1.0) and anti-ideal (all 0.0)
+    4. Score = dist_anti / (dist_ideal + dist_anti)
+    5. Sort descending (higher score = closer to ideal = higher priority)
+    """
+    from tidewatch.components import _DEFAULT_BOUNDS
+
+    # Domain-weighted profile — weights derived from factor importance
+    # for deadline compliance (sum = 1.0)
+    topsis_weights = {
+        "time_pressure": 0.3,
+        "materiality": 0.2,
+        "dependency_amp": 0.2,
+        "completion_damp": 0.15,
+        "timing_amp": 0.1,
+        "violation_amp": 0.05,
+    }
+
+    results = recalculate_batch(obligations, now=now)
+    scored = []
+    for r in results:
+        cs = r.component_space
+        if hasattr(cs, 'space') and hasattr(cs.space, 'components'):
+            components = cs.space.components
+            # Normalize each component to [0,1] and apply weights
+            weighted_norm = {}
+            for name, value in components.items():
+                lo, hi = _DEFAULT_BOUNDS.get(name, (0.0, 1.0))
+                span = hi - lo
+                norm = (value - lo) / span if span > 0 else 0.0
+                norm = max(0.0, min(1.0, norm))
+                w = topsis_weights.get(name, 0.0)
+                weighted_norm[name] = w * norm
+
+            # Distance to ideal (all weighted norms = weight_i)
+            dist_ideal_sq = sum(
+                (topsis_weights.get(name, 0.0) - wn) ** 2
+                for name, wn in weighted_norm.items()
+            )
+            # Distance to anti-ideal (all weighted norms = 0)
+            dist_anti_sq = sum(wn ** 2 for wn in weighted_norm.values())
+
+            dist_ideal = math.sqrt(dist_ideal_sq)
+            dist_anti = math.sqrt(dist_anti_sq)
+            denom = dist_ideal + dist_anti
+            topsis_score = dist_anti / denom if denom > 0 else 0.0
+        else:
+            topsis_score = r.pressure
+        scored.append((r.obligation_id, topsis_score))
+
+    scored.sort(key=lambda x: x[1], reverse=True)
+    id_to_rank = {oid: i for i, (oid, _) in enumerate(scored)}
+    indices = list(range(len(obligations)))
+    indices.sort(key=lambda i: id_to_rank.get(obligations[i].id, i))
+    return indices
+
+
 def _weighted_sum_order(obligations: list[Obligation], now: datetime) -> list[int]:
     """Order by normalized weighted-sum of component space (MCDM baseline, #1185).
 
@@ -485,6 +559,7 @@ def _build_strategy_registry() -> tuple[dict[str, str], dict[str, callable]]:
         "tidewatch_bw_mid": "Tidewatch + bandwidth (b=0.5)",
         "tidewatch_bw_low": "Tidewatch + bandwidth (b=0.2)",
         "tidewatch_bw_variable": "Tidewatch + variable bandwidth (Beta(2,3) per trial, #1188)",
+        "topsis": "TOPSIS with domain-weighted profiles (#1321)",
         "weighted_sum": "Weighted-sum MCDM (equal weights, normalized)",
         "weighted_edf": "Weighted-EDF: zone-tier + earliest-deadline (#1211)",
         "llf": "Least Laxity First (#1313)",
@@ -500,6 +575,7 @@ def _build_strategy_registry() -> tuple[dict[str, str], dict[str, callable]]:
         "tidewatch_bw_mid": lambda obs, now, rng: _tidewatch_bandwidth_order(obs, now, 0.5),
         "tidewatch_bw_low": lambda obs, now, rng: _tidewatch_bandwidth_order(obs, now, 0.2),
         "tidewatch_bw_variable": lambda obs, now, rng: _tidewatch_bandwidth_variable_order(obs, now, rng),
+        "topsis": lambda obs, now, rng: _topsis_order(obs, now),
         "weighted_sum": lambda obs, now, rng: _weighted_sum_order(obs, now),
         "weighted_edf": lambda obs, now, rng: _weighted_edf_order(obs, now),
         "llf": lambda obs, now, rng: _llf_order(obs, now),
@@ -602,6 +678,14 @@ def _run_trial(
     Inversions are measured at current sim-clock time (#1175), not stale snapshot.
     """
     saturated_count, pre_clamp_pressures, tie_count = _scan_saturation(sim_obs, sim_start)
+    # Count obligation pairs tied at saturation (#1322)
+    remaining_pressures = [
+        calculate_pressure(sob.obligation, now=sim_start).pressure
+        for sob in sim_obs
+    ]
+    saturated_indices = [i for i, p in enumerate(remaining_pressures) if p >= SATURATION_THRESHOLD]
+    n_sat = len(saturated_indices)
+    tie_affected_decisions = n_sat * (n_sat - 1) // 2 if n_sat >= 2 else 0
     clock_hours = 0.0
     on_time = 0
     late = 0
@@ -639,6 +723,7 @@ def _run_trial(
         saturated_count=saturated_count,
         pre_clamp_pressures=pre_clamp_pressures,
         tie_count=tie_count,
+        tie_affected_decisions=tie_affected_decisions,
     )
 
 
@@ -653,6 +738,7 @@ def _aggregate_trials(
     inversion_rates = np.array([t.queue_inversion_rate for t in trials])
     efficiency_rates = np.array([t.attention_efficiency for t in trials])
     saturation_rates = np.array([t.saturation_rate for t in trials])
+    tie_affected_rates = np.array([t.tie_affected_rate for t in trials])
 
     # Bootstrap 95% CIs (#1177)
     missed_ci = _bootstrap_ci(missed_rates, seed=seed) if n_trials >= CI_MIN_TRIALS else (0.0, 0.0)
@@ -673,6 +759,7 @@ def _aggregate_trials(
         attention_efficiency_ci=efficiency_ci,
         saturation_rate_mean=float(np.mean(saturation_rates)),
         saturation_rate_std=float(np.std(saturation_rates)),
+        tie_affected_rate_mean=float(np.mean(tie_affected_rates)),
         trial_results=trials,
     )
 
@@ -824,6 +911,55 @@ def run_kf_sensitivity(
         # Always restore originals
         _constants.FANOUT_TEMPORAL_K = original_const
         _pressure.FANOUT_TEMPORAL_K = original_pressure
+
+    return results
+
+
+def run_beta_sensitivity(
+    obligations: list[Obligation],
+    beta_values: list[float] | None = None,
+    n_trials: int = DEFAULT_TRIALS,
+    seed: int = DEFAULT_SEED,
+    sim_start: datetime | None = None,
+) -> dict[float, MonteCarloResult]:
+    """Run completion dampener beta (COMPLETION_DAMPENING) sensitivity analysis (#1325).
+
+    Temporarily patches tidewatch.constants.COMPLETION_DAMPENING to each value,
+    runs a full Monte Carlo simulation under the tidewatch strategy, then
+    restores the original constant. This measures how completion dampener
+    strength affects scheduling outcomes.
+
+    Args:
+        obligations: obligations to schedule
+        beta_values: list of COMPLETION_DAMPENING values to test
+        n_trials: MC replications per beta value
+        seed: RNG seed for reproducibility
+        sim_start: simulation reference time
+
+    Returns:
+        dict mapping beta value to MonteCarloResult
+    """
+    import tidewatch.constants as _constants
+    import tidewatch.pressure as _pressure
+
+    if beta_values is None:
+        beta_values = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+
+    original_const = _constants.COMPLETION_DAMPENING
+    original_pressure = _pressure.COMPLETION_DAMPENING
+    results: dict[float, MonteCarloResult] = {}
+
+    try:
+        for beta in beta_values:
+            _constants.COMPLETION_DAMPENING = beta
+            _pressure.COMPLETION_DAMPENING = beta
+            results[beta] = run_monte_carlo(
+                obligations, strategy="tidewatch", n_trials=n_trials,
+                seed=seed, sim_start=sim_start,
+            )
+    finally:
+        _constants.COMPLETION_DAMPENING = original_const
+        _pressure.COMPLETION_DAMPENING = original_pressure
 
     return results
 

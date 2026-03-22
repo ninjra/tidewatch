@@ -274,7 +274,7 @@ class TestStrategyComparison:
             "tidewatch", "tidewatch_unclamped",
             "tidewatch_bw_full", "tidewatch_bw_mid",
             "tidewatch_bw_low", "tidewatch_bw_variable",
-            "weighted_sum", "weighted_edf",
+            "topsis", "weighted_sum", "weighted_edf",
             "llf", "slack",
             "edf", "fifo", "random",
         }

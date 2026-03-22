@@ -1,0 +1,534 @@
+{
+  "tidewatch": {
+    "strategy": "tidewatch",
+    "n_trials": 200,
+    "missed_deadline_rate": {
+      "mean": 0.0607,
+      "std": 0.0037,
+      "ci_95": [
+        0.0602,
+        0.0612
+      ]
+    },
+    "queue_inversion_rate": {
+      "mean": 0.0189,
+      "std": 0.0028,
+      "ci_95": [
+        0.0186,
+        0.0193
+      ]
+    },
+    "attention_efficiency": {
+      "mean": 0.9346,
+      "std": 0.0355,
+      "ci_95": [
+        0.9295,
+        0.9393
+      ]
+    },
+    "saturation_rate": {
+      "mean": 0.08,
+      "std": 0.0
+    },
+    "pre_clamp_distribution": {
+      "max": 1.6865,
+      "mean": 0.2395,
+      "above_1_count": 800,
+      "total_ties_at_ceiling": 600
+    }
+  },
+  "tidewatch_unclamped": {
+    "strategy": "tidewatch_unclamped",
+    "n_trials": 200,
+    "missed_deadline_rate": {
+      "mean": 0.1269,
+      "std": 0.0097,
+      "ci_95": [
+        0.1256,
+        0.1283
+      ]
+    },
+    "queue_inversion_rate": {
+      "mean": 0.4911,
+      "std": 0.0021,
+      "ci_95": [
+        0.4908,
+        0.4914
+      ]
+    },
+    "attention_efficiency": {
+      "mean": 0.8966,
+      "std": 0.0363,
+      "ci_95": [
+        0.8914,
+        0.9016
+      ]
+    },
+    "saturation_rate": {
+      "mean": 0.08,
+      "std": 0.0
+    },
+    "pre_clamp_distribution": {
+      "max": 1.6865,
+      "mean": 0.2395,
+      "above_1_count": 800,
+      "total_ties_at_ceiling": 600
+    }
+  },
+  "tidewatch_bw_full": {
+    "strategy": "tidewatch_bw_full",
+    "n_trials": 200,
+    "missed_deadline_rate": {
+      "mean": 0.0607,
+      "std": 0.0037,
+      "ci_95": [
+        0.0602,
+        0.0612
+      ]
+    },
+    "queue_inversion_rate": {
+      "mean": 0.0189,
+      "std": 0.0028,
+      "ci_95": [
+        0.0186,
+        0.0193
+      ]
+    },
+    "attention_efficiency": {
+      "mean": 0.9346,
+      "std": 0.0355,
+      "ci_95": [
+        0.9295,
+        0.9393
+      ]
+    },
+    "saturation_rate": {
+      "mean": 0.08,
+      "std": 0.0
+    },
+    "pre_clamp_distribution": {
+      "max": 1.6865,
+      "mean": 0.2395,
+      "above_1_count": 800,
+      "total_ties_at_ceiling": 600
+    }
+  },
+  "tidewatch_bw_mid": {
+    "strategy": "tidewatch_bw_mid",
+    "n_trials": 200,
+    "missed_deadline_rate": {
+      "mean": 0.06,
+      "std": 0.0,
+      "ci_95": [
+        0.06,
+        0.06
+      ]
+    },
+    "queue_inversion_rate": {
+      "mean": 0.0356,
+      "std": 0.0009,
+      "ci_95": [
+        0.0355,
+        0.0358
+      ]
+    },
+    "attention_efficiency": {
+      "mean": 0.935,
+      "std": 0.0342,
+      "ci_95": [
+        0.93,
+        0.9395
+      ]
+    },
+    "saturation_rate": {
+      "mean": 0.08,
+      "std": 0.0
+    },
+    "pre_clamp_distribution": {
+      "max": 1.6865,
+      "mean": 0.2395,
+      "above_1_count": 800,
+      "total_ties_at_ceiling": 600
+    }
+  },
+  "tidewatch_bw_low": {
+    "strategy": "tidewatch_bw_low",
+    "n_trials": 200,
+    "missed_deadline_rate": {
+      "mean": 0.06,
+      "std": 0.0,
+      "ci_95": [
+        0.06,
+        0.06
+      ]
+    },
+    "queue_inversion_rate": {
+      "mean": 0.0755,
+      "std": 0.0009,
+      "ci_95": [
+        0.0753,
+        0.0756
+      ]
+    },
+    "attention_efficiency": {
+      "mean": 0.935,
+      "std": 0.0342,
+      "ci_95": [
+        0.93,
+        0.9395
+      ]
+    },
+    "saturation_rate": {
+      "mean": 0.08,
+      "std": 0.0
+    },
+    "pre_clamp_distribution": {
+      "max": 1.6865,
+      "mean": 0.2395,
+      "above_1_count": 800,
+      "total_ties_at_ceiling": 600
+    }
+  },
+  "tidewatch_bw_variable": {
+    "strategy": "tidewatch_bw_variable",
+    "n_trials": 200,
+    "missed_deadline_rate": {
+      "mean": 0.0601,
+      "std": 0.0014,
+      "ci_95": [
+        0.06,
+        0.0603
+      ]
+    },
+    "queue_inversion_rate": {
+      "mean": 0.0532,
+      "std": 0.0292,
+      "ci_95": [
+        0.0492,
+        0.0573
+      ]
+    },
+    "attention_efficiency": {
+      "mean": 0.9349,
+      "std": 0.0345,
+      "ci_95": [
+        0.9299,
+        0.9395
+      ]
+    },
+    "saturation_rate": {
+      "mean": 0.08,
+      "std": 0.0
+    },
+    "pre_clamp_distribution": {
+      "max": 1.6865,
+      "mean": 0.2395,
+      "above_1_count": 800,
+      "total_ties_at_ceiling": 600
+    }
+  },
+  "topsis": {
+    "strategy": "topsis",
+    "n_trials": 200,
+    "missed_deadline_rate": {
+      "mean": 0.0929,
+      "std": 0.0177,
+      "ci_95": [
+        0.0905,
+        0.0954
+      ]
+    },
+    "queue_inversion_rate": {
+      "mean": 0.278,
+      "std": 0.0028,
+      "ci_95": [
+        0.2776,
+        0.2783
+      ]
+    },
+    "attention_efficiency": {
+      "mean": 0.9148,
+      "std": 0.0483,
+      "ci_95": [
+        0.9077,
+        0.9212
+      ]
+    },
+    "saturation_rate": {
+      "mean": 0.08,
+      "std": 0.0
+    },
+    "pre_clamp_distribution": {
+      "max": 1.6865,
+      "mean": 0.2395,
+      "above_1_count": 800,
+      "total_ties_at_ceiling": 600
+    }
+  },
+  "weighted_sum": {
+    "strategy": "weighted_sum",
+    "n_trials": 200,
+    "missed_deadline_rate": {
+      "mean": 0.1157,
+      "std": 0.0167,
+      "ci_95": [
+        0.1134,
+        0.1181
+      ]
+    },
+    "queue_inversion_rate": {
+      "mean": 0.3147,
+      "std": 0.0037,
+      "ci_95": [
+        0.3142,
+        0.3152
+      ]
+    },
+    "attention_efficiency": {
+      "mean": 0.9018,
+      "std": 0.0474,
+      "ci_95": [
+        0.8948,
+        0.9081
+      ]
+    },
+    "saturation_rate": {
+      "mean": 0.08,
+      "std": 0.0
+    },
+    "pre_clamp_distribution": {
+      "max": 1.6865,
+      "mean": 0.2395,
+      "above_1_count": 800,
+      "total_ties_at_ceiling": 600
+    }
+  },
+  "weighted_edf": {
+    "strategy": "weighted_edf",
+    "n_trials": 200,
+    "missed_deadline_rate": {
+      "mean": 0.0668,
+      "std": 0.0109,
+      "ci_95": [
+        0.0653,
+        0.0684
+      ]
+    },
+    "queue_inversion_rate": {
+      "mean": 0.117,
+      "std": 0.0021,
+      "ci_95": [
+        0.1167,
+        0.1173
+      ]
+    },
+    "attention_efficiency": {
+      "mean": 0.9311,
+      "std": 0.0395,
+      "ci_95": [
+        0.9253,
+        0.9363
+      ]
+    },
+    "saturation_rate": {
+      "mean": 0.08,
+      "std": 0.0
+    },
+    "pre_clamp_distribution": {
+      "max": 1.6865,
+      "mean": 0.2395,
+      "above_1_count": 800,
+      "total_ties_at_ceiling": 600
+    }
+  },
+  "llf": {
+    "strategy": "llf",
+    "n_trials": 200,
+    "missed_deadline_rate": {
+      "mean": 0.0668,
+      "std": 0.0109,
+      "ci_95": [
+        0.0653,
+        0.0684
+      ]
+    },
+    "queue_inversion_rate": {
+      "mean": 0.1186,
+      "std": 0.0021,
+      "ci_95": [
+        0.1183,
+        0.1189
+      ]
+    },
+    "attention_efficiency": {
+      "mean": 0.9311,
+      "std": 0.0395,
+      "ci_95": [
+        0.9253,
+        0.9363
+      ]
+    },
+    "saturation_rate": {
+      "mean": 0.08,
+      "std": 0.0
+    },
+    "pre_clamp_distribution": {
+      "max": 1.6865,
+      "mean": 0.2395,
+      "above_1_count": 800,
+      "total_ties_at_ceiling": 600
+    }
+  },
+  "slack": {
+    "strategy": "slack",
+    "n_trials": 200,
+    "missed_deadline_rate": {
+      "mean": 0.0668,
+      "std": 0.0109,
+      "ci_95": [
+        0.0653,
+        0.0684
+      ]
+    },
+    "queue_inversion_rate": {
+      "mean": 0.117,
+      "std": 0.0021,
+      "ci_95": [
+        0.1167,
+        0.1173
+      ]
+    },
+    "attention_efficiency": {
+      "mean": 0.9311,
+      "std": 0.0395,
+      "ci_95": [
+        0.9253,
+        0.9363
+      ]
+    },
+    "saturation_rate": {
+      "mean": 0.08,
+      "std": 0.0
+    },
+    "pre_clamp_distribution": {
+      "max": 1.6865,
+      "mean": 0.2395,
+      "above_1_count": 800,
+      "total_ties_at_ceiling": 600
+    }
+  },
+  "edf": {
+    "strategy": "edf",
+    "n_trials": 200,
+    "missed_deadline_rate": {
+      "mean": 0.0668,
+      "std": 0.0109,
+      "ci_95": [
+        0.0653,
+        0.0684
+      ]
+    },
+    "queue_inversion_rate": {
+      "mean": 0.1178,
+      "std": 0.0021,
+      "ci_95": [
+        0.1175,
+        0.1181
+      ]
+    },
+    "attention_efficiency": {
+      "mean": 0.9311,
+      "std": 0.0395,
+      "ci_95": [
+        0.9253,
+        0.9363
+      ]
+    },
+    "saturation_rate": {
+      "mean": 0.08,
+      "std": 0.0
+    },
+    "pre_clamp_distribution": {
+      "max": 1.6865,
+      "mean": 0.2395,
+      "above_1_count": 800,
+      "total_ties_at_ceiling": 600
+    }
+  },
+  "fifo": {
+    "strategy": "fifo",
+    "n_trials": 200,
+    "missed_deadline_rate": {
+      "mean": 0.1269,
+      "std": 0.0097,
+      "ci_95": [
+        0.1256,
+        0.1283
+      ]
+    },
+    "queue_inversion_rate": {
+      "mean": 0.4911,
+      "std": 0.0021,
+      "ci_95": [
+        0.4908,
+        0.4914
+      ]
+    },
+    "attention_efficiency": {
+      "mean": 0.8966,
+      "std": 0.0363,
+      "ci_95": [
+        0.8914,
+        0.9016
+      ]
+    },
+    "saturation_rate": {
+      "mean": 0.08,
+      "std": 0.0
+    },
+    "pre_clamp_distribution": {
+      "max": 1.6865,
+      "mean": 0.2395,
+      "above_1_count": 800,
+      "total_ties_at_ceiling": 600
+    }
+  },
+  "random": {
+    "strategy": "random",
+    "n_trials": 200,
+    "missed_deadline_rate": {
+      "mean": 0.13,
+      "std": 0.0221,
+      "ci_95": [
+        0.127,
+        0.133
+      ]
+    },
+    "queue_inversion_rate": {
+      "mean": 0.4915,
+      "std": 0.0468,
+      "ci_95": [
+        0.4849,
+        0.498
+      ]
+    },
+    "attention_efficiency": {
+      "mean": 0.8954,
+      "std": 0.0374,
+      "ci_95": [
+        0.89,
+        0.9003
+      ]
+    },
+    "saturation_rate": {
+      "mean": 0.08,
+      "std": 0.0
+    },
+    "pre_clamp_distribution": {
+      "max": 1.6865,
+      "mean": 0.2395,
+      "above_1_count": 800,
+      "total_ties_at_ceiling": 600
+    }
+  }
+}
