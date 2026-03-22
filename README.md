@@ -93,6 +93,40 @@ Obligations --> Scorer (6 factors) --> ComponentSpace --> Collapse/Pareto --> Ra
 
 **Capacity-aware reranking** adjusts presentation order by operator or system load without changing pressure scores. Three risk tiers control which obligations can be demoted. This mechanism is specified and implemented but not empirically validated.
 
+## Scalability
+
+Single-core, pure Python, zero dependencies:
+
+| N | Time | Throughput | Memory |
+|---|------|-----------|--------|
+| 10,000 | 0.08s | 118K/sec | 52MB |
+| 100,000 | 0.90s | 111K/sec | 203MB |
+| 1,000,000 | 14s | 71K/sec | 1.7GB |
+| 5,000,000 | 74s | 68K/sec | 8.2GB |
+
+A Fortune 500 JIRA instance (~500K issues) scores in under 5 seconds. Incremental rescoring (`recalculate_stale`) touches only changed items — the effective cost is O(k) where k << N.
+
+## Integrations
+
+Tidewatch is a scoring engine, not a product. It sits between your data source and your dispatch system:
+
+```
+[JIRA / ServiceNow / GitHub Issues / PagerDuty / Custom DB]
+                        ↓
+              Tidewatch scoring engine
+                        ↓
+        [Agent dispatcher / Dashboard / Alert router]
+```
+
+See `examples/` for ready-to-use integrations:
+- **[quickstart.py](examples/quickstart.py)** — 10-line introduction
+- **[jira_integration.py](examples/jira_integration.py)** — map JIRA issues to obligations
+- **[api_server.py](examples/api_server.py)** — REST scoring API (stdlib, zero deps)
+
+## Commercial Use
+
+Tidewatch is dual-licensed: **Apache-2.0** for open use, **Commercial** for embedding in proprietary products. See [COMMERCIAL.md](COMMERCIAL.md) for details.
+
 ## Part of the Sentinel Constellation
 
 Tidewatch is the prioritization substrate in a family of tools for agent orchestration:
