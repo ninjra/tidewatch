@@ -366,6 +366,8 @@ scan:
         decorators:
         - dataclass
       functions:
+      - name: _build_domain_durations
+        decorators: []
       - name: _hours_to_seconds
         decorators: []
       - name: _seconds_to_hours
@@ -391,6 +393,8 @@ scan:
       - name: _tidewatch_unclamped_order
         decorators: []
       - name: _weighted_sum_order
+        decorators: []
+      - name: _build_strategy_registry
         decorators: []
       - name: _sample_durations
         decorators: []
@@ -2515,42 +2519,42 @@ graph:
     tidewatch/constants.py: 21
     benchmarks/datasets/generate_obligations.py: 15
     tidewatch/components.py: 7
-    benchmarks/constants.py: 6
     benchmarks/metrics.py: 6
+    benchmarks/constants.py: 6
     benchmarks/monte_carlo.py: 5
     benchmarks/baselines/eisenhower.py: 4
     benchmarks/baselines/__init__.py: 3
+    tidewatch/planner.py: 3
     benchmarks/baselines/linear_urgency.py: 3
     benchmarks/baselines/binary_deadline.py: 3
-    tidewatch/planner.py: 3
+    benchmarks/run.py: 2
     scripts/generate_mc_results.py: 2
     tidewatch/triage.py: 2
-    benchmarks/run.py: 2
-    scripts/generate_paper_figures.py: 1
     scripts/constants.py: 1
-    tests/test_golden_pipeline.py: 0
-    tests/test_baselines.py: 0
-    tests/test_generate_mc_results.py: 0
-    tests/test_eisenhower.py: 0
-    tests/test_cognitive_bandwidth.py: 0
-    tests/test_linear_urgency.py: 0
-    tests/test_constants.py: 0
-    tests/test_run.py: 0
-    tests/test_property_pressure.py: 0
-    tests/test_binary_deadline.py: 0
-    tests/test_types.py: 0
+    scripts/generate_paper_figures.py: 1
     tests/test_generate_obligations.py: 0
-    tests/conftest.py: 0
     tests/test_generate_paper_figures.py: 0
+    benchmarks/__init__.py: 0
+    tests/test_binary_deadline.py: 0
+    tests/test_golden_pipeline.py: 0
+    tests/test_init.py: 0
+    tests/test_cognitive_bandwidth.py: 0
+    tests/test_run.py: 0
+    tests/test_monte_carlo.py: 0
+    tests/test_eisenhower.py: 0
+    tests/test_linear_urgency.py: 0
+    tests/test_integration.py: 0
+    tests/test_baselines.py: 0
+    tests/test_constants.py: 0
+    tests/conftest.py: 0
+    tests/test_pressure.py: 0
+    tests/test_types.py: 0
     tests/test_planner.py: 0
     tests/test_triage.py: 0
-    tests/test_monte_carlo.py: 0
-    tests/test_pressure.py: 0
-    tests/test_benchmarks.py: 0
-    tests/test_integration.py: 0
-    tests/test_init.py: 0
-    benchmarks/__init__.py: 0
+    tests/test_generate_mc_results.py: 0
     tests/test_metrics.py: 0
+    tests/test_benchmarks.py: 0
+    tests/test_property_pressure.py: 0
   out_degree:
     tests/test_golden_pipeline.py: 96
     tests/test_pressure.py: 25
@@ -2558,48 +2562,48 @@ graph:
     tidewatch/pressure.py: 9
     tidewatch/__init__.py: 5
     benchmarks/baselines/__init__.py: 4
-    scripts/generate_mc_results.py: 4
     tests/test_monte_carlo.py: 4
+    scripts/generate_mc_results.py: 4
     tests/test_benchmarks.py: 4
-    tests/test_generate_mc_results.py: 3
-    tests/test_property_pressure.py: 3
+    benchmarks/run.py: 3
     tidewatch/components.py: 3
     tests/test_planner.py: 3
-    benchmarks/run.py: 3
-    tests/test_eisenhower.py: 2
+    tests/test_generate_mc_results.py: 3
+    tests/test_property_pressure.py: 3
     tests/test_run.py: 2
+    tests/test_eisenhower.py: 2
     scripts/generate_paper_figures.py: 2
+    tests/test_integration.py: 2
     tests/conftest.py: 2
     tidewatch/planner.py: 2
-    tests/test_triage.py: 2
     tidewatch/types.py: 2
-    tests/test_integration.py: 2
-    tests/test_baselines.py: 1
-    benchmarks/baselines/eisenhower.py: 1
-    tests/test_cognitive_bandwidth.py: 1
-    tests/test_linear_urgency.py: 1
-    tests/test_constants.py: 1
-    tests/test_binary_deadline.py: 1
-    tests/test_types.py: 1
-    benchmarks/datasets/generate_obligations.py: 1
+    tests/test_triage.py: 2
     tests/test_generate_obligations.py: 1
     tests/test_generate_paper_figures.py: 1
-    benchmarks/metrics.py: 1
-    tidewatch/triage.py: 1
-    tests/test_init.py: 1
     benchmarks/__init__.py: 1
+    tests/test_binary_deadline.py: 1
+    tests/test_init.py: 1
+    tests/test_cognitive_bandwidth.py: 1
+    benchmarks/metrics.py: 1
+    tests/test_linear_urgency.py: 1
+    tests/test_baselines.py: 1
+    tests/test_constants.py: 1
+    benchmarks/baselines/eisenhower.py: 1
+    tests/test_types.py: 1
+    tidewatch/triage.py: 1
     tests/test_metrics.py: 1
+    benchmarks/datasets/generate_obligations.py: 1
+    scripts/constants.py: 0
+    tidewatch/constants.py: 0
     benchmarks/baselines/linear_urgency.py: 0
     benchmarks/constants.py: 0
     benchmarks/baselines/binary_deadline.py: 0
-    scripts/constants.py: 0
-    tidewatch/constants.py: 0
   betweenness_centrality:
     tidewatch/__init__.py: 39.87210258096334
     benchmarks/run.py: 18.0
     benchmarks/baselines/__init__.py: 13.0
     benchmarks/monte_carlo.py: 12.933333333333334
-    tidewatch/types.py: 7.824603174603175
+    tidewatch/types.py: 7.824603174603174
     tidewatch/pressure.py: 6.310437101576342
     scripts/generate_mc_results.py: 5.0
     benchmarks/datasets/generate_obligations.py: 4.166666666666666
@@ -2607,36 +2611,36 @@ graph:
     scripts/generate_paper_figures.py: 2.0
     tidewatch/components.py: 1.8055555555555558
     benchmarks/metrics.py: 1.7666666666666666
-    tidewatch/planner.py: 1.2539682539682542
+    tidewatch/planner.py: 1.253968253968254
+    tests/test_generate_obligations.py: 0.0
+    tests/test_generate_paper_figures.py: 0.0
+    benchmarks/__init__.py: 0.0
+    tests/test_binary_deadline.py: 0.0
     tests/test_golden_pipeline.py: 0.0
-    tests/test_baselines.py: 0.0
-    tests/test_generate_mc_results.py: 0.0
-    tests/test_eisenhower.py: 0.0
+    tests/test_init.py: 0.0
     tests/test_cognitive_bandwidth.py: 0.0
-    benchmarks/baselines/linear_urgency.py: 0.0
+    tests/test_run.py: 0.0
+    scripts/constants.py: 0.0
+    tests/test_monte_carlo.py: 0.0
+    tests/test_eisenhower.py: 0.0
     tests/test_linear_urgency.py: 0.0
+    tests/test_integration.py: 0.0
+    tests/test_baselines.py: 0.0
     tests/test_constants.py: 0.0
+    tests/conftest.py: 0.0
+    tests/test_pressure.py: 0.0
+    tidewatch/constants.py: 0.0
+    benchmarks/baselines/linear_urgency.py: 0.0
+    tests/test_types.py: 0.0
+    tests/test_planner.py: 0.0
+    tidewatch/triage.py: 0.0
+    tests/test_triage.py: 0.0
+    tests/test_generate_mc_results.py: 0.0
+    tests/test_metrics.py: 0.0
+    tests/test_benchmarks.py: 0.0
     benchmarks/constants.py: 0.0
     benchmarks/baselines/binary_deadline.py: 0.0
-    tests/test_run.py: 0.0
     tests/test_property_pressure.py: 0.0
-    tests/test_binary_deadline.py: 0.0
-    tests/test_types.py: 0.0
-    tests/test_generate_obligations.py: 0.0
-    tests/conftest.py: 0.0
-    tests/test_generate_paper_figures.py: 0.0
-    tests/test_planner.py: 0.0
-    scripts/constants.py: 0.0
-    tests/test_triage.py: 0.0
-    tests/test_monte_carlo.py: 0.0
-    tidewatch/triage.py: 0.0
-    tests/test_pressure.py: 0.0
-    tests/test_benchmarks.py: 0.0
-    tests/test_integration.py: 0.0
-    tests/test_init.py: 0.0
-    benchmarks/__init__.py: 0.0
-    tidewatch/constants.py: 0.0
-    tests/test_metrics.py: 0.0
   orphans: []
   clusters:
   - - benchmarks/__init__.py
@@ -2837,28 +2841,28 @@ graph:
     scripts/generate_paper_figures.py: 5.0
     tests/test_monte_carlo.py: 4.0
     tests/test_benchmarks.py: 4.0
-    tests/test_generate_mc_results.py: 3.0
     benchmarks/baselines/linear_urgency.py: 3.0
-    benchmarks/baselines/binary_deadline.py: 3.0
-    tests/test_property_pressure.py: 3.0
     tests/test_planner.py: 3.0
     tidewatch/triage.py: 3.0
-    tests/test_eisenhower.py: 2.0
+    tests/test_generate_mc_results.py: 3.0
+    benchmarks/baselines/binary_deadline.py: 3.0
+    tests/test_property_pressure.py: 3.0
     tests/test_run.py: 2.0
+    tests/test_eisenhower.py: 2.0
+    tests/test_integration.py: 2.0
     tests/conftest.py: 2.0
     tests/test_triage.py: 2.0
-    tests/test_integration.py: 2.0
-    tests/test_baselines.py: 1.0
-    tests/test_cognitive_bandwidth.py: 1.0
-    tests/test_linear_urgency.py: 1.0
-    tests/test_constants.py: 1.0
-    tests/test_binary_deadline.py: 1.0
-    tests/test_types.py: 1.0
     tests/test_generate_obligations.py: 1.0
     tests/test_generate_paper_figures.py: 1.0
-    scripts/constants.py: 1.0
-    tests/test_init.py: 1.0
     benchmarks/__init__.py: 1.0
+    tests/test_binary_deadline.py: 1.0
+    tests/test_init.py: 1.0
+    tests/test_cognitive_bandwidth.py: 1.0
+    scripts/constants.py: 1.0
+    tests/test_linear_urgency.py: 1.0
+    tests/test_baselines.py: 1.0
+    tests/test_constants.py: 1.0
+    tests/test_types.py: 1.0
     tests/test_metrics.py: 1.0
   external_imports:
     benchmarks/baselines/__init__.py:
@@ -3047,59 +3051,12 @@ abstraction:
     hotspots: {}
   files_analyzed: 9
 assumptions:
-  findings:
-  - file: benchmarks/monte_carlo.py
-    line: 75
-    category: mapping_assumption
-    severity: medium
-    severity_rank: 1
-    code: "_DOMAIN_DURATIONS: dict[str, LogNormalParams] = {\n    \"legal\": LogNormalParams(mu=2.0, sigma=0.8),       # ASSUMPTION:\
-      \ Sentinel exec logs Q4-2025; ~7.4h median, high variance\n    \"financial\": LogNormalParams(mu=1.5, sigma=0.6),  \
-      \ # ASSUMPTION: Sentinel exec logs Q4-2025; ~4.5h median\n    \"engineering\": LogNormalParams(mu=1.0, sigma=0.5), #\
-      \ ASSUMPTION: Sentinel exec logs Q4-2025 (N=847); ~2.7h median\n    \"ops\": LogNormalParams(mu=0.5, sigma=0.3),   \
-      \      # ASSUMPTION: Sentinel exec logs Q4-2025; ~1.6h median\n    ..."
-    note: Mapping '_DOMAIN_DURATIONS' with 5 entries — assumes complete domain coverage
-    domain: tidewatch
-  - file: benchmarks/monte_carlo.py
-    line: 174
-    category: default_value
-    severity: medium
-    severity_rank: 1
-    code: 'def _bootstrap_ci(data: np.ndarray,'
-    note: Default alpha=0.05 in _bootstrap_ci() — assumed safe for all callers
-    current_value: 0.05
-    perturbation_range: '[0.025, 0.1]'
-    domain: tidewatch
-  - file: benchmarks/monte_carlo.py
-    line: 393
-    category: mapping_assumption
-    severity: medium
-    severity_rank: 1
-    code: "STRATEGIES: dict[str, str] = {\n    \"tidewatch\": \"Tidewatch pressure ranking\",\n    \"tidewatch_unclamped\"\
-      : \"Tidewatch unclamped product ranking (#1263)\",\n    \"tidewatch_bw_full\": \"Tidewatch + bandwidth (b=1.0)\",\n\
-      \    \"tidewatch_bw_mid\": \"Tidewatch + bandwidth (b=0.5)\",\n    ..."
-    note: Mapping 'STRATEGIES' with 11 entries — assumes complete domain coverage
-    domain: tidewatch
-  - file: benchmarks/monte_carlo.py
-    line: 410
-    category: mapping_assumption
-    severity: medium
-    severity_rank: 1
-    code: "_STRATEGY_DISPATCH: dict[str, callable] = {\n    \"tidewatch\": lambda obs, now, rng: _tidewatch_order(obs, now),\n\
-      \    \"tidewatch_unclamped\": lambda obs, now, rng: _tidewatch_unclamped_order(obs, now),\n    \"tidewatch_bw_full\"\
-      : lambda obs, now, rng: _tidewatch_bandwidth_order(obs, now, 1.0),\n    \"tidewatch_bw_mid\": lambda obs, now, rng:\
-      \ _tidewatch_bandwidth_order(obs, now, 0.5),\n    ..."
-    note: Mapping '_STRATEGY_DISPATCH' with 11 entries — assumes complete domain coverage
-    domain: tidewatch
+  findings: []
   summary:
-    total: 4
-    by_category:
-      mapping_assumption: 3
-      default_value: 1
-    by_severity:
-      medium: 4
-    hotspots:
-      benchmarks/monte_carlo.py: 4
+    total: 0
+    by_category: {}
+    by_severity: {}
+    hotspots: {}
   files_analyzed: 18
 hubris:
   findings: []
@@ -3130,35 +3087,82 @@ viewpoints:
   analysis_completeness: *id001
   confidence: 1.0
 timing:
-  total_s: 78.8
+  total_s: 16.6685
   steps:
   - step: scan
-    elapsed_s: 0.1372
+    elapsed_s: 0.1217
   - step: llm_decision
-    elapsed_s: 0.0924
+    elapsed_s: 0.0905
   - step: sovereignty
     elapsed_s: 0.0006
   - step: graph
     elapsed_s: 0.0013
   - step: purpose
-    elapsed_s: 0.0878
+    elapsed_s: 0.085
   - step: coherence
-    elapsed_s: 0.0006
+    elapsed_s: 0.0004
   - step: abstraction
-    elapsed_s: 0.0566
+    elapsed_s: 0.0578
   - step: assumptions
-    elapsed_s: 0.1499
+    elapsed_s: 0.1158
   - step: hubris
-    elapsed_s: 0.0571
+    elapsed_s: 0.05
   - step: integration
-    elapsed_s: 0.1228
+    elapsed_s: 0.1058
   - step: viewpoints_load
-    elapsed_s: 0.0912
+    elapsed_s: 0.0015
   - step: viewpoints_ast
-    elapsed_s: 0.1272
+    elapsed_s: 0.1458
   - step: viewpoints_save
     elapsed_s: 0.0
   - step: remediation_context
-    elapsed_s: 0.0012
+    elapsed_s: 0.0872
+  - step: finding_validation
+    elapsed_s: 3.1743
   - step: redteam
-    elapsed_s: 1.4375
+    elapsed_s: 1.3966
+  - step: llm_reasoning
+    elapsed_s: 10.4149
+llm_analysis:
+  identity_assessment: Tidewatch is a computational framework that models task obligations as a pressure field, calculates
+    urgency metrics, and generates speculative plans for high‑pressure items. It combines NumPy‑based numerical computation,
+    obligation parsing, and pressure‑zone classification, exposing its functionality through a library (tidewatch/), command‑line
+    scripts, and a test harness. The core purpose is to provide a mathematically rigorous, pressure‑based task‑management
+    assistant rather than a generic productivity app.
+  orientation_assessment: The codebase is structurally oriented toward the identified purpose. Key files that support the
+    pressure‑model include tidewatch/pressure.py, tidewatch/types.py, tidewatch/constants.py, and benchmarks/datasets/generate_obligations.py,
+    all of which implement obligation creation, pressure calculation, and zone classification. The hub file tidewatch/__init__.py
+    aggregates these modules and provides the public API used by scripts and tests. Test files (e.g., tests/test_pressure.py,
+    tests/test_golden_pipeline.py) validate the core functionality, confirming alignment. No contradictory modules were found
+    that aim to repurpose the system for unrelated tasks.
+  coherence_judgment: High coherence – the repository forms a single, tightly coupled cluster with 1 cluster and 0 orphaned
+    files. Hub files (tidewatch/__init__.py, tests/test_golden_pipeline.py, tidewatch/pressure.py, etc.) are central to the
+    pressure‑model and are referenced by multiple dependency chains (e.g., benchmarks/run.py → tidewatch/__init__.py → tidewatch/pressure.py).
+    The import resolution rate (69.8%) and dense edge count (206) indicate a unified architecture rather than fragmented components.
+  drift_observations:
+  - area: Auxiliary script divergence
+    evidence: scripts/generate_mc_results.py and scripts/generate_paper_figures.py operate as standalone utilities that consume
+      core pressure calculations but are not integrated into the core library’s test suite; they reside outside the tidewatch/
+      package and lack direct imports from the main hub.
+    interpretation: These scripts represent a peripheral expansion (paper generation, Monte‑Carlo result creation) that drifts
+      toward output‑oriented workflows rather than core pressure modeling, suggesting the repo is extending beyond its original
+      pressure‑engine intent.
+  - area: Missing test for hub module
+    evidence: tidewatch/__init__.py holds the highest hub score (122.9) but has no corresponding test file, while every other
+      core module (e.g., pressure.py, types.py) is exercised by tests.
+    interpretation: The lack of tests for the primary entry point signals a potential blind spot in the test coverage and
+      may indicate an evolving API surface that is not yet stabilized, creating a subtle drift between implementation centrality
+      and quality assurance.
+  risk_factors:
+  - Single point of failure risk in tidewatch/__init__.py due to high hub score and absence of unit tests
+  - Deep dependency chain (depth 6) through benchmarks/run.py → tidewatch/__init__.py → ... → constants.py creates long coupling;
+    changes near the leaf modules could ripple through many entry points
+  - Orphaned test files (none) but uneven test distribution – many tests focus on pressure and obligation validation, while
+    fewer tests cover utility scripts, potentially leaving non‑core functionality under‑tested
+  confidence: 0.88
+  token_usage:
+    completion_tokens: 1143
+    prompt_tokens: 1793
+    total_tokens: 2936
+  source: local
+  model: claude-sonnet-4-6

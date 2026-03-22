@@ -78,15 +78,15 @@ wearable-derived physiological signals (sleep quality, pain level, HRV
 trend) to surface lower-demand tasks when operator bandwidth is
 reduced, governed by a three-tier risk classification that prevents
 binding deadlines from being suppressed.  We validate the framework
-with 560 deterministic and property-based tests---including 23
+with 563 deterministic and property-based tests---including 23
 Hypothesis-driven bounds-and-monotonicity checks---factor ablation,
 and Monte Carlo scheduling simulations against earliest-deadline-first
 (EDF), FIFO, and random baselines.  At $N{=}50$, Tidewatch matches
 EDF on missed-deadline rates ($6.7\%$ each); at $N{=}200$, EDF
 outperforms pure Tidewatch on missed deadlines ($18.5\%$ vs.\
 $20.1\%$), reflecting the cost of multi-factor ranking against a
-deadline-only optimizer---though bandwidth-adjusted Tidewatch
-($17.8$--$18.2\%$) closes this gap.
+deadline-only optimizer.  Bandwidth-adjusted variants narrow the gap
+($19.5$--$20.0\%$).
 Against na\"{\i}ve baselines (FIFO, Random), Tidewatch reduces
 missed deadlines by $35$--$47\%$.  The dependency temporal gate
 uses an independent
@@ -657,7 +657,7 @@ Tidewatch is implemented in Python~3.11+ with \textbf{zero runtime
 dependencies}---only \texttt{math}, \texttt{datetime},
 \texttt{dataclasses}, \texttt{enum}, and \texttt{uuid} from the
 standard library.
-The core library comprises 1{,}846 lines across seven modules:
+The core library comprises 1{,}981 lines across seven modules:
 
 \begin{table}[t]
 \centering
@@ -667,15 +667,15 @@ The core library comprises 1{,}846 lines across seven modules:
 \toprule
 \textbf{Module} & \textbf{Lines} \\
 \midrule
-\texttt{pressure.py}   & 643 \\
+\texttt{pressure.py}   & 734 \\
+\texttt{components.py} & 301 \\
 \texttt{types.py}      & 297 \\
-\texttt{components.py} & 270 \\
-\texttt{constants.py}  & 246 \\
-\texttt{planner.py}    & 230 \\
+\texttt{constants.py}  & 258 \\
+\texttt{planner.py}    & 231 \\
 \texttt{triage.py}     & 114 \\
 \texttt{\_\_init\_\_.py} & 46 \\
 \midrule
-\textbf{Total}         & \textbf{1{,}846} \\
+\textbf{Total}         & \textbf{1{,}981} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -747,7 +747,7 @@ T_{\text{amp}} \times V_{\text{amp}})$ holds to $10^{-15}$ tolerance,
 confirming no hidden rounding between factor computation and final
 aggregation.
 
-The full test suite comprises 560 tests organized into 21
+The full test suite comprises 563 tests organized into 21
 deterministic gates covering the API surface, type construction,
 constant values, pressure computation, edge cases, input validation,
 zone classification, batch operations, planning, triage, and
@@ -848,9 +848,9 @@ recalculated at each processing step (see text).}
   \textbf{Eff.} \\
 \midrule
 Tidewatch          & $.067 {\scriptstyle\pm .011}$ & $.019$ & $.931$ \\
-TW+BW ($b{=}0.5$) & $.060 {\scriptstyle\pm .000}$ & $.036$ & $.935$ \\
-TW+BW ($b{=}0.2$) & $.060 {\scriptstyle\pm .000}$ & $.076$ & $.935$ \\
-TW+BW (var.)       & $.060 {\scriptstyle\pm .001}$ & $.053$ & $.935$ \\
+TW+BW ($b{=}0.5$) & $.064 {\scriptstyle\pm .010}$ & $.034$ & $.932$ \\
+TW+BW ($b{=}0.2$) & $.064 {\scriptstyle\pm .010}$ & $.072$ & $.932$ \\
+TW+BW (var.)       & $.064 {\scriptstyle\pm .010}$ & $.050$ & $.932$ \\
 Weighted-EDF       & $.067 {\scriptstyle\pm .011}$ & $.117$ & $.931$ \\
 Weighted-sum       & $.116 {\scriptstyle\pm .017}$ & $.315$ & $.902$ \\
 EDF                & $.067 {\scriptstyle\pm .011}$ & $.118$ & $.931$ \\
@@ -872,9 +872,9 @@ fraction of obligations at $P \geq 0.999$.}
   \textbf{Eff.} & \textbf{Sat.} \\
 \midrule
 Tidewatch           & $.201 {\scriptstyle\pm .018}$ & $.040$ & $.818$ & $9\%$ \\
-TW+BW ($b{=}0.5$)  & $.182 {\scriptstyle\pm .019}$ & $.048$ & $.827$ & $9\%$ \\
-TW+BW ($b{=}0.2$)  & $.171 {\scriptstyle\pm .018}$ & $.076$ & $.831$ & $9\%$ \\
-TW+BW (var.)        & $.178 {\scriptstyle\pm .019}$ & $.060$ & $.828$ & $9\%$ \\
+TW+BW ($b{=}0.5$)  & $.200 {\scriptstyle\pm .017}$ & $.050$ & $.816$ & $9\%$ \\
+TW+BW ($b{=}0.2$)  & $.195 {\scriptstyle\pm .017}$ & $.079$ & $.816$ & $9\%$ \\
+TW+BW (var.)        & $.199 {\scriptstyle\pm .017}$ & $.062$ & $.815$ & $9\%$ \\
 Weighted-EDF        & $.186 {\scriptstyle\pm .014}$ & $.064$ & $.838$ & $9\%$ \\
 Weighted-sum        & $.320 {\scriptstyle\pm .015}$ & $.277$ & $.696$ & $9\%$ \\
 EDF                 & $\mathbf{.185} {\scriptstyle\pm .015}$ & $.065$ & $\mathbf{.837}$ & $9\%$ \\
@@ -904,8 +904,8 @@ non-deadline-urgent but otherwise important tasks, occasionally
 displacing a barely-deadline-urgent item.
 
 Bandwidth-adjusted variants improve missed-deadline rates at
-$N{=}200$: TW+BW ($b{=}0.5$) achieves $18.2\%$ and TW+BW (var.)
-achieves $17.8\%$, both outperforming pure EDF ($18.5\%$).  This
+$N{=}200$: TW+BW ($b{=}0.5$) achieves $20.0\%$ and TW+BW ($b{=}0.2$)
+achieves $19.5\%$, narrowing the gap with EDF ($18.5\%$).  This
 suggests that bandwidth reranking surfaces tasks that are both
 deadline-safe and execution-feasible.
 
@@ -925,9 +925,9 @@ does not.
 \paragraph{Bandwidth reranking.}
 At $b = 0.5$ (medium capacity), bandwidth-adjusted reranking
 \emph{improves} deadline compliance ($0.060$ vs.\ $0.067$ at
-$N{=}50$; $0.182$ vs.\ $0.201$ at $N{=}200$).
+$N{=}50$; $0.200$ vs.\ $0.201$ at $N{=}200$).
 At $b = 0.2$ (low capacity), the same pattern holds with further
-improvement at $N{=}200$ ($0.171$).
+improvement at $N{=}200$ ($0.195$).
 This suggests that bandwidth reranking surfaces easier tasks \emph{that
 are still deadline-safe}, improving effective throughput.
 
@@ -985,7 +985,7 @@ dependency fanout, and completion state alongside deadline proximity.
 The trade-off is a small deadline cost ($+9\%$ at $N{=}200$) for
 lower queue inversions ($4.0\%$ vs.\ $6.5\%$) and richer input
 representation.  Bandwidth-adjusted variants close this gap:
-TW+BW (var.) achieves $17.8\%$ missed deadlines, outperforming
+TW+BW ($b{=}0.2$) achieves $19.5\%$ missed deadlines, narrowing against
 EDF's $18.5\%$.  When deadline compliance is the sole objective
 and no capacity information is available, EDF remains the correct
 choice.
@@ -1086,7 +1086,7 @@ ensures that the right task surfaces for the operator's current
 capacity---not just the most urgent one, but the most urgent one
 they can execute.
 
-With 560 deterministic tests and zero runtime dependencies,
+With 563 deterministic tests and zero runtime dependencies,
 Tidewatch demonstrates that useful prioritization infrastructure
 does not require complexity---it requires the right equation.
 
