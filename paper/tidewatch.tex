@@ -114,6 +114,18 @@ appropriate allocation of attention differs by an order of magnitude.
 Without a continuous signal, priority sorting degenerates to
 tie-breaking by title or insertion order.
 
+The problem compounds in agent orchestration systems where autonomous
+sessions manage hundreds to tens of thousands of obligations across
+multiple repositories simultaneously.  A dispatching agent cannot
+simply sort by deadline: it must weigh a legal brief with 50
+downstream dependents against a routine config update due tomorrow.
+EDF tells it which is due sooner; it cannot tell it which matters
+more.  The prioritization substrate must produce a continuous,
+decomposable signal that encodes materiality, dependency structure,
+and completion state alongside deadline proximity---and must do so
+at population scales where na\"{\i}ve scoring saturates into
+indistinguishable clusters.
+
 Tidewatch addresses this with two mechanisms:
 \begin{enumerate}[nosep]
   \item A \emph{pressure equation} (Section~\ref{sec:pressure}) that
@@ -130,19 +142,21 @@ Tidewatch addresses this with two mechanisms:
 \end{enumerate}
 
 An optional capacity-aware reranking extension
-(Section~\ref{sec:bandwidth}) adapts task presentation to operator
-cognitive state via a three-tier risk policy.  This mechanism is
-specified and implemented but \emph{not empirically validated};
-it is not part of the evaluated contribution.
+(Section~\ref{sec:bandwidth}) adapts presentation order to operator
+cognitive state or system load via a three-tier risk policy.  This
+mechanism is specified and implemented but \emph{not empirically
+validated}; it is not part of the evaluated contribution.
 
-Tidewatch is a multi-objective prioritization framework, not a
-scheduler.  It does not assign start times, allocate resources, or
-generate Gantt charts.  It produces an auditable score per obligation
-and a rank order, leaving execution decisions to the user or the
+Tidewatch is a prioritization substrate, not a scheduler.  It does
+not assign start times, allocate resources, or generate Gantt
+charts.  It produces an auditable score per obligation and a rank
+order, leaving execution decisions to the human operator or the
 autonomous agent consuming the signal.  EDF is theoretically optimal
 for deadline minimization~\citep{liu1973scheduling}; Tidewatch does
 not compete on that metric.  Its contribution is interpretable,
-auditable multi-factor ranking with deferred scalarization.
+auditable multi-factor ranking with deferred scalarization, designed
+for deployment as the prioritization layer in agent orchestration
+systems.
 
 % ======================================================================
 % 2  RELATED WORK
@@ -1071,28 +1085,35 @@ and not attributable to sampling noise.
 \section{Discussion}
 \label{sec:discussion}
 
-\paragraph{Pressure-ordered does not mean deadline-optimal.}
-The Monte Carlo results show that pure Tidewatch does not beat EDF on
-raw deadline compliance.  This is by design: Tidewatch optimizes
-for \emph{pressure-aware} ordering, which incorporates materiality,
-dependency fanout, and completion state alongside deadline proximity.
-The trade-off is a small deadline cost ($+9\%$ at $N{=}200$) for
-lower queue inversions ($4.0\%$ vs.\ $6.5\%$) and richer input
-representation.  Bandwidth-adjusted variants close this gap:
-TW+BW ($b{=}0.2$) achieves $19.5\%$ missed deadlines, narrowing against
-EDF's $18.5\%$.  When deadline compliance is the sole objective
-and no capacity information is available, EDF remains the correct
-choice.
+\paragraph{The EDF gap is the cost of multi-factor ranking.}
+Tidewatch does not beat EDF on raw deadline compliance---by design.
+EDF orders by deadline alone; Tidewatch encodes five additional
+dimensions.  The $8.6\%$ relative cost at $N{=}200$ ($20.1\%$ vs.\
+$18.5\%$ missed) is the price of being able to distinguish a legal
+brief with 50 downstream dependents from a routine config update
+due on the same day.  EDF cannot make that distinction.  For an
+agent orchestration system dispatching work across repositories,
+this discrimination is the primary requirement---deadline compliance
+alone is necessary but insufficient.  Bandwidth-adjusted variants
+narrow the gap further: TW+BW ($b{=}0.2$) achieves $19.5\%$,
+within $1.0$~pp of EDF.  When deadline compliance is the sole
+objective and no multi-factor signal is needed, EDF remains the
+correct choice.
 
 \paragraph{Deferred scalarization as an architectural pattern.}
 Deferred scalarization is an established technique in MCDM
 pipelines~\citep{hwang1981topsis}.  Tidewatch's contribution is
-not the technique itself but its application to task prioritization
-with a specific six-factor decomposition grounded in deadline
-mechanics.  The broader pattern---retaining scored dimensions
-until the consumer requests a scalar---has applicability beyond
-task prioritization in any system combining multiple factors
-(risk assessment, search ranking, recommendation).
+not the technique itself but its application to obligation
+prioritization with a specific six-factor decomposition grounded in
+deadline mechanics.  In an agent orchestration system, different
+consumers need different views of the same obligation: a dispatching
+agent needs a scalar rank, a monitoring dashboard needs zone
+classification, and a diagnostic tool needs per-factor decomposition.
+Deferred scalarization serves all three from a single computation.
+The broader pattern---retaining scored dimensions until the consumer
+requests a scalar---has applicability beyond obligation
+prioritization in any system combining multiple factors (risk
+assessment, search ranking, recommendation).
 
 \paragraph{Bandwidth under simulation.}
 The Monte Carlo results (Tables~\ref{tab:mc50} and~\ref{tab:mc200})
@@ -1190,15 +1211,21 @@ decomposable pressure score from six multiplicative factors
 (all bounded away from zero), retained in a six-dimensional
 component space with deferred scalarization.  EDF remains optimal
 for deadline minimization; Tidewatch's contribution is orthogonal:
-interpretable, auditable multi-factor ranking that encodes
+an interpretable, auditable prioritization substrate that encodes
 materiality, dependency structure, and completion state alongside
-deadline proximity.
+deadline proximity.  Adaptive rate-constant selection, incremental
+rescoring, rank normalization, and zone-capacity limits extend the
+architecture to populations of tens of thousands without degrading
+small-$N$ behavior.
 
-The framework is verified to $\Delta < 10^{-10}$ against
-analytically computed reference values across 651 deterministic
-tests under pinned Python~3.11+ with zero runtime dependencies.
-No field deployment or user study is presented; external validity
-remains an open question for future work.
+The framework has zero runtime dependencies and is verified to
+$\Delta < 10^{-10}$ against analytically computed reference values
+across 651 deterministic tests under pinned Python~3.11+.  It is
+designed for deployment as the prioritization layer in agent
+orchestration systems, where a dispatching agent consumes the
+pressure signal to decide which obligation to work next.  No field
+deployment or user study is presented; external validity remains an
+open question.
 
 % ======================================================================
 % REFERENCES
