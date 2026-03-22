@@ -4,6 +4,9 @@
 Each gate is a dict with a 'type' field that determines the assertion.
 The runner is called by the golden pipeline test via parametrize.
 
+Portable: works against any repo with a gates/registry.yaml.
+Callable as CLI: python3 gates/runner.py [--repo /path/to/repo]
+
 Stdlib only — no runtime dependencies.
 """
 
@@ -11,9 +14,19 @@ from __future__ import annotations
 
 import re
 import subprocess
+import sys
 import tomllib
 from pathlib import Path
 from typing import Any
+
+# Module-level repo root — set by set_repo_root() or defaults to this file's repo
+_REPO_ROOT: Path = Path(__file__).parent.parent
+
+
+def set_repo_root(path: Path) -> None:
+    """Set the repo root for path resolution. Used for cross-repo validation."""
+    global _REPO_ROOT
+    _REPO_ROOT = path
 
 # ── Scope extraction ─────────────────────────────────────────────────────────
 
@@ -42,14 +55,25 @@ def _extract_scope(text: str, scope: str) -> str:
 
 # ── Gate registry loading ────────────────────────────────────────────────────
 
-def load_gates(registry_path: Path | None = None) -> list[dict[str, Any]]:
+def load_gates(
+    registry_path: Path | None = None,
+    repo_root: Path | None = None,
+) -> list[dict[str, Any]]:
     """Load gates from the YAML registry file.
+
+    Args:
+        registry_path: Path to registry.yaml. Default: gates/registry.yaml
+            relative to repo_root.
+        repo_root: Repository root for path resolution. When set, also
+            updates the module-level _REPO_ROOT for gate execution.
 
     Uses a minimal YAML subset parser (no PyYAML dependency) for simple
     key-value and list structures. Falls back to PyYAML if available.
     """
+    if repo_root is not None:
+        set_repo_root(repo_root)
     if registry_path is None:
-        registry_path = Path(__file__).parent / "registry.yaml"
+        registry_path = _REPO_ROOT / "gates" / "registry.yaml"
     if not registry_path.exists():
         return []
 
@@ -134,8 +158,7 @@ def _parse_gates_minimal(text: str) -> list[dict[str, Any]]:
 
 def _resolve_path(file_path: str) -> Path:
     """Resolve a gate file path relative to repo root."""
-    repo_root = Path(__file__).parent.parent
-    return repo_root / file_path
+    return _REPO_ROOT / file_path
 
 
 def run_gate(gate: dict[str, Any]) -> tuple[bool, str]:
@@ -232,10 +255,9 @@ def _gate_count_drift(gate: dict) -> tuple[bool, str]:
     if not command:
         return False, "No command specified for count_drift gate"
 
-    repo_root = Path(__file__).parent.parent
     result = subprocess.run(
         command, shell=True, capture_output=True, text=True,
-        cwd=str(repo_root), timeout=60,
+        cwd=str(_REPO_ROOT), timeout=60,
     )
     actual_str = result.stdout.strip()
     try:
@@ -266,10 +288,12 @@ def _gate_toml_equals(gate: dict) -> tuple[bool, str]:
         value = value[key]
 
     expected_from = gate.get("expected_from", "")
-    if expected_from.startswith("tidewatch."):
-        import tidewatch
-        attr = expected_from.split(".", 1)[1]
-        expected = getattr(tidewatch, attr)
+    if "." in expected_from:
+        # Dynamic import: "module.attr" → import module, getattr(module, attr)
+        import importlib
+        mod_name, attr = expected_from.rsplit(".", 1)
+        mod = importlib.import_module(mod_name)
+        expected = getattr(mod, attr)
     else:
         expected = gate.get("expected")
 
@@ -298,11 +322,76 @@ def _gate_toml_empty(gate: dict) -> tuple[bool, str]:
 
 def _gate_command_passes(gate: dict) -> tuple[bool, str]:
     command = gate["command"]
-    repo_root = Path(__file__).parent.parent
     result = subprocess.run(
         command, shell=True, capture_output=True, text=True,
-        cwd=str(repo_root), timeout=120,
+        cwd=str(_REPO_ROOT), timeout=120,
     )
     if result.returncode != 0:
         return False, f"Command failed (exit {result.returncode}): {result.stderr[:200]}"
     return True, "Command passed"
+
+
+# ── CLI — run gates against any repo ─────────────────────────────────────────
+
+
+def run_all(repo_root: Path | None = None) -> tuple[int, int, list[str]]:
+    """Run all gates for a repo. Returns (passed, failed, failure_messages)."""
+    gates = load_gates(repo_root=repo_root)
+    if not gates:
+        return 0, 0, ["No gates found in registry"]
+
+    passed = 0
+    failed = 0
+    failures: list[str] = []
+    for gate in gates:
+        ok, msg = run_gate(gate)
+        if ok:
+            passed += 1
+        else:
+            failed += 1
+            failures.append(f"  FAIL {gate.get('id', '?')}: {msg}")
+    return passed, failed, failures
+
+
+def main() -> None:
+    """CLI entry point: run gates against a repo."""
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="Run pipeline gates against a repo",
+        epilog="Any repo with a gates/registry.yaml can be validated.",
+    )
+    parser.add_argument(
+        "--repo", type=Path, default=None,
+        help="Repository root (default: this file's repo)",
+    )
+    parser.add_argument(
+        "--quiet", "-q", action="store_true",
+        help="Only print failures",
+    )
+    args = parser.parse_args()
+
+    repo = args.repo or _REPO_ROOT
+    if not (repo / "gates" / "registry.yaml").exists():
+        print(f"No gates/registry.yaml in {repo}")
+        sys.exit(0)
+
+    gates = load_gates(repo_root=repo)
+    passed = 0
+    failed = 0
+    for gate in gates:
+        ok, msg = run_gate(gate)
+        if ok:
+            passed += 1
+            if not args.quiet:
+                print(f"  PASS {gate.get('id', '?')}")
+        else:
+            failed += 1
+            print(f"  FAIL {gate.get('id', '?')}: {msg}")
+
+    total = passed + failed
+    print(f"\n{passed}/{total} gates passed in {repo.name}")
+    sys.exit(1 if failed else 0)
+
+
+if __name__ == "__main__":
+    main()
