@@ -1,0 +1,119 @@
+# Gate Registry — Self-Evolving Pipeline
+#
+# Each gate is an assertion that must pass for the pipeline to be healthy.
+# Gates are loaded dynamically by the golden pipeline test runner.
+# To add a gate: python3 scripts/add_gate.py --help
+#
+# Gate types:
+#   regex_present   — pattern must exist in file (within optional scope)
+#   regex_absent    — pattern must NOT exist in scope
+#   regex_consistent — all matches must have the same captured group value
+#   count_drift     — numeric value in file vs actual, within tolerance
+#   toml_equals     — TOML path value must equal expected
+#   toml_empty      — TOML path value must be empty list
+#   command_passes  — shell command must exit 0
+#
+# Scope values (for paper gates):
+#   abstract  — between \begin{abstract} and \end{abstract}
+#   intro     — \section{Introduction} to next \section
+#   discussion — \section{Discussion} to next \section
+#   conclusion — \section{Conclusion} to next \section
+#   full      — entire file (default)
+#
+# Origin: records which session/incident created this gate for traceability.
+
+gates:
+
+  # ── Deployment framing (2026-03-22: abstract led with "task manager") ──
+
+  - id: abstract_mentions_agent
+    type: regex_present
+    file: paper/tidewatch.tex
+    scope: abstract
+    pattern: "agent"
+    description: "Abstract must reference agent deployment model"
+    origin: "2026-03-22: abstract originally framed as task manager comparison"
+
+  - id: abstract_mentions_orchestration
+    type: regex_present
+    file: paper/tidewatch.tex
+    scope: abstract
+    pattern: "orchestration|prioritization substrate"
+    description: "Abstract must frame as orchestration substrate"
+    origin: "2026-03-22: abstract undersold contribution as scheduler comparison"
+
+  - id: intro_mentions_agent
+    type: regex_present
+    file: paper/tidewatch.tex
+    scope: intro
+    pattern: "agent orchestration"
+    description: "Introduction must establish agent deployment model"
+    origin: "2026-03-22: intro discussed only human task management"
+
+  # ── Contribution framing (2026-03-22: led with EDF loss) ──
+
+  - id: discussion_edf_cost_not_deficiency
+    type: regex_present
+    file: paper/tidewatch.tex
+    scope: discussion
+    pattern: "cost of multi-factor ranking"
+    description: "Discussion must frame EDF gap as cost of feature, not deficiency"
+    origin: "2026-03-22: discussion paragraph led with 'does not beat EDF'"
+
+  # ── Count consistency (2026-03-22: 563 tests in paper, 651 actual) ──
+
+  - id: test_count_consistent
+    type: regex_consistent
+    file: paper/tidewatch.tex
+    scope: full
+    pattern: '(\d+)\s+deterministic\s+(?:and|tests)'
+    description: "All test count citations in paper must be identical"
+    origin: "2026-03-22: abstract said 563, code had 651"
+
+  # test_count_drift and line_count_drift are enforced by Gate 22
+  # (hardcoded in test_golden_pipeline.py) which runs without subprocess
+  # recursion. The registry handles framing/consistency checks only.
+
+  # ── Version/dep contract (2026-03-22: pyproject=0.1.0, init=0.3.0) ──
+
+  - id: version_sync
+    type: toml_equals
+    file: pyproject.toml
+    toml_path: project.version
+    expected_from: "tidewatch.__version__"
+    description: "pyproject.toml version must match __init__.__version__"
+    origin: "2026-03-22: pyproject had 0.1.0, __init__ had 0.3.0"
+
+  - id: zero_dep_contract
+    type: toml_empty
+    file: pyproject.toml
+    toml_path: project.dependencies
+    description: "Dependencies list must be empty (zero runtime dep contract)"
+    origin: "2026-03-22: gravitas was listed as required dep"
+
+  # ── Bandwidth framing (2026-03-22: framed as physiological only) ──
+
+  - id: abstract_bandwidth_not_only_cognitive
+    type: regex_present
+    file: paper/tidewatch.tex
+    scope: abstract
+    pattern: "operator or system load|operator.*system|system.*load"
+    description: "Abstract must frame bandwidth as operator or system load, not just cognitive"
+    origin: "2026-03-22: bandwidth described only as physiological/cognitive"
+
+  # ── Conclusion framing (2026-03-22: ended on limitations) ──
+
+  - id: conclusion_mentions_substrate
+    type: regex_present
+    file: paper/tidewatch.tex
+    scope: conclusion
+    pattern: "prioritization.*layer|prioritization substrate"
+    description: "Conclusion must end on architectural contribution, not limitations"
+    origin: "2026-03-22: conclusion trailed off on 'external validity remains open'"
+
+  - id: test_add_gate_works
+    type: regex_present
+    file: CLAUDE.md
+    pattern: "Verification Block"
+    description: "CLAUDE.md must have verification block section"
+    origin: "2026-03-22: added verification block for constellation health"

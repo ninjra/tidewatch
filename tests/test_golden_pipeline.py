@@ -1481,3 +1481,68 @@ class TestGate22_PaperCountConsistency:
             f"Paper claims {claimed} lines, actual is {actual} "
             f"({drift:.0%} drift). Update paper/tidewatch.tex."
         )
+
+
+# ════════════════════════════════════════════════════════════════════
+# Gate 23 — Self-Evolving Pipeline Registry
+# ════════════════════════════════════════════════════════════════════
+
+class TestGate23_PipelineRegistry:
+    """Dynamically loaded gates from gates/registry.yaml.
+
+    Gates are added via scripts/add_gate.py or by appending to the
+    YAML directly. Each gate is an assertion that must pass. New
+    problem classes discovered in any session become permanent gates.
+    """
+
+    @staticmethod
+    def _load_gates():
+        from gates.runner import load_gates
+        return load_gates()
+
+    @staticmethod
+    def _gate_ids():
+        from gates.runner import load_gates
+        gates = load_gates()
+        return [g.get("id", f"gate_{i}") for i, g in enumerate(gates)]
+
+    @pytest.fixture(autouse=True)
+    def _skip_if_no_gates(self):
+        from gates.runner import load_gates
+        if not load_gates():
+            pytest.skip("No gates in registry")
+
+    def test_registry_loads(self) -> None:
+        """Gate registry must load without errors."""
+        gates = self._load_gates()
+        assert len(gates) > 0, "Registry is empty"
+        for g in gates:
+            assert "id" in g, f"Gate missing 'id': {g}"
+            assert "type" in g, f"Gate {g.get('id')} missing 'type'"
+
+    def test_all_gates_pass(self) -> None:
+        """Every gate in the registry must pass."""
+        from gates.runner import run_gate
+        gates = self._load_gates()
+        failures = []
+        for gate in gates:
+            passed, msg = run_gate(gate)
+            if not passed:
+                failures.append(f"  {gate['id']}: {msg}")
+        if failures:
+            pytest.fail(
+                f"{len(failures)} gate(s) failed:\n" + "\n".join(failures)
+            )
+
+    def test_no_duplicate_ids(self) -> None:
+        """Gate IDs must be unique."""
+        gates = self._load_gates()
+        ids = [g["id"] for g in gates]
+        dupes = [x for x in ids if ids.count(x) > 1]
+        assert not dupes, f"Duplicate gate IDs: {set(dupes)}"
+
+    def test_all_gates_have_origin(self) -> None:
+        """Every gate must document why it was added."""
+        gates = self._load_gates()
+        missing = [g["id"] for g in gates if not g.get("origin")]
+        assert not missing, f"Gates missing origin: {missing}"
