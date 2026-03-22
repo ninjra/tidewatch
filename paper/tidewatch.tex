@@ -76,12 +76,12 @@ interpretability until ranking time.  A capacity-aware reranking
 extension is specified but empirically unvalidated.
 
 We evaluate the core scoring engine with 563 deterministic and
-property-based tests targeting implementation correctness and
+property-based tests verifying implementation correctness and
 algebraic monotonicity (golden values from closed-form solutions),
 and Monte Carlo scheduling simulations (200 trials, seed${=}42$,
 LogNormal task durations; distributional sensitivity and full
 parameterization in Section~5).  Reported results use product-collapse
-scalarization.  EDF is theoretically optimal for deadline
+scalarization (element-wise product of the component vector).  EDF is theoretically optimal for deadline
 minimization; Tidewatch does not compete on that metric.
 At $N{=}50$, it matches EDF ($6.7\%$ missed deadlines); at
 $N{=}200$, EDF achieves $18.5\%$ vs.\ Tidewatch's $20.1\%$---an
@@ -89,8 +89,9 @@ $8.6\%$ relative cost of encoding materiality, dependency fanout,
 and completion state alongside deadline proximity.  Against FIFO and
 random baselines, Tidewatch reduces missed deadlines by $35$--$47\%$.
 
-No field deployment, user study, or real physiological dataset is
-presented; external validity remains an open question.  The primary
+However, no field deployment, user study, or real physiological
+dataset is presented; external validity remains an open question.  The
+primary
 contribution is an interpretable, auditable multi-factor ranking
 architecture with deferred scalarization.  All scoring functions are
 verified to $\Delta < 10^{-10}$ against analytically computed
