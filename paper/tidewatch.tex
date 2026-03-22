@@ -77,7 +77,7 @@ incremental rescoring, rank normalization, and zone-capacity limits
 maintain discrimination at $N{>}10{,}000$ without degrading
 small-$N$ behavior.
 
-We evaluate the core engine with 651 deterministic and property-based
+We evaluate the core engine with 659 deterministic and property-based
 tests ($\Delta < 10^{-10}$ against closed-form reference values) and
 Monte Carlo scheduling simulations (200 trials, seed${=}42$,
 LogNormal durations).  EDF is theoretically optimal for deadline
@@ -738,7 +738,7 @@ T_{\text{amp}} \times V_{\text{amp}})$ holds to $10^{-15}$ tolerance,
 confirming no hidden rounding between factor computation and final
 aggregation.
 
-The full test suite comprises 651 tests organized into 21
+The full test suite comprises 659 tests organized into 23
 deterministic gates covering the API surface, type construction,
 constant values, pressure computation, edge cases, input validation,
 zone classification, batch operations, planning, triage, and
@@ -1220,7 +1220,7 @@ small-$N$ behavior.
 
 The framework has zero runtime dependencies and is verified to
 $\Delta < 10^{-10}$ against analytically computed reference values
-across 651 deterministic tests under pinned Python~3.11+.  It is
+across 659 deterministic tests under pinned Python~3.11+.  It is
 designed for deployment as the prioritization layer in agent
 orchestration systems, where a dispatching agent consumes the
 pressure signal to decide which obligation to work next.  No field
