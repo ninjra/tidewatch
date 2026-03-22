@@ -78,7 +78,8 @@ maintain discrimination at $N{>}10{,}000$ without degrading
 small-$N$ behavior.
 
 We evaluate the core engine with 659 deterministic and property-based
-tests ($\Delta < 10^{-10}$ against closed-form reference values) and
+tests ($\Delta < 10^{-10}$ against closed-form reference values under
+pinned Python~3.11+ with zero runtime dependencies) and
 Monte Carlo scheduling simulations (200 trials, seed${=}42$,
 LogNormal durations).  EDF is theoretically optimal for deadline
 minimization; Tidewatch does not compete on that metric.  At
@@ -92,9 +93,8 @@ presentation order by operator or system load; it is specified and
 implemented but not empirically validated.
 
 The primary contribution is an interpretable, auditable multi-factor
-ranking architecture with deferred scalarization and zero runtime
-dependencies, designed as the prioritization substrate for agent
-orchestration systems.  No field deployment or user study is
+ranking architecture with deferred scalarization, designed as the
+prioritization substrate for agent orchestration systems.  No field deployment or user study is
 presented; external validity remains an open question.
 \end{abstract}
 

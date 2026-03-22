@@ -60,7 +60,11 @@ P = min(1.0, P_time x M x A x D x T_amp x V_amp)
 | Timing sensitivity | Escalation for stagnant tasks | logistic ramp |
 | Violation amplification | Penalty for missed deadlines (14-day half-life decay) | cap = 1.5x |
 
+All constants are sensible defaults tuned for human-scale workflows (days/weeks). Zone thresholds are environment-configurable (`TIDEWATCH_ZONE_*`). The adaptive rate constant (`deadline_distribution` parameter) auto-tunes for any population scale. See `tidewatch/constants.py` for the full parameter set with derivations.
+
 Factors are retained in a six-dimensional component space with **deferred scalarization** — the product collapse happens only when a consumer requests a scalar. Until then, all six dimensions are available for Pareto comparison, weighted aggregation, or per-factor inspection.
+
+**Why multiplicative, not additive?** Weighted-sum aggregation allows a high score on one dimension (e.g., materiality) to compensate for low urgency — a material task due in 30 days could outrank a routine task due tomorrow. In Monte Carlo evaluation, the weighted-sum baseline produces 73% more missed deadlines than product collapse. The multiplicative architecture is a structural necessity, not an arbitrary choice.
 
 ## Evaluation
 
@@ -76,6 +80,8 @@ Monte Carlo scheduling simulation (200 trials, seed=42, LogNormal durations):
 | Random | 13.0% | 31.2% | 48.5% |
 
 EDF is theoretically optimal for deadline minimization — Tidewatch does not compete on that metric. The 8.6% relative cost at N=200 is the price of encoding materiality, dependency structure, and completion state alongside deadline proximity. Against naive baselines, Tidewatch reduces missed deadlines by 35-47%.
+
+**Why pay 8.6%?** EDF treats all obligations equally. Tidewatch can distinguish a legal brief blocking 50 tasks from a routine config update due the same day. The cost is fewer deadlines met; the return is that the *right* deadlines are met. A value-weighted completion metric (weighting missed deadlines by materiality and downstream impact) would quantify this benefit — this is planned future work.
 
 ## Architecture
 
