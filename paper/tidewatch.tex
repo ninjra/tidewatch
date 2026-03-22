@@ -1046,7 +1046,9 @@ The ablation study also serves as a computational proxy for the
 ``interpretable, auditable'' contribution claim: because each
 factor has an independently measurable effect on scheduling
 outcomes, a consumer can diagnose any ranking decision by
-comparing ablated and unablated scores.  Factor-level attribution
+comparing ablated and unablated scores.  In a multiplicative model,
+this attribution is faithful by construction: removing a factor
+literally removes its causal contribution.  Factor-level attribution
 ---``this task ranks higher because its dependency fanout increased
 its pressure by $X\%$''---is a direct consequence of the
 multiplicative architecture with named, inspectable components.
