@@ -147,8 +147,7 @@ ZONE_RED = float(os.environ.get("TIDEWATCH_ZONE_RED", "0.80"))
 BANDWIDTH_MIN_FLOOR = 0.2        # Poisoned signals can't reduce bandwidth below 20% (#1216)
 BANDWIDTH_FULL_THRESHOLD = 0.99  # Above this, skip bandwidth adjustment
 BANDWIDTH_HOURS_GOOD = 8.0      # Hours since sleep: 0-8h = good (1.0)
-BANDWIDTH_HOURS_BAD = 16.0      # Hours since sleep: 16h+ = bad (0.0)
-BANDWIDTH_NORMALIZATION_RANGE = 8.0  # BANDWIDTH_HOURS_BAD - BANDWIDTH_HOURS_GOOD
+BANDWIDTH_NORMALIZATION_RANGE = 8.0  # Span from good (8h) to bad (16h)
 
 # --- Task demand estimation (domain -> cognitive profile) ---
 # Domain demand profile values — extracted for analyzer compliance
@@ -197,12 +196,6 @@ MATERIAL_DECISION_BOOST = 0.1      # Added to decision_weight for material items
 HARD_FLOOR_DEMAND_THRESHOLD = 0.7  # Mean demand >= this triggers auto-promotion
 HARD_FLOOR_DAYS_THRESHOLD = 1.0    # 24h window — binding deadlines within 1 day bypass bandwidth
 
-# Deprecated: demand-based detection in _get_effective_risk_tier replaced
-# domain-name matching as of #1181. This frozenset is no longer referenced
-# and will be removed in the next major version.
-HARD_FLOOR_DOMAINS: frozenset[str] = frozenset({
-    "legal", "financial", "security", "compliance", "safety",
-})
 
 # --- Speculative planner ---
 PLANNER_MIN_ZONES: frozenset[str] = frozenset({"yellow", "orange", "red"})
@@ -273,7 +266,5 @@ PLANNER_DOMAIN_MAX_LEN = 50
 PLANNER_ASCII_PRINTABLE_MIN = 32
 
 # --- Provenance thresholds (#1182) ---
-# 0.3: a 30% completion jump is unlikely without an audit trail — detectable gaming point.
-PROVENANCE_COMPLETION_JUMP_THRESHOLD = 0.3
 # 0.8: obligations reported 80%+ complete without source are high-risk for completion inflation.
 PROVENANCE_HIGH_COMPLETION = 0.8
