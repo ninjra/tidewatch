@@ -630,7 +630,7 @@ Tidewatch is implemented in Python~3.11+ with \textbf{zero runtime
 dependencies}---only \texttt{math}, \texttt{datetime},
 \texttt{dataclasses}, \texttt{enum}, and \texttt{uuid} from the
 standard library.
-The core library comprises 1{,}981 lines across seven modules:
+The core library comprises 1{,}984 lines across seven modules:
 
 \begin{table}[t]
 \centering
@@ -640,7 +640,7 @@ The core library comprises 1{,}981 lines across seven modules:
 \toprule
 \textbf{Module} & \textbf{Lines} \\
 \midrule
-\texttt{pressure.py}   & 734 \\
+\texttt{pressure.py}   & 737 \\
 \texttt{components.py} & 301 \\
 \texttt{types.py}      & 297 \\
 \texttt{constants.py}  & 258 \\
@@ -648,7 +648,7 @@ The core library comprises 1{,}981 lines across seven modules:
 \texttt{triage.py}     & 114 \\
 \texttt{\_\_init\_\_.py} & 46 \\
 \midrule
-\textbf{Total}         & \textbf{1{,}981} \\
+\textbf{Total}         & \textbf{1{,}984} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -770,7 +770,7 @@ and violation amplifiers push the raw product above~$1.0$.
 \label{sec:monte_carlo}
 
 We evaluate scheduling outcomes via a Monte Carlo simulation
-comparing ten strategies across 200 trials (seed~$= 42$).
+comparing thirteen strategies across 200 trials (seed~$= 42$).
 
 \paragraph{Simulation model.}
 $N$ obligations with deadlines, dependencies, and
@@ -792,6 +792,10 @@ order determined by the scheduling strategy.
         scaled to $[0, 1]$ by its algebraic bounds.
   \item \textbf{Weighted-EDF:} hybrid---zone-tier urgency
         (red$>$orange$>$yellow$>$green) with EDF within each tier.
+  \item \textbf{LLF:} least laxity first (deadline minus estimated
+        remaining duration).
+  \item \textbf{Slack:} remaining-slack order (deadline minus
+        remaining work, accounting for partial completion).
   \item \textbf{EDF:} earliest deadline first.
   \item \textbf{FIFO:} insertion order.
   \item \textbf{Random:} shuffled (null hypothesis).
@@ -964,20 +968,28 @@ and no capacity information is available, EDF remains the correct
 choice.
 
 \paragraph{Deferred scalarization as an architectural pattern.}
-Retaining scored dimensions until the consumer requests a scalar
-has broader applicability beyond task prioritization.  Any system
-that combines multiple factors---risk assessment, search ranking,
-recommendation---can benefit from preserving the component space
-for downstream Pareto analysis or query-specific weighting.
+Deferred scalarization is an established technique in MCDM
+pipelines~\citep{hwang1981topsis}.  Tidewatch's contribution is
+not the technique itself but its application to task prioritization
+with a specific six-factor decomposition grounded in deadline
+mechanics.  The broader pattern---retaining scored dimensions
+until the consumer requests a scalar---has applicability beyond
+task prioritization in any system combining multiple factors
+(risk assessment, search ranking, recommendation).
 
 \paragraph{Bandwidth under simulation.}
 The Monte Carlo results (Tables~\ref{tab:mc50} and~\ref{tab:mc200})
-show that bandwidth reranking at reduced capacity consistently
-improves deadline compliance at both $N{=}50$ and $N{=}200$.
-However, the current simulation uses a fixed bandwidth level per
-run rather than modelling capacity variation \emph{within} a trial
-(e.g., operator fatigue over a workday).
-Intra-trial capacity dynamics remain future work.
+include bandwidth-adjusted variants that modify sorting order using
+a fixed bandwidth parameter.  These variants are included to
+characterize the \emph{sorting behavior} of the bandwidth mechanism,
+not to validate its efficacy as a cognitive adaptation tool.
+The bandwidth module is specified and implemented but not
+empirically validated against real physiological data; the
+simulation results show only that the reranking mechanism
+produces different (and sometimes deadline-favorable) orderings
+when bandwidth is reduced.
+Intra-trial capacity dynamics and real-signal validation remain
+future work.
 
 \paragraph{Deployment safety for physiological reranking.}
 The cognitive bandwidth modulator raises deployment considerations
@@ -1023,6 +1035,15 @@ with explicit safety boundaries.
         Task demand is estimated from domain and materiality.
         Richer features (historical completion time, code
         complexity metrics) would improve accuracy.
+  \item \textbf{Factor independence assumption.}
+        The multiplicative model implicitly assumes that factors
+        contribute independently.  In practice, completion and
+        timing interact (a task at 90\% completion for 14 days
+        is qualitatively different from one at 10\% for 1 day),
+        and dependency urgency depends on deadline proximity.
+        These interactions are partially captured by the temporal
+        gate on dependency amplification, but no formal interaction
+        model is provided.
   \item \textbf{No feedback loop.}
         Constants are fixed.  A closed-loop system would observe
         completion patterns and adjust parameters over time.
