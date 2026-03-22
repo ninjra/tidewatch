@@ -50,6 +50,25 @@ def _obligations_from_sob(n: int, seed: int, sim_start: datetime) -> list[Obliga
     return obs
 
 
+def _print_ablation_table(results: dict) -> None:
+    """Print formatted ablation results table."""
+    header = f"\n{'Factor':<25s} {'Missed Rate':>12s} {'CI 95%':>20s} {'Delta':>8s}"
+    print(header)
+    print("-" * len(header.strip()))
+    baseline = results["baseline"]
+    baseline_rate = baseline.missed_deadline_rate_mean
+    baseline_ci = baseline.missed_deadline_rate_ci
+    print(f"{'baseline':<25s} {baseline_rate:>12.4f} [{baseline_ci[0]:.4f}, {baseline_ci[1]:.4f}] {'---':>8s}")
+    for factor, mc in results.items():
+        if factor == "baseline":
+            continue
+        rate = mc.missed_deadline_rate_mean
+        ci = mc.missed_deadline_rate_ci
+        delta = rate - baseline_rate
+        sign = "+" if delta >= 0 else ""
+        print(f"{factor:<25s} {rate:>12.4f} [{ci[0]:.4f}, {ci[1]:.4f}] {sign}{delta:>.4f}")
+
+
 def main() -> None:
     sim_start = datetime(
         PAPER_SIM_START_YEAR, PAPER_SIM_START_MONTH, PAPER_SIM_START_DAY,
@@ -60,23 +79,7 @@ def main() -> None:
     print(f"Running ablation study: N={PAPER_DEFAULT_N}, trials={DEFAULT_TRIALS}, seed={DEFAULT_SEED}")
     results = run_ablation_study(obs, n_trials=DEFAULT_TRIALS, seed=DEFAULT_SEED, sim_start=sim_start)
 
-    # Formatted table
-    print(f"\n{'Factor':<25s} {'Missed Rate':>12s} {'CI 95%':>20s} {'Delta':>8s}")
-    _TABLE_WIDTH = 67  # Matches column header width above
-    print("-" * _TABLE_WIDTH)
-    baseline = results["baseline"]
-    baseline_rate = baseline.missed_deadline_rate_mean
-    baseline_ci = baseline.missed_deadline_rate_ci
-    print(f"{'baseline':<25s} {baseline_rate:>12.4f} [{baseline_ci[0]:.4f}, {baseline_ci[1]:.4f}] {'---':>8s}")
-
-    for factor, mc in results.items():
-        if factor == "baseline":
-            continue
-        rate = mc.missed_deadline_rate_mean
-        ci = mc.missed_deadline_rate_ci
-        delta = rate - baseline_rate
-        sign = "+" if delta >= 0 else ""
-        print(f"{factor:<25s} {rate:>12.4f} [{ci[0]:.4f}, {ci[1]:.4f}] {sign}{delta:>.4f}")
+    _print_ablation_table(results)
 
     # Save JSON
     output_path = os.path.join(os.path.dirname(__file__), "..", "benchmarks", "ablation_results.json")
