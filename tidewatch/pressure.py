@@ -592,49 +592,62 @@ def pressure_zone(pressure: float) -> str:
     return "red"
 
 
+def _probe_dominance_support(results: list[PressureResult]) -> bool | None:
+    """Probe whether the component-space backend supports dominance checks.
+
+    Finds the first two results with a component_space and tests dominance.
+    Returns True if supported, False if not enough items, or None if the
+    backend returns None (all items incomparable).
+    """
+    first = None
+    second = None
+    for r in results:
+        if r.component_space is not None:
+            if first is None:
+                first = r
+            elif second is None:
+                second = r
+                break
+    if first is None or second is None:
+        return True  # Not enough items to probe — proceed with standard check
+    probe = first.component_space.dominates(second.component_space)
+    if probe is None:
+        return None  # Backend doesn't support dominance
+    return True
+
+
+def _is_dominated(candidate: PressureResult, results: list[PressureResult]) -> bool:
+    """Check if candidate is dominated by any other result in the set."""
+    for other in results:
+        if other is candidate or other.component_space is None:
+            continue
+        if other.component_space.dominates(candidate.component_space) is True:
+            return True
+    return False
+
+
 def _find_pareto_front(results: list[PressureResult]) -> list[PressureResult]:
     """Identify the Pareto front: results not dominated by any other.
 
     A result is in the front if no other result dominates it on all
     component dimensions simultaneously. Uses ComponentSpace.dominates()
-    which is O(d) per comparison, O(n²d) total.
+    which is O(d) per comparison, O(n^2 d) total.
 
     Optimization: if the first dominance check returns None (backend doesn't
     support Pareto comparison), all items are incomparable and the entire
-    set is the front. This avoids O(N²) work with the fallback backend.
+    set is the front. This avoids O(N^2) work with the fallback backend.
     """
     if not results:
         return []
 
     # Quick check: if backend doesn't support dominance, return all
-    first_with_space = None
-    second_with_space = None
-    for r in results:
-        if r.component_space is not None:
-            if first_with_space is None:
-                first_with_space = r
-            elif second_with_space is None:
-                second_with_space = r
-                break
-    if first_with_space is not None and second_with_space is not None:
-        probe = first_with_space.component_space.dominates(second_with_space.component_space)
-        if probe is None:
-            # Backend returns None for all comparisons — all items are incomparable
-            return list(results)
+    support = _probe_dominance_support(results)
+    if support is None:
+        return list(results)
 
     front: list[PressureResult] = []
     for candidate in results:
-        dominated = False
-        if candidate.component_space is None:
-            front.append(candidate)
-            continue
-        for other in results:
-            if other is candidate or other.component_space is None:
-                continue
-            if other.component_space.dominates(candidate.component_space) is True:
-                dominated = True
-                break
-        if not dominated:
+        if candidate.component_space is None or not _is_dominated(candidate, results):
             front.append(candidate)
     return front
 
@@ -956,6 +969,45 @@ def apply_zone_capacity(
     return sorted_results
 
 
+def _check_stability_freeze(
+    result: PressureResult,
+    previous: list[PressureResult],
+    min_stability_seconds: float,
+    old_pos: int,
+) -> int | None:
+    """Check if a result should be frozen at its old position due to time stability.
+
+    Returns the frozen position if stability threshold not met, else None.
+    """
+    if min_stability_seconds <= 0 or result.scored_at is None:
+        return None
+    for prev_r in previous:
+        if prev_r.obligation_id == result.obligation_id and prev_r.scored_at is not None:
+            elapsed = (result.scored_at - prev_r.scored_at).total_seconds()
+            if elapsed < min_stability_seconds:
+                return old_pos
+            break
+    return None
+
+
+def _cap_displacement(
+    old_pos: int,
+    new_pos: int,
+    max_displacement: int,
+    list_len: int,
+) -> int | None:
+    """Cap displacement to max_displacement positions.
+
+    Returns the capped position if displacement exceeds the limit, else None.
+    The result is clamped to valid list indices [0, list_len - 1].
+    """
+    displacement = new_pos - old_pos
+    if abs(displacement) <= max_displacement:
+        return None
+    capped = old_pos + (max_displacement if displacement > 0 else -max_displacement)
+    return max(0, min(capped, list_len - 1))
+
+
 def dampen_rank_changes(
     current: list[PressureResult],
     previous: list[PressureResult] | None = None,
@@ -1014,24 +1066,17 @@ def dampen_rank_changes(
 
         old_pos = prev_rank[ob_id]
         new_pos = curr_rank[ob_id]
-        displacement = new_pos - old_pos
 
-        # Check time stability
-        if min_stability_seconds > 0 and result.scored_at is not None:
-            for prev_r in previous:
-                if prev_r.obligation_id == ob_id and prev_r.scored_at is not None:
-                    elapsed = (result.scored_at - prev_r.scored_at).total_seconds()
-                    if elapsed < min_stability_seconds:
-                        # Not enough time elapsed — freeze at old position
-                        curr_rank[ob_id] = old_pos
-                        needs_reorder = True
-                    break
+        # Check time stability — freeze at old position if too soon
+        frozen = _check_stability_freeze(result, previous, min_stability_seconds, old_pos)
+        if frozen is not None:
+            curr_rank[ob_id] = frozen
+            needs_reorder = True
 
         # Cap displacement
-        if abs(displacement) > max_displacement:
-            capped_pos = old_pos + (max_displacement if displacement > 0 else -max_displacement)
-            capped_pos = max(0, min(capped_pos, len(dampened) - 1))
-            curr_rank[ob_id] = capped_pos
+        capped = _cap_displacement(old_pos, new_pos, max_displacement, len(dampened))
+        if capped is not None:
+            curr_rank[ob_id] = capped
             needs_reorder = True
 
     if not needs_reorder:

@@ -29,18 +29,26 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
+# Supported gate assertion types — must match gates/runner.py
+GATE_TYPES = [
+    "regex_present", "regex_absent", "regex_consistent",
+    "count_drift", "toml_equals", "toml_empty", "command_passes",
+]
+
+# Valid scope labels for paper-file gates
+SCOPE_CHOICES = ["full", "abstract", "intro", "discussion", "conclusion"]
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Add a gate to the pipeline registry")
     parser.add_argument("--id", required=True, help="Unique gate identifier")
     parser.add_argument("--type", required=True, dest="gate_type",
-                        choices=["regex_present", "regex_absent", "regex_consistent",
-                                 "count_drift", "toml_equals", "toml_empty", "command_passes"],
+                        choices=GATE_TYPES,
                         help="Gate assertion type")
     parser.add_argument("--file", required=True, help="File to check (relative to repo root)")
     parser.add_argument("--pattern", help="Regex pattern (for regex_* and count_drift types)")
     parser.add_argument("--scope", default="full",
-                        choices=["full", "abstract", "intro", "discussion", "conclusion"],
+                        choices=SCOPE_CHOICES,
                         help="Scope within file (default: full)")
     parser.add_argument("--description", required=True, help="What this gate checks")
     parser.add_argument("--origin", help="Why this gate was added (incident reference)")
