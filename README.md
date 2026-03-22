@@ -9,6 +9,10 @@
 
 **Scores obligations by deadline pressure, dependencies, and what actually matters — so agents know what to work on next.**
 
+<p align="center">
+  <img src="docs/demo.svg" alt="Tidewatch terminal demo" width="700">
+</p>
+
 ## Why Tidewatch?
 
 - **Not just overdue/not-overdue** — continuous pressure scoring sees urgency accumulating days before a deadline, not just the moment it passes
