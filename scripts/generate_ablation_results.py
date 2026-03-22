@@ -19,6 +19,7 @@ from datetime import UTC, datetime
 
 from benchmarks.constants import (
     DEFAULT_SEED,
+    DEFAULT_TRIALS,
     JSON_INDENT,
     PAPER_DEFAULT_N,
     PAPER_SIM_START_DAY,
@@ -29,8 +30,6 @@ from benchmarks.constants import (
 from benchmarks.datasets.generate_obligations import generate
 from benchmarks.monte_carlo import run_ablation_study
 from tidewatch.types import Obligation
-
-N_TRIALS = 200
 
 
 def _obligations_from_sob(n: int, seed: int, sim_start: datetime) -> list[Obligation]:
@@ -58,12 +57,13 @@ def main() -> None:
     )
     obs = _obligations_from_sob(PAPER_DEFAULT_N, DEFAULT_SEED, sim_start)
 
-    print(f"Running ablation study: N={PAPER_DEFAULT_N}, trials={N_TRIALS}, seed={DEFAULT_SEED}")
-    results = run_ablation_study(obs, n_trials=N_TRIALS, seed=DEFAULT_SEED, sim_start=sim_start)
+    print(f"Running ablation study: N={PAPER_DEFAULT_N}, trials={DEFAULT_TRIALS}, seed={DEFAULT_SEED}")
+    results = run_ablation_study(obs, n_trials=DEFAULT_TRIALS, seed=DEFAULT_SEED, sim_start=sim_start)
 
     # Formatted table
     print(f"\n{'Factor':<25s} {'Missed Rate':>12s} {'CI 95%':>20s} {'Delta':>8s}")
-    print("-" * 67)
+    _TABLE_WIDTH = 67  # Matches column header width above
+    print("-" * _TABLE_WIDTH)
     baseline = results["baseline"]
     baseline_rate = baseline.missed_deadline_rate_mean
     baseline_ci = baseline.missed_deadline_rate_ci
