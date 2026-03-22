@@ -17,7 +17,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 - Abstract and paper reframed for agent orchestration deployment model
-- pyproject.toml: version synced to 0.4.4, gravitas moved to optional dep
+- pyproject.toml: version synced to 0.4.4, component space backend moved to optional dep
 - CLAUDE.md: updated equation to show all 6 factors
 
 ### Removed
@@ -28,7 +28,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 - Phase 5 audit fixes: terminology, repetition cleanup
-- Minds-eye findings: format string extraction, constant naming
+- Static analysis findings: format string extraction, constant naming
 
 ## [0.4.0] - 2026-03-20
 

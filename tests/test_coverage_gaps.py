@@ -178,7 +178,7 @@ class TestPressureComponentsProperties:
         )
         # pc1 dominates pc2 on all dimensions
         result = pc1.dominates(pc2)
-        assert result is True or result is None  # True with gravitas, None with fallback
+        assert result is True or result is None  # True with full Pareto backend, None with fallback
 
 
 # ── Zombie task guard ────────────────────────────────────────────────────────

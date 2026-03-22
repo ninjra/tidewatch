@@ -89,7 +89,7 @@ gates:
     file: pyproject.toml
     toml_path: project.dependencies
     description: "Dependencies list must be empty (zero runtime dep contract)"
-    origin: "2026-03-22: gravitas was listed as required dep"
+    origin: "2026-03-22: component space backend was listed as required dep"
 
   # ── Bandwidth framing (2026-03-22: framed as physiological only) ──
 
@@ -116,4 +116,4 @@ gates:
     file: CLAUDE.md
     pattern: "Verification"
     description: "CLAUDE.md must have verification section"
-    origin: "2026-03-22: added verification block for constellation health"
+    origin: "2026-03-22: added verification block for pipeline health"

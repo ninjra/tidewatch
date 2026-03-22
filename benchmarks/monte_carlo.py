@@ -65,7 +65,7 @@ if TYPE_CHECKING:
 
 # Duration model: obligations take time ~ LogNormal(mu, sigma)
 # Domain → (mu, sigma) for processing time in hours.
-# Exhaustive mapping: covers all Sentinel cognitive domains used in SOB
+# Exhaustive mapping: covers all cognitive domains used in SOB
 # dataset generation (generate_obligations.py). Unknown domains fall through
 # to _FALLBACK_DURATION. Adding a new domain to generate_obligations.py
 # requires a corresponding entry here — otherwise durations default to
@@ -74,7 +74,7 @@ def _build_domain_durations() -> dict[str, LogNormalParams]:
     """Build domain → LogNormal(mu, sigma) mapping for task processing duration.
 
     Contract: every domain used in generate_obligations.py MUST have an entry.
-    Source: Sentinel execution logs Q4-2025.
+    Source: execution logs Q4-2025.
     """
     return {
         "legal": LogNormalParams(mu=2.0, sigma=0.8),       # ~7.4h median, high variance
@@ -97,7 +97,7 @@ _DOMAIN_DURATIONS = _build_domain_durations()
 #   mu mirrors the "engineering" profile — the neutral midpoint domain —
 #   because unknown-domain obligations are most likely engineering tasks.
 #   sigma of 0.5 is consistent with observed engineering task duration
-#   distributions in Sentinel execution logs (2025 Q4 sample, N=847 tasks).
+#   distributions in execution logs (2025 Q4 sample, N=847 tasks).
 #   Sensitivity: mu ± 0.5 shifts median to [1.6h, 4.5h]; results are robust
 #   across this range (see §5.5 sensitivity analysis in the paper).
 # Weight rationale: mu=1.0 and sigma=0.5 are not free weights — they are

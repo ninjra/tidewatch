@@ -256,8 +256,8 @@ HALFLIFE_BASE = 2.0
 # --- Gravity tiebreak (#635) ---
 GRAVITY_TIEBREAK_WEIGHT = 0.1   # Weight of gravity score in bandwidth-adjusted sort
 
-# --- Forge pressure export (#140) ---
-FORGE_PRESSURE_PAUSE_THRESHOLD = 0.80  # System pressure above which forge pauses evolution
+# --- Evolution pressure export (#140) ---
+EVOLUTION_PAUSE_THRESHOLD = 0.80  # System pressure above which callers should pause evolution
 
 # --- Planner sanitization limits ---
 PLANNER_TITLE_MAX_LEN = 200

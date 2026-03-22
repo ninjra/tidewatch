@@ -99,10 +99,10 @@ class Obligation:
     hard_floor: bool = False  # Binding deadline — callers may set directly; prefer risk_tier
     days_in_status: float = 0.0  # Days in current status (#195 timing amplification)
     violation_count: int = 0     # Rule violations associated with this obligation (#99)
-    gravity_score: float | None = None  # Gravitational attraction score from gravitas (#635)
+    gravity_score: float | None = None  # Gravitational attraction score for relevance ranking (#635)
     risk_tier: RiskTier = RiskTier.FULLY_DEMOTABLE  # Bandwidth modulation classification
     # Provenance fields (#1182) — caller-populated audit trail for gameable inputs
-    completion_source: str | None = None      # Who/what set completion_pct (e.g., "sentinel:autobot", "human:manual")
+    completion_source: str | None = None      # Who/what set completion_pct (e.g., "automation:scheduler", "human:manual")
     completion_updated_at: datetime | None = None  # When completion_pct was last changed
     dependency_source: str | None = None      # How dependency_count was derived (e.g., "mssql:dep_chain", "manual")
     # Status-reset exploit prevention (#1261) — event-anchored timestamps

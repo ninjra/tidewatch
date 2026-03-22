@@ -21,7 +21,7 @@ Usage:
 Gate types: regex_present, regex_absent, regex_consistent,
             count_drift, toml_equals, toml_empty, command_passes
 
-Any constellation tool can call this script to evolve the pipeline.
+Any external tool can call this script to evolve the pipeline.
 """
 
 import argparse

@@ -581,7 +581,7 @@ class TestProvenanceChecks:
         import logging
         now = datetime(2026, 6, 1, 12, 0, 0, tzinfo=UTC)
         ob = Obligation(id=1, title="Test", due_date=now + timedelta(days=7),
-                        completion_pct=0.9, completion_source="sentinel:autobot")
+                        completion_pct=0.9, completion_source="automation:scheduler")
         with caplog.at_level(logging.WARNING, logger="tidewatch.pressure.provenance"):
             calculate_pressure(ob, now=now)
         assert not any("PROVENANCE_MISSING" in r.message for r in caplog.records)

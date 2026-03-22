@@ -480,9 +480,9 @@ without premature aggregation.
 
 \paragraph{Backend selection.}
 The component space has two implementations:
-(1)~a full implementation from the Gravitas library (when available),
-supporting normalized Pareto dominance and weighted collapse with
-configurable bounds; and
+(1)~a full implementation supporting normalized Pareto dominance
+and weighted collapse with configurable bounds (when an external
+component-space backend is available); and
 (2)~a lightweight fallback using only the standard library,
 providing the same protocol with product-only collapse.
 Backend selection is automatic and transparent to consumers.
@@ -698,8 +698,8 @@ completion percentage must lie in $[0, 1]$ and dependency count
 must be non-negative.  Invalid inputs are rejected at the function
 boundary, never silently clamped.
 
-Optional integrations (Sentinel telemetry, Gravitas component
-space) degrade gracefully via try/except import guards.  The core
+Optional integrations (external telemetry, component-space
+backends) degrade gracefully via import guards.  The core
 library functions identically with or without these packages.
 
 % ======================================================================
@@ -1259,7 +1259,7 @@ with explicit safety boundaries.
         completion patterns and adjust parameters over time.
   \item \textbf{Gravity tiebreak (future work).}
         The implementation includes an optional gravity tiebreak
-        score from the Gravitas coherence system, but it is not
+        score from an external coherence system, but it is not
         part of the core pressure equation and is not evaluated
         in this paper.  Integration remains future work.
 \end{enumerate}

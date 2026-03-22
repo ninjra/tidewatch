@@ -5,16 +5,14 @@ Individual scoring factors are preserved as named dimensions through the entire
 pipeline. Collapse to a scalar [0,1] pressure score happens only when a consumer
 requires it, via an explicit collapse method.
 
-This module defines the interface (Protocol) and provides a default implementation
-backed by gravitas.types.ComponentSpace. The gravitas dependency is optional —
-any implementation satisfying ComponentSpaceProtocol can be substituted.
+This module defines the interface (Protocol) and provides a default implementation.
+Any implementation satisfying ComponentSpaceProtocol can be substituted.
 
 Architecture decision: exponential time-decay is the BASE SIGNAL. All other
 factors (materiality, dependency, completion, timing, violation) are MODULATING
 COMPONENTS that adjust the base signal's urgency weighting.
 
 References:
-  - Gravitas Late Collapse Principle (gravitas/types.py:ComponentSpace)
   - Tidewatch paper §3.1 (pressure equation)
 """
 
@@ -69,7 +67,7 @@ class ComponentSpaceProtocol(Protocol):
         ...
 
 
-# ── Default implementation via Gravitas ───────────────────────────────────────
+# ── Default implementation ────────────────────────────────────────────────────
 
 
 def _make_component_space(
@@ -78,26 +76,13 @@ def _make_component_space(
     source_equation: str = "",
     raw_inputs: dict[str, Any] | None = None,
 ) -> ComponentSpaceProtocol:
-    """Create a ComponentSpace using the best available backend.
-
-    Tries gravitas.types.ComponentSpace first (full Pareto support).
-    Falls back to a lightweight stdlib implementation if gravitas is unavailable.
-    """
-    try:
-        from gravitas.types import ComponentSpace
-        return ComponentSpace(
-            components=components,
-            component_bounds=component_bounds or {},
-            source_equation=source_equation,
-            raw_inputs=raw_inputs or {},
-        )
-    except ImportError:
-        logger.debug("gravitas not available — using lightweight ComponentSpace fallback")
-        return _FallbackComponentSpace(
-            _components=components,
-            _bounds=component_bounds or {},
-            _source_equation=source_equation,
-        )
+    """Create a ComponentSpace using the built-in lightweight backend."""
+    return _FallbackComponentSpace(
+        _components=components,
+        _bounds=component_bounds or {},
+        _source_equation=source_equation,
+        _raw_inputs=raw_inputs or {},
+    )
 
 
 def _clamp_normalize(value: float, lo: float, hi: float) -> float:
@@ -117,15 +102,16 @@ def _clamp_normalize(value: float, lo: float, hi: float) -> float:
 
 @dataclass(frozen=True)
 class _FallbackComponentSpace:
-    """Lightweight ComponentSpace for environments without gravitas.
+    """Lightweight ComponentSpace implementation.
 
-    Provides the same interface but without Pareto ranking support
+    Provides the full interface but without Pareto ranking support
     (dominates() always returns None).
     """
 
     _components: dict[str, float]
     _bounds: dict[str, tuple[float, float]] = field(default_factory=dict)
     _source_equation: str = ""
+    _raw_inputs: dict[str, Any] = field(default_factory=dict)
 
     @property
     def components(self) -> dict[str, float]:
@@ -134,6 +120,10 @@ class _FallbackComponentSpace:
     @property
     def component_bounds(self) -> dict[str, tuple[float, float]]:
         return dict(self._bounds)
+
+    @property
+    def raw_inputs(self) -> dict[str, Any]:
+        return dict(self._raw_inputs)
 
     @property
     def collapsed(self) -> float:

@@ -7,8 +7,8 @@ This is a TEMPLATE ENGINE, not an NLP system. It:
   3. Stages the result as a PlanRequest for the caller's LLM
 
 The caller provides the LLM. Tidewatch never invokes inference directly.
-When integrated with Sentinel, plan stubs can be enriched by Sentinel's
-LLM layer — that is a Sentinel capability, not a Tidewatch one.
+When integrated with an orchestration layer, plan stubs can be enriched by the
+caller's LLM — that is a caller capability, not a Tidewatch one.
 
 Runs synchronously after ranking. No daemon, no event loop, no concurrency.
 complete_plan() uses datetime.now(UTC) for timestamp — callers requiring

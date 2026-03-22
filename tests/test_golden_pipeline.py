@@ -29,7 +29,7 @@ Gates:
   13. Triage Stage and List — staging, deduplication, ordering
   14. Triage Accept and Reject — conversion to Obligation, removal
   15. Full Pipeline — triage → pressure → plan → result end-to-end
-  16. Sentinel SDK Graceful Degradation — telemetry path without sentinel_sdk
+  16. Telemetry Graceful Degradation — telemetry hook is a safe no-op
   17. SOB Dataset Generator — deterministic output, valid fields, distributions
   18. Benchmark Baselines — binary, linear, eisenhower known-value scoring
   19. Benchmark Metrics — all four evaluation metrics with hard-coded outputs
@@ -287,7 +287,7 @@ _EXPECTED_CONSTANTS = [
     ("VIOLATION_AMPLIFICATION", 0.05),
     ("VIOLATION_MAX_AMPLIFICATION", 0.5),
     ("GRAVITY_TIEBREAK_WEIGHT", 0.1),
-    ("FORGE_PRESSURE_PAUSE_THRESHOLD", 0.80),
+    ("EVOLUTION_PAUSE_THRESHOLD", 0.80),
 ]
 
 
@@ -1039,31 +1039,29 @@ class TestGate15_FullPipeline:
 
 
 # ════════════════════════════════════════════════════════════════════
-# Gate 16 — Sentinel SDK Graceful Degradation
+# Gate 16 — Telemetry Graceful Degradation
 # ════════════════════════════════════════════════════════════════════
 
-class TestGate16_SentinelGraceful:
-    """recalculate_batch must work without sentinel_sdk installed."""
+class TestGate16_TelemetryGraceful:
+    """recalculate_batch telemetry hook must be a safe no-op."""
 
-    def test_batch_without_sentinel_sdk(self) -> None:
-        """sentinel_sdk is optional — batch must not raise ImportError."""
+    def test_batch_telemetry_is_safe(self) -> None:
+        """Telemetry hook must not raise — batch must complete cleanly."""
         from tidewatch import Obligation, recalculate_batch
         obs = [
             Obligation(id=1, title="Test", due_date=NOW + timedelta(days=3)),
             Obligation(id=2, title="Test2", due_date=NOW + timedelta(days=1)),
         ]
-        # This should not raise even if sentinel_sdk is not installed
         results = recalculate_batch(obs, now=NOW)
         assert len(results) == 2
 
-    def test_telemetry_code_path_exists(self) -> None:
-        """The try/except ImportError block must exist in pressure.py."""
+    def test_telemetry_hook_exists(self) -> None:
+        """The _emit_batch_telemetry function must exist in pressure.py."""
         import inspect  # noqa: I001
 
         from tidewatch import pressure
         source = inspect.getsource(pressure._emit_batch_telemetry)
-        assert "sentinel_sdk" in source
-        assert "ImportError" in source
+        assert "telemetry" in source.lower()
 
 
 # ════════════════════════════════════════════════════════════════════

@@ -3,8 +3,7 @@
 
 Scoring factors are preserved as named components (ComponentSpace) through the
 entire pipeline. Collapse to scalar [0,1] happens only when a consumer needs it.
-Backed by gravitas.types.ComponentSpace for Pareto-aware ranking; the dependency
-is interface-based (ComponentSpaceProtocol) and substitutable.
+The dependency is interface-based (ComponentSpaceProtocol) and substitutable.
 """
 
 from tidewatch.components import (

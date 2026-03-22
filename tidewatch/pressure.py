@@ -50,7 +50,7 @@ from tidewatch.constants import (
     DIVISION_GUARD,
     FANOUT_TEMPORAL_K,
     FIT_SCORE_MISMATCH_COMPONENTS,
-    FORGE_PRESSURE_PAUSE_THRESHOLD,
+    EVOLUTION_PAUSE_THRESHOLD,
     GRAVITY_TIEBREAK_WEIGHT,
     HALFLIFE_BASE,
     HARD_FLOOR_DAYS_THRESHOLD,
@@ -682,20 +682,15 @@ def _emit_batch_telemetry(
     pareto: bool,
     latency_ms: float,
 ) -> None:
-    """Emit optional telemetry for batch recalculation via sentinel_sdk."""
-    try:
-        from sentinel_sdk.metrics import get_buffer
+    """Emit optional telemetry for batch recalculation.
 
-        red_count = sum(1 for r in results if r.zone == "red")
-        get_buffer().record(
-            source_repo="tidewatch",
-            operation_type="pressure.recalculate_batch",
-            operation_detail=f"batch_size={len(obligations)} red={red_count} pareto={pareto}",
-            latency_ms=latency_ms,
-            success=True,
-        )
-    except ImportError:
-        logging.getLogger(__name__).debug("sentinel_sdk not available — telemetry skipped")
+    This is a no-op hook. Callers can monkey-patch or subclass to route
+    telemetry to their own metrics backend.
+    """
+    logging.getLogger(__name__).debug(
+        "batch telemetry: size=%d pareto=%s latency_ms=%.1f",
+        len(obligations), pareto, latency_ms,
+    )
 
 
 def _rank_normalize_results(results: list[PressureResult]) -> list[PressureResult]:
@@ -825,10 +820,10 @@ def recalculate_batch(
 
 
 def export_pressure_summary(results: list[PressureResult]) -> dict:
-    """Export system pressure summary for forge governance consumption (#140).
+    """Export system pressure summary for evolution governance consumption (#140).
 
     Returns dict with system_pressure (max), red_count, and at-risk obligation IDs.
-    Forge uses system_pressure >= FORGE_PRESSURE_PAUSE_THRESHOLD to pause evolution.
+    Callers use system_pressure >= EVOLUTION_PAUSE_THRESHOLD to pause evolution.
     """
     if not results:
         return {"system_pressure": 0.0, "red_count": 0, "obligations_at_risk": []}
@@ -838,7 +833,7 @@ def export_pressure_summary(results: list[PressureResult]) -> dict:
         "system_pressure": system_pressure,
         "red_count": len(red),
         "obligations_at_risk": [r.obligation_id for r in red],
-        "should_pause_evolution": system_pressure >= FORGE_PRESSURE_PAUSE_THRESHOLD,
+        "should_pause_evolution": system_pressure >= EVOLUTION_PAUSE_THRESHOLD,
     }
 
 

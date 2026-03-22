@@ -75,12 +75,5 @@ print('PASS: pressure engine healthy')
 | Governance systems | `export_pressure_summary()` | System pressure signal for pausing evolution |
 | Memory rankers | `PressureResult.pressure`, zone labels | Complements urgency with domain relevance |
 
-### Consumes (optional)
-| Provider | Interface | Required? |
-|----------|-----------|-----------|
-| Gravitas | `gravitas.types.ComponentSpace` | Optional — fallback used when unavailable |
-| Telemetry | `sentinel_sdk.metrics.get_buffer()` | Optional — degrades gracefully |
-
 ### Contract: zero runtime dependencies
-The core library (`tidewatch/`) uses stdlib only. All integrations are optional
-extras that degrade gracefully via try/except import guards.
+The core library (`tidewatch/`) uses stdlib only.
