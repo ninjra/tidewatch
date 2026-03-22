@@ -121,6 +121,9 @@ class PressureResult:
     Every factor is exposed for auditability. The component_space field
     preserves all factors as named dimensions for Pareto-aware ranking.
     The scalar .pressure field is the default product collapse.
+
+    scored_at: timestamp when this result was computed (for staleness detection).
+    input_hash: hash of the obligation's mutable fields at scoring time.
     """
     obligation_id: int | str
     pressure: float
@@ -130,6 +133,8 @@ class PressureResult:
     dependency_amp: float
     completion_damp: float
     component_space: object | None = None  # PressureComponents when available
+    scored_at: datetime | None = None
+    input_hash: str | None = None
 
 
 # --- Plan types ---
@@ -279,6 +284,26 @@ def estimate_task_demand(obligation: Obligation) -> TaskDemand:
 
 
 # --- Triage ---
+
+@dataclass
+class DeadlineDistribution:
+    """Population-level deadline statistics for adaptive rate constant selection.
+
+    Provided to recalculate_batch to tune the exponential decay rate constant k
+    so the pressure curve spreads scores across the full [0,1] range for the
+    given population, avoiding saturation collapse at large N.
+
+    Fields:
+        min_days: minimum days-to-deadline in the population
+        max_days: maximum days-to-deadline in the population
+        median_days: median days-to-deadline in the population
+        count: total number of obligations in the population
+    """
+    min_days: float
+    max_days: float
+    median_days: float
+    count: int
+
 
 @dataclass
 class TriageCandidate:

@@ -70,6 +70,27 @@ SECONDS_PER_DAY = 86400.0  # Conversion factor for timedelta → days
 DIVISION_GUARD = 0.01      # Floor for division-by-zero protection in P_time(t)
 MS_PER_SECOND = 1000       # Conversion factor for latency metrics
 
+# --- Adaptive k for large-N scaling ---
+# When deadline_distribution is provided, k is computed so that P_time at the
+# population's median deadline distance equals the yellow-entry threshold (0.30).
+#
+# Derivation:
+#   P_time(t_median) = ZONE_YELLOW = 0.30
+#   1 - exp(-k / t_median) = 0.30
+#   exp(-k / t_median) = 0.70
+#   -k / t_median = ln(0.70)
+#   k = -t_median * ln(0.70)
+#   k = -t_median * ln(1 - ZONE_YELLOW)
+#
+# At t_median=7d:  k = -7 * ln(0.70) = 2.497 (close to default k=3.0)
+# At t_median=45d: k = -45 * ln(0.70) = 16.05 (spreads curve over 90-day range)
+ADAPTIVE_K_MIN = 1.0   # Floor: prevents near-zero k when median is very small
+ADAPTIVE_K_MAX = 50.0  # Ceiling: prevents runaway k when median is very large
+
+# --- Dependency cap modes ---
+DEPENDENCY_CAP_LOG_SCALE_FACTOR = 5  # Multiplier for log2(N) in log_scaled mode
+DEPENDENCY_CAP_LOG_MIN = 20          # Floor for log_scaled mode (matches fixed cap)
+
 # --- Materiality ---
 MATERIALITY_WEIGHTS: dict[str, float] = {
     "material": 1.5,       # Wide pipe -- carries more pressure

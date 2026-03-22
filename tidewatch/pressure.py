@@ -36,12 +36,16 @@ import math
 from datetime import UTC, datetime
 
 from tidewatch.constants import (
+    ADAPTIVE_K_MAX,
+    ADAPTIVE_K_MIN,
     BANDWIDTH_FULL_THRESHOLD,
     COMPLETION_DAMPENING,
     COMPLETION_DAMPENING_MODE,
     COMPLETION_LOGISTIC_K,
     COMPLETION_LOGISTIC_MID,
     DEPENDENCY_AMPLIFICATION,
+    DEPENDENCY_CAP_LOG_MIN,
+    DEPENDENCY_CAP_LOG_SCALE_FACTOR,
     DEPENDENCY_COUNT_CAP,
     DIVISION_GUARD,
     FANOUT_TEMPORAL_K,
@@ -67,6 +71,7 @@ from tidewatch.constants import (
 )
 from tidewatch.types import (
     CognitiveContext,
+    DeadlineDistribution,
     Obligation,
     PressureResult,
     estimate_task_demand,
@@ -80,6 +85,66 @@ _exponential = math.exp
 _AMPLIFIER_IDENTITY = float(1)
 
 # Timing amplification uses a logistic ramp (#1179) for continuous-framework consistency
+
+
+def compute_adaptive_k(distribution: DeadlineDistribution) -> float:
+    """Compute adaptive rate constant k from population deadline statistics.
+
+    Selects k such that P_time at the population's median deadline distance
+    equals the yellow-entry threshold (ZONE_YELLOW = 0.30).
+
+    Derivation:
+        P_time(t_median) = ZONE_YELLOW
+        1 - exp(-k / t_median) = ZONE_YELLOW
+        exp(-k / t_median) = 1 - ZONE_YELLOW
+        k = -t_median * ln(1 - ZONE_YELLOW)
+
+    At the default ZONE_YELLOW=0.30:
+        k = -t_median * ln(0.70) ≈ t_median * 0.3567
+
+    The result is clamped to [ADAPTIVE_K_MIN, ADAPTIVE_K_MAX] to prevent
+    degenerate behavior at extreme median values.
+
+    Args:
+        distribution: Population deadline statistics.
+
+    Returns:
+        Adaptive rate constant k.
+    """
+    if distribution.median_days <= 0:
+        return RATE_CONSTANT  # All overdue — default k is fine
+    k = -distribution.median_days * math.log(1.0 - ZONE_YELLOW)
+    return max(ADAPTIVE_K_MIN, min(k, ADAPTIVE_K_MAX))
+
+
+def compute_dependency_cap(
+    population_size: int,
+    mode: str = "fixed",
+) -> int:
+    """Compute effective dependency count cap based on population size and mode.
+
+    Args:
+        population_size: Number of obligations in the batch (N).
+        mode: "fixed" uses DEPENDENCY_COUNT_CAP (default 20, backward compatible).
+              "log_scaled" uses max(20, ceil(log2(N) * 5)).
+
+    Returns:
+        Maximum effective dependency count.
+
+    At N=50:    log_scaled cap = max(20, ceil(5.64 * 5)) = max(20, 29) = 29
+    At N=10000: log_scaled cap = max(20, ceil(13.29 * 5)) = max(20, 67) = 67
+    At N=39000: log_scaled cap = max(20, ceil(15.25 * 5)) = max(20, 77) = 77
+    """
+    if mode == "fixed":
+        return DEPENDENCY_COUNT_CAP
+    if mode == "log_scaled":
+        if population_size <= 1:
+            return DEPENDENCY_CAP_LOG_MIN
+        return max(
+            DEPENDENCY_CAP_LOG_MIN,
+            math.ceil(math.log2(population_size) * DEPENDENCY_CAP_LOG_SCALE_FACTOR),
+        )
+    raise ValueError(f"Unknown dependency_cap_mode: {mode!r}. Use 'fixed' or 'log_scaled'.")
 
 
 def _days_remaining(due_date: datetime, now: datetime) -> float:
@@ -280,14 +345,25 @@ def _compute_factors(
     obligation: Obligation,
     days_rem: float,
     now: datetime,
+    *,
+    rate_constant: float | None = None,
+    dep_cap: int | None = None,
 ) -> tuple[float, float, float, float, float, float, float]:
     """Compute all six pressure factors for a single obligation.
+
+    Args:
+        rate_constant: Override for RATE_CONSTANT (k). Used by adaptive k.
+            Default None uses the module-level RATE_CONSTANT (3.0).
+        dep_cap: Override for DEPENDENCY_COUNT_CAP. Used by log_scaled mode.
+            Default None uses the module-level DEPENDENCY_COUNT_CAP (20).
 
     Returns:
         (time_p, mat_mult, dep_amp, comp_damp, timing_amp, violation_amp, t_gate)
     """
+    k = rate_constant if rate_constant is not None else RATE_CONSTANT
+    cap = dep_cap if dep_cap is not None else DEPENDENCY_COUNT_CAP
     # Guard: days_rem ≥ DIVISION_GUARD prevents division by zero in P_time(t)
-    time_p = OVERDUE_PRESSURE if days_rem <= 0 else 1.0 - _exponential(-RATE_CONSTANT / max(days_rem, DIVISION_GUARD))
+    time_p = OVERDUE_PRESSURE if days_rem <= 0 else 1.0 - _exponential(-k / max(days_rem, DIVISION_GUARD))
     mat_mult = MATERIALITY_WEIGHTS.get(obligation.materiality, 1.0)
 
     # Dependency urgency propagation (#1180): if dependents have earlier deadlines,
@@ -297,7 +373,7 @@ def _compute_factors(
         dep_days_rem = _days_remaining(obligation.earliest_dependent_deadline, now)
         dep_days = min(days_rem, dep_days_rem)  # Tighter deadline wins (#1180)
     t_gate = _temporal_gate(dep_days)
-    effective_deps = min(obligation.dependency_count, DEPENDENCY_COUNT_CAP)  # DoS cap: deps ∈ [0, CAP] (#1213)
+    effective_deps = min(obligation.dependency_count, cap)  # DoS cap: deps ∈ [0, cap] (#1213)
     dep_amp = 1.0 + (effective_deps * DEPENDENCY_AMPLIFICATION * t_gate)
 
     comp_damp = _completion_dampening(obligation.completion_pct)
@@ -408,11 +484,36 @@ def _build_result(
     )
 
 
+def _obligation_input_hash(obligation: Obligation) -> str:
+    """Compute a hash of the obligation's mutable scoring-relevant fields.
+
+    Used by recalculate_stale to detect whether an obligation's inputs have
+    changed since it was last scored. The hash covers all fields that affect
+    the pressure calculation.
+    """
+    import hashlib
+    parts = (
+        str(obligation.due_date),
+        str(obligation.completion_pct),
+        str(obligation.dependency_count),
+        str(obligation.materiality),
+        str(obligation.violation_count),
+        str(obligation.days_in_status),
+        str(obligation.status),
+        str(obligation.earliest_dependent_deadline),
+        str(obligation.status_changed_at),
+        str(obligation.violation_first_at),
+    )
+    return hashlib.md5("|".join(parts).encode(), usedforsecurity=False).hexdigest()
+
+
 def calculate_pressure(
     obligation: Obligation,
     now: datetime | None = None,
     *,
     ablate: frozenset[str] | None = None,
+    rate_constant: float | None = None,
+    dep_cap: int | None = None,
 ) -> PressureResult:
     """Compute pressure for a single obligation (§3.1).
 
@@ -424,6 +525,10 @@ def calculate_pressure(
     Args:
         ablate: frozenset of component names to neutralize (set to 1.0).
             Used for factor ablation studies (§4.3).
+        rate_constant: Override for the exponential decay rate constant k.
+            Default None uses RATE_CONSTANT (3.0). Set by adaptive k.
+        dep_cap: Override for the dependency count cap.
+            Default None uses DEPENDENCY_COUNT_CAP (20). Set by log_scaled mode.
     """
     if now is None:
         now = datetime.now(UTC)
@@ -435,6 +540,8 @@ def calculate_pressure(
 
     time_p, mat_mult, dep_amp, comp_damp, timing_amp, violation_amp, t_gate = _compute_factors(
         obligation, days_rem, now,
+        rate_constant=rate_constant,
+        dep_cap=dep_cap,
     )
 
     if ablate:
@@ -442,10 +549,13 @@ def calculate_pressure(
             ablate, time_p, mat_mult, dep_amp, comp_damp, timing_amp, violation_amp,
         )
 
-    return _build_result(
+    result = _build_result(
         obligation, time_p, mat_mult, dep_amp, comp_damp,
         timing_amp, violation_amp, days_rem, t_gate,
     )
+    result.scored_at = now
+    result.input_hash = _obligation_input_hash(obligation)
+    return result
 
 
 # Sort tier constants for bandwidth-adjusted ordering
@@ -488,7 +598,30 @@ def _find_pareto_front(results: list[PressureResult]) -> list[PressureResult]:
     A result is in the front if no other result dominates it on all
     component dimensions simultaneously. Uses ComponentSpace.dominates()
     which is O(d) per comparison, O(n²d) total.
+
+    Optimization: if the first dominance check returns None (backend doesn't
+    support Pareto comparison), all items are incomparable and the entire
+    set is the front. This avoids O(N²) work with the fallback backend.
     """
+    if not results:
+        return []
+
+    # Quick check: if backend doesn't support dominance, return all
+    first_with_space = None
+    second_with_space = None
+    for r in results:
+        if r.component_space is not None:
+            if first_with_space is None:
+                first_with_space = r
+            elif second_with_space is None:
+                second_with_space = r
+                break
+    if first_with_space is not None and second_with_space is not None:
+        probe = first_with_space.component_space.dominates(second_with_space.component_space)
+        if probe is None:
+            # Backend returns None for all comparisons — all items are incomparable
+            return list(results)
+
     front: list[PressureResult] = []
     for candidate in results:
         dominated = False
@@ -506,24 +639,40 @@ def _find_pareto_front(results: list[PressureResult]) -> list[PressureResult]:
     return front
 
 
-def _pareto_layered_sort(results: list[PressureResult]) -> list[PressureResult]:
+def _pareto_layered_sort(
+    results: list[PressureResult],
+    pareto_budget: int | None = None,
+) -> list[PressureResult]:
     """Sort results using Pareto-layered ranking.
 
     Step 1: Extract the Pareto front (non-dominated results).
     Step 2: Sort the front by scalar pressure descending.
-    Step 3: Remove front from remaining, repeat until empty.
+    Step 3: Remove front from remaining, repeat until empty or budget exhausted.
+
+    Args:
+        pareto_budget: Maximum number of Pareto fronts to extract. When set,
+            extraction stops after this many fronts and remaining items are
+            sorted by scalar pressure and appended as a "tail" tier.
+            Default None extracts all fronts (backward compatible).
 
     This preserves multi-dimensional information: a result that dominates
     another always ranks higher, even if its scalar collapse is lower.
     """
     ranked: list[PressureResult] = []
     remaining = list(results)
+    fronts_extracted = 0
     while remaining:
+        if pareto_budget is not None and fronts_extracted >= pareto_budget:
+            # Budget exhausted — sort remaining by scalar pressure
+            remaining.sort(key=lambda r: r.pressure, reverse=True)
+            ranked.extend(remaining)
+            break
         front = _find_pareto_front(remaining)
         front.sort(key=lambda r: r.pressure, reverse=True)
         ranked.extend(front)
         front_ids = {id(r) for r in front}
         remaining = [r for r in remaining if id(r) not in front_ids]
+        fronts_extracted += 1
     return ranked
 
 
@@ -549,40 +698,115 @@ def _emit_batch_telemetry(
         logging.getLogger(__name__).debug("sentinel_sdk not available — telemetry skipped")
 
 
+def _rank_normalize_results(results: list[PressureResult]) -> list[PressureResult]:
+    """Replace each component value with its percentile rank within the batch.
+
+    For each component dimension, all results are sorted by that dimension's
+    raw value. Each result's component is replaced with its rank / (N - 1),
+    giving 0.0 for the lowest and 1.0 for the highest. The raw values remain
+    accessible via the component_space's underlying storage.
+
+    The product collapse is recomputed from ranked values, and the pressure
+    and zone fields are updated accordingly.
+    """
+    from tidewatch.components import _COMPONENT_KEYS, _DEFAULT_BOUNDS, _SOURCE_EQUATION, _make_component_space, PressureComponents
+    from tidewatch.constants import saturate
+
+    n = len(results)
+    if n <= 1:
+        return results
+
+    # Extract raw component dicts
+    raw_components: list[dict[str, float]] = []
+    for r in results:
+        if r.component_space is not None:
+            raw_components.append(dict(r.component_space.space.components))
+        else:
+            raw_components.append({})
+
+    # For each component, compute percentile ranks
+    ranked_components: list[dict[str, float]] = [{} for _ in range(n)]
+    for key in _COMPONENT_KEYS:
+        values_with_idx = [(raw_components[i].get(key, 0.0), i) for i in range(n)]
+        values_with_idx.sort(key=lambda x: x[0])
+        for rank, (_, idx) in enumerate(values_with_idx):
+            ranked_components[idx][key] = rank / (n - 1) if n > 1 else 0.5
+
+    # Rebuild results with ranked components
+    for i, r in enumerate(results):
+        ranked_space = _make_component_space(
+            components=ranked_components[i],
+            component_bounds={k: (0.0, 1.0) for k in _COMPONENT_KEYS},
+            source_equation=_SOURCE_EQUATION + " [rank-normalized]",
+            raw_inputs={"raw_components": raw_components[i]},
+        )
+        ranked_pc = PressureComponents(space=ranked_space, obligation_id=r.obligation_id)
+        r.pressure = saturate(ranked_pc.pressure)
+        r.zone = pressure_zone(r.pressure)
+        r.component_space = ranked_pc
+    return results
+
+
 def recalculate_batch(
     obligations: list[Obligation],
     now: datetime | None = None,
     *,
     pareto: bool = False,
+    deadline_distribution: DeadlineDistribution | None = None,
+    rank_normalize: bool = False,
+    pareto_budget: int | None = None,
+    dependency_cap_mode: str = "fixed",
 ) -> list[PressureResult]:
     """Recalculate pressure for a batch of obligations.
 
-    Inputs:
+    Args:
       obligations: list of Obligation dataclasses
       now: current datetime (default: utcnow, shared across batch)
       pareto: if True, use Pareto-layered ranking instead of scalar sort.
-        Obligations that dominate others on ALL component dimensions rank
-        higher, even if their scalar collapse is lower. Within each Pareto
-        front, sorting is by scalar pressure descending.
+      deadline_distribution: population deadline statistics for adaptive k.
+          When provided, the exponential decay rate constant k is computed
+          so the yellow-entry threshold (P=0.30) falls at the population's
+          median deadline distance. When absent, k=3.0 (backward compatible).
+      rank_normalize: if True, replace component values with their percentile
+          rank within the batch before collapsing to scalar pressure.
+          This spreads scores across [0,1] even when raw values cluster.
+          Default False (backward compatible).
+      pareto_budget: maximum number of Pareto fronts to extract. When set,
+          extraction stops after this many fronts and remaining items are
+          sorted by collapsed score. Default None (extract all, backward compatible).
+      dependency_cap_mode: "fixed" (default, backward compatible) or "log_scaled".
+          In log_scaled mode, cap = max(20, ceil(log2(N) * 5)).
 
-    Logic:
-      Calculate pressure for each, sort by pressure descending (or Pareto-layered).
-
-    Outputs:
+    Returns:
       list[PressureResult] sorted by pressure descending (or Pareto rank)
     """
-    # Batch pipeline: compute → sort → emit telemetry. All three stages
-    # are sequential and stateless; the telemetry try/except is the only
-    # optional segment (degrades gracefully without sentinel_sdk).
     import time as _time
 
     _t0 = _time.monotonic()
     if now is None:
         now = datetime.now(UTC)
-    results = [calculate_pressure(ob, now=now) for ob in obligations]
+
+    # Problem 1: Adaptive k
+    rate_k: float | None = None
+    if deadline_distribution is not None:
+        rate_k = compute_adaptive_k(deadline_distribution)
+
+    # Problem 6: Population-relative dependency cap
+    dep_cap: int | None = None
+    if dependency_cap_mode != "fixed":
+        dep_cap = compute_dependency_cap(len(obligations), mode=dependency_cap_mode)
+
+    results = [
+        calculate_pressure(ob, now=now, rate_constant=rate_k, dep_cap=dep_cap)
+        for ob in obligations
+    ]
+
+    # Problem 2: Rank normalization
+    if rank_normalize:
+        results = _rank_normalize_results(results)
 
     if pareto:
-        results = _pareto_layered_sort(results)
+        results = _pareto_layered_sort(results, pareto_budget=pareto_budget)
     else:
         def _sort_key(r: PressureResult) -> tuple[float, float]:
             raw = r.component_space.space.collapsed if r.component_space else r.pressure
@@ -611,6 +835,125 @@ def export_pressure_summary(results: list[PressureResult]) -> dict:
         "obligations_at_risk": [r.obligation_id for r in red],
         "should_pause_evolution": system_pressure >= FORGE_PRESSURE_PAUSE_THRESHOLD,
     }
+
+
+def recalculate_stale(
+    results: list[PressureResult],
+    obligations: list[Obligation],
+    now: datetime,
+    staleness_budget: float,
+    *,
+    rate_constant: float | None = None,
+    dep_cap: int | None = None,
+) -> list[PressureResult]:
+    """Incrementally rescore only stale or changed obligations.
+
+    A result is considered stale if:
+    1. Its scored_at is older than now - staleness_budget (seconds), OR
+    2. The obligation's mutable fields have changed since scored_at
+       (detected via input_hash comparison).
+
+    Args:
+        results: Previous batch results (with scored_at and input_hash).
+        obligations: Current obligations (may have updated fields).
+        now: Current datetime for scoring.
+        staleness_budget: Maximum age in seconds before a result is stale.
+        rate_constant: Optional adaptive k override.
+        dep_cap: Optional dependency cap override.
+
+    Returns:
+        Updated results list with stale items rescored. Order is NOT
+        guaranteed — caller should re-sort if needed.
+    """
+    from datetime import timedelta as _td
+
+    ob_map = {ob.id: ob for ob in obligations}
+    result_map = {r.obligation_id: r for r in results}
+    cutoff = now - _td(seconds=staleness_budget)
+
+    stale_ids: set[int | str] = set()
+    for r in results:
+        ob = ob_map.get(r.obligation_id)
+        if ob is None:
+            continue
+        # Stale by age
+        if r.scored_at is None or r.scored_at < cutoff:
+            stale_ids.add(r.obligation_id)
+            continue
+        # Stale by input change
+        current_hash = _obligation_input_hash(ob)
+        if r.input_hash != current_hash:
+            stale_ids.add(r.obligation_id)
+
+    # Rescore stale items
+    for ob_id in stale_ids:
+        ob = ob_map.get(ob_id)
+        if ob is None:
+            continue
+        new_result = calculate_pressure(
+            ob, now=now, rate_constant=rate_constant, dep_cap=dep_cap,
+        )
+        result_map[ob_id] = new_result
+
+    return list(result_map.values())
+
+
+def top_k_obligations(
+    results: list[PressureResult],
+    k: int,
+) -> list[PressureResult]:
+    """Return the K highest-pressure items with full component decomposition.
+
+    Args:
+        results: Scored results (from recalculate_batch).
+        k: Number of top items to return.
+
+    Returns:
+        List of the top K results sorted by pressure descending, each with
+        its full component_space and zone intact.
+    """
+    sorted_results = sorted(results, key=lambda r: r.pressure, reverse=True)
+    return sorted_results[:k]
+
+
+def apply_zone_capacity(
+    results: list[PressureResult],
+    zone_capacity: int | None = None,
+) -> list[PressureResult]:
+    """Apply zone capacity limits, demoting overflow items to the next lower zone.
+
+    When a zone exceeds capacity, only the top zone_capacity items (by pressure)
+    remain in that zone; the rest are demoted to the next lower zone. Demotion
+    cascades: red overflow → orange, which may then overflow → yellow, etc.
+
+    Args:
+        results: Scored results.
+        zone_capacity: Maximum items per zone. None means no limit (backward compatible).
+
+    Returns:
+        Results with updated zone labels. Pressure values are unchanged.
+    """
+    if zone_capacity is None:
+        return results
+
+    _DEMOTION_MAP = {"red": "orange", "orange": "yellow", "yellow": "green"}
+    _ZONE_ORDER = ["red", "orange", "yellow"]
+
+    sorted_results = sorted(results, key=lambda r: r.pressure, reverse=True)
+
+    # Iterate zones top-down. Demotion from red may overflow orange,
+    # so we re-check each zone after processing higher zones.
+    for zone in _ZONE_ORDER:
+        zone_items = [r for r in sorted_results if r.zone == zone]
+        if len(zone_items) > zone_capacity:
+            # Sort zone items by pressure desc, keep top zone_capacity
+            zone_items.sort(key=lambda r: r.pressure, reverse=True)
+            demoted = zone_items[zone_capacity:]
+            lower_zone = _DEMOTION_MAP[zone]
+            for r in demoted:
+                r.zone = lower_zone
+
+    return sorted_results
 
 
 def _get_effective_risk_tier(ob: Obligation, now: datetime | None = None) -> int:
