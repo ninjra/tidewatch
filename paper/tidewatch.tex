@@ -106,58 +106,45 @@ controlled execution environment.
 \section{Introduction}
 \label{sec:intro}
 
-Most project management tools and autonomous agent planners treat
+Most task management systems and autonomous agent planners treat
 deadlines as step functions: an obligation transitions from
 ``upcoming'' to ``overdue'' at a single moment, producing either a
-binary flag or at best a coarse urgency tier.
-This creates two problems.
-
-\textbf{Problem~1: Loss of gradient information.}
-A task due in 14~days and a task due in 2~days both register as
-``not overdue,'' yet the appropriate allocation of attention differs
-by an order of magnitude.
+binary flag or at best a coarse urgency tier.  This discards the
+continuous accumulation of lateness risk---a task due in 2~days
+and a task due in 14~days both register as ``not overdue,'' yet the
+appropriate allocation of attention differs by an order of magnitude.
 Without a continuous signal, priority sorting degenerates to
 tie-breaking by title or insertion order.
 
-\textbf{Problem~2: Operator state blindness.}
-Even systems that produce a continuous urgency signal present the same
-ranked list regardless of the operator's current cognitive capacity.
-A legally complex, high-stakes obligation may technically be the
-highest-pressure item, yet be precisely the wrong task for an operator
-experiencing high pain levels or sleep
-deprivation~\citep{kahneman1973attention,hart1988development}.
-
-Tidewatch addresses both problems with three orthogonal mechanisms:
+Tidewatch addresses this with two mechanisms:
 \begin{enumerate}[nosep]
   \item A \emph{pressure equation} (Section~\ref{sec:pressure}) that
         maps each obligation to a continuous score $P \in [0, 1]$ from
-        six multiplicative factors: exponential time-decay, materiality,
-        temporally gated dependency fanout, logistic completion
-        dampening, timing-sensitivity amplification, and
-        deadline-violation amplification.
-  \item A \emph{Late Collapse component space}
-        (Section~\ref{sec:late_collapse}) that preserves all six
-        factors as named dimensions, deferring scalar reduction until
-        a consumer requires it and enabling Pareto-layered ranking
-        over the full dimensional space.
-  \item A \emph{cognitive bandwidth modulator}
-        (Section~\ref{sec:bandwidth}) that re-ranks the
-        pressure-sorted queue based on the operator's physiological
-        state, promoting low-demand tasks when bandwidth is
-        constrained while a three-tier risk classification prevents
-        binding deadlines from being suppressed.
+        six multiplicative factors (all bounded away from zero):
+        three temporal signals, two state-dependent modifiers, and one
+        structural dependency factor.
+  \item A \emph{deferred scalarization architecture}
+        (Section~\ref{sec:deferred}) that retains all six factors
+        in a six-dimensional component space, deferring the product
+        collapse until a consumer requires a scalar ranking.  This
+        enables Pareto-dominance comparison and weighted aggregation
+        without premature information loss.
 \end{enumerate}
 
-Tidewatch is a \emph{prioritization heuristic}, not a scheduler.
-It does not assign start times, allocate resources, or generate
-Gantt charts.
-It produces a single, auditable score per obligation and a
-bandwidth-aware sort order, leaving execution decisions to the
-operator or the autonomous agent consuming the signal.
-We evaluate it against scheduling baselines (EDF, FIFO) to
-demonstrate that a multi-factor prioritization heuristic can achieve
-deadline compliance comparable to scheduling-theoretic optima while
-encoding richer input dimensions.
+An optional capacity-aware reranking extension
+(Section~\ref{sec:bandwidth}) adapts task presentation to operator
+cognitive state via a three-tier risk policy.  This mechanism is
+specified and implemented but \emph{not empirically validated};
+it is not part of the evaluated contribution.
+
+Tidewatch is a multi-objective prioritization framework, not a
+scheduler.  It does not assign start times, allocate resources, or
+generate Gantt charts.  It produces an auditable score per obligation
+and a rank order, leaving execution decisions to the user or the
+autonomous agent consuming the signal.  EDF is theoretically optimal
+for deadline minimization~\citep{liu1973scheduling}; Tidewatch does
+not compete on that metric.  Its contribution is interpretable,
+auditable multi-factor ranking with deferred scalarization.
 
 % ======================================================================
 % 2  RELATED WORK
@@ -166,70 +153,56 @@ encoding richer input dimensions.
 \label{sec:related}
 
 \textbf{Real-time scheduling.}
-Earliest Deadline First (EDF)~\citep{liu1973scheduling} and
-rate-monotonic scheduling are optimal for periodic task sets on
-uniprocessors.
-Both assume fixed task durations and no notion of partial completion
-or variable operator capacity.
+EDF~\citep{liu1973scheduling} is optimal for minimizing missed
+deadlines on a single resource with known task durations.
+Tidewatch does not claim to improve on EDF for that objective; it
+encodes additional factors (materiality, dependencies, completion)
+that EDF ignores.  We include EDF as a baseline to quantify the
+cost of this multi-factor encoding.
 
 \textbf{Project management.}
-Critical Path Method (CPM)~\citep{kelley1959critical} identifies
-the longest dependency chain to determine project duration.
-CPM models task dependencies but not urgency gradients---every task
-on the critical path has equal implicit priority.
-
-\textbf{LLM-based agent planners.}
-AutoGPT~\citep{autogpt2023} and BabyAGI~\citep{babyagi2023} use
-large language models to decompose goals into subtasks and execute
-them autonomously.
-ReAct~\citep{yao2023react} and Reflexion~\citep{shinn2023reflexion}
-improve agent decision-making through reasoning traces and verbal
-self-reflection.
-\citet{wang2024survey} survey the broader landscape of LLM-based
-autonomous agents.
-None of these systems incorporate a continuous pressure signal or
-adapt task ordering to physiological operator state.
+CPM~\citep{kelley1959critical} identifies the longest dependency
+chain but assigns equal implicit priority to all critical-path
+tasks.  Tidewatch's temporally gated fanout amplifies urgency in
+proportion to downstream dependency count \emph{and} deadline
+proximity simultaneously.
 
 \textbf{Prioritization heuristics.}
-The Eisenhower matrix classifies tasks on two binary axes
-(urgent/important).  ICE~\citep{ice2016scoring} and
-RICE~\citep{rice2018intercom} score by impact, confidence, effort,
-and reach---additive heuristics used in product management.
-Weighted Shortest Job First (WSJF)~\citep{reinertsen2009flow}
-divides cost-of-delay by duration.  All are static: they compute
-a one-time score without modeling temporal dynamics, completion
-progress, or operator capacity.  Tidewatch adds continuous
-time-decay, multiplicative factor interaction, and
-bandwidth-adaptive reranking.
+The Eisenhower matrix classifies tasks on two binary axes.
+ICE~\citep{ice2016scoring} and RICE~\citep{rice2018intercom} score
+by impact, confidence, effort, and reach.
+WSJF~\citep{reinertsen2009flow} divides cost-of-delay by duration.
+All are static one-time scores without temporal dynamics, completion
+tracking, or deferred scalarization.
 
-\textbf{Multi-criteria decision making (MCDM).}
-Weighted-sum aggregation, TOPSIS~\citep{hwang1981topsis}, and
-PROMETHEE~\citep{brans1985promethee} are standard approaches for
-combining multiple scored dimensions into a single ranking.
-AHP~\citep{saaty1980ahp} derives weights from pairwise preference
-judgments.  Tidewatch's product collapse differs from additive MCDM
-methods: it treats factors as multiplicative modulators of a base
-signal rather than interchangeable dimensions, preventing a high
-score on one factor from compensating for zero urgency on another.
-The weighted-sum MCDM baseline in Section~\ref{sec:monte_carlo}
-uses normalized equal weights after scaling each component to $[0,1]$
-by its algebraic bounds.
+\textbf{Multi-criteria decision making.}
+Weighted-sum, TOPSIS~\citep{hwang1981topsis},
+PROMETHEE~\citep{brans1985promethee}, and
+AHP~\citep{saaty1980ahp} combine multiple dimensions into a
+scalar.  All use additive or outranking aggregation, allowing a high
+score on one dimension to compensate for low urgency on another.
+Tidewatch's product collapse prevents this: factors are
+multiplicative modulators, not interchangeable dimensions.  The
+weighted-sum MCDM baseline in Section~\ref{sec:monte_carlo}
+normalizes each component to $[0,1]$ by its algebraic bounds before
+applying equal weights.
 
-\textbf{Cognitive load and workload.}
-NASA-TLX~\citep{hart1988development} measures perceived workload
-across six dimensions.
-Wickens' Multiple Resource Theory~\citep{wickens2008multiple} models
-interference between concurrent tasks.
-These frameworks measure load post-hoc or at design time; Tidewatch
-uses similar dimensions \emph{online} to modulate task presentation
-in real time.
+\textbf{Cognitive workload.}
+NASA-TLX~\citep{hart1988development} and
+Wickens' Multiple Resource Theory~\citep{wickens2008multiple}
+measure or model cognitive load.  Tidewatch's capacity-aware
+extension uses similar dimensions to modulate task presentation,
+but this module is specified only---no empirical validation is
+presented.
 
-\textbf{Generative agent simulations.}
-\citet{park2023generative} simulate agent behavior with memory and
-planning, and \citet{khot2023decomposed} decompose complex tasks
-modularly.
-Both operate in simulated or single-session contexts without
-persistent, multi-obligation tracking or capacity adaptation.
+\textbf{LLM-based agents.}
+AutoGPT~\citep{autogpt2023}, BabyAGI~\citep{babyagi2023},
+ReAct~\citep{yao2023react}, Reflexion~\citep{shinn2023reflexion},
+and the survey by \citet{wang2024survey} address autonomous task
+execution.  \citet{park2023generative} and
+\citet{khot2023decomposed} explore memory-augmented and modular
+agent architectures.  None incorporate a continuous pressure signal
+with deferred scalarization or capacity-aware reranking.
 
 % ======================================================================
 % 3  THE TIDEWATCH MODEL
@@ -246,8 +219,8 @@ persistent, multi-obligation tracking or capacity adaptation.
 Each obligation carries a deadline, a materiality class, a count of
 downstream dependents, a completion percentage, a days-in-status
 counter, and a violation count.
-Given the current time, Tidewatch computes a pressure score from six
-multiplicative factors:
+Given the current time, Tidewatch computes a pressure score as the
+product of six factors, all bounded away from zero:
 
 \begin{equation}
 \label{eq:pressure}
@@ -416,15 +389,14 @@ Hard-floor days           &                          & 1.0  \\
 \end{table}
 
 % ------------------------------------------------------------------
-% 3.2  Late Collapse
+% 3.2  Deferred Scalarization
 % ------------------------------------------------------------------
-\subsection{Late Collapse}
-\label{sec:late_collapse}
+\subsection{Deferred Scalarization}
+\label{sec:deferred}
 
 Most scoring systems compute factors, multiply them, and discard the
-components.  Tidewatch preserves all six factors as named dimensions
-in a \texttt{ComponentSpace} that implements a protocol with four
-operations:
+components.  Tidewatch retains all six factors as named dimensions
+in a six-dimensional \texttt{ComponentSpace} with four operations:
 
 \begin{enumerate}[nosep]
   \item \textbf{components} $\to$ \texttt{dict[str, float]}:
@@ -438,19 +410,20 @@ operations:
         dimension, None if incomparable.
 \end{enumerate}
 
-Scalar reduction happens \emph{only} when a consumer calls
-\texttt{collapsed} or \texttt{weighted\_collapse}.  Until that
-moment, all six dimensions are available for inspection, Pareto
-comparison, or custom aggregation.
+Scalarization happens \emph{only} when a consumer calls
+\texttt{collapsed} (product of all six components) or
+\texttt{weighted\_collapse}.  Until that point, all six dimensions
+are available for inspection, Pareto comparison, or custom
+aggregation.
 
-\paragraph{Pareto-layered ranking.}
+\paragraph{Pareto-dominance ranking.}
 The batch recalculation function accepts a \texttt{pareto=True}
-flag.  When set, it iteratively extracts Pareto fronts from the
-component space: the first front contains obligations not dominated
-by any other; the second front contains those dominated only by
-first-front members; and so on.  Within each layer, obligations are
-sorted by their collapsed scalar.  This produces a ranking that
-respects multidimensional trade-offs without premature scalarization.
+flag.  When set, it iteratively extracts Pareto fronts: the first
+front contains obligations not dominated by any other; the second
+contains those dominated only by first-front members; and so on.
+Within each layer, obligations are sorted by their product collapse.
+This produces a ranking that respects multidimensional trade-offs
+without premature aggregation.
 
 \paragraph{Backend selection.}
 The component space has two implementations:
@@ -919,7 +892,7 @@ $P = 1.0$ simultaneously.  When ties occur, obligations are ordered by
 their position in the input list (stable sort).  This is a known
 information-loss boundary: the Late Collapse component space
 preserves the raw (unclamped) product for consumers that need
-discrimination above the ceiling, but the default scalar pressure
+discrimination above the ceiling, but the default product collapse
 does not.
 
 \paragraph{Bandwidth reranking.}
@@ -990,10 +963,10 @@ EDF's $18.5\%$.  When deadline compliance is the sole objective
 and no capacity information is available, EDF remains the correct
 choice.
 
-\paragraph{Late Collapse as an architectural pattern.}
-Deferring scalarization until the consumer requests it has broader
-applicability beyond task prioritization.  Any system that combines
-multiple scored dimensions---risk assessment, search ranking,
+\paragraph{Deferred scalarization as an architectural pattern.}
+Retaining scored dimensions until the consumer requests a scalar
+has broader applicability beyond task prioritization.  Any system
+that combines multiple factors---risk assessment, search ranking,
 recommendation---can benefit from preserving the component space
 for downstream Pareto analysis or query-specific weighting.
 
@@ -1075,20 +1048,19 @@ simulated capacity variation.
 \label{sec:conclusion}
 
 Tidewatch replaces the binary overdue flag with a continuous,
-decomposable pressure score.
-Its six-factor multiplicative model
-($P_{\text{time}} \times M \times A \times D \times T_{\text{amp}}
-\times V_{\text{amp}}$) produces interpretable urgency gradients
-that autonomous agents and human operators can act on.
-The Late Collapse component space preserves these factors for
-Pareto-layered ranking, and the cognitive bandwidth modulator
-ensures that the right task surfaces for the operator's current
-capacity---not just the most urgent one, but the most urgent one
-they can execute.
+decomposable pressure score from six multiplicative factors
+(all bounded away from zero), retained in a six-dimensional
+component space with deferred scalarization.  EDF remains optimal
+for deadline minimization; Tidewatch's contribution is orthogonal:
+interpretable, auditable multi-factor ranking that encodes
+materiality, dependency structure, and completion state alongside
+deadline proximity.
 
-With 563 deterministic tests and zero runtime dependencies,
-Tidewatch demonstrates that useful prioritization infrastructure
-does not require complexity---it requires the right equation.
+The framework is verified to $\Delta < 10^{-10}$ against
+analytically computed reference values across 563 deterministic
+tests under pinned Python~3.11+ with zero runtime dependencies.
+No field deployment or user study is presented; external validity
+remains an open question for future work.
 
 % ======================================================================
 % REFERENCES
