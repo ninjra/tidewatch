@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tidewatch"
-version = "0.1.0"
+version = "0.4.4"
 description = "Continuous obligation pressure with proactive idle-time planning"
 readme = "README.md"
 license = "Apache-2.0 OR LicenseRef-Commercial"
@@ -16,11 +16,12 @@ keywords = [
     "task management", "deadline", "urgency", "pressure",
     "proactive planning", "AI agents", "obligation tracking",
 ]
-dependencies = [
-    "gravitas",
-]
+dependencies = []
 
 [project.optional-dependencies]
+gravitas = [
+    "gravitas",
+]
 dev = [
     "pytest>=7.0",
     "hypothesis>=6.0",

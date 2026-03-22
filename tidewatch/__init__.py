@@ -40,7 +40,7 @@ from tidewatch.types import (
     estimate_task_demand,
 )
 
-__version__ = "0.3.0"
+__version__ = "0.4.4"
 __all__ = [
     "calculate_pressure", "pressure_zone", "recalculate_batch",
     "recalculate_stale", "top_k_obligations", "apply_zone_capacity",

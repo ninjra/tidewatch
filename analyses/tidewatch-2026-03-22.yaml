@@ -5,7 +5,7 @@ scan:
   repo_path: /home/justi/projects/tidewatch
   repo_name: tidewatch
   stats:
-    total_files: 46
+    total_files: 47
     languages:
     - Python
     - Markdown
@@ -16,7 +16,7 @@ scan:
       Markdown: 7
       TOML: 1
       JSON: 1
-      Python: 33
+      Python: 34
       Shell: 1
   tree:
   - CLAUDE.md
@@ -31,6 +31,7 @@ scan:
   - repomix-output.xml
   - repomix.config.json
   - scripts/constants.py
+  - scripts/generate_ablation_results.py
   - scripts/generate_mc_results.py
   - scripts/generate_paper_figures.py
   - scripts/golden_pipeline.sh
@@ -138,6 +139,7 @@ scan:
       \ numerical/statistical properties (not exact values)\",\n]\n\n[tool.ruff]\ntarget-version = \"py312\"\nline-length\
       \ = 120\n\n[tool.ruff.lint]\nselect = [\"E\", \"F\", \"W\", \"I\", \"UP\", \"B\", \"SIM\"]\nignore = [\"E501\"]\n"
   entry_points:
+  - scripts/generate_ablation_results.py
   - scripts/generate_mc_results.py
   - scripts/generate_paper_figures.py
   - tests/test_baselines.py
@@ -189,6 +191,25 @@ scan:
   - tests/test_types.py
   ci_configs: []
   source_signatures:
+    scripts/generate_ablation_results.py:
+      imports:
+      - json
+      - os
+      - sys
+      - datetime
+      - benchmarks.constants
+      - benchmarks.datasets.generate_obligations
+      - benchmarks.monte_carlo
+      - tidewatch.types
+      classes: []
+      functions:
+      - name: _obligations_from_sob
+        decorators: []
+      - name: _print_ablation_table
+        decorators: []
+      - name: main
+        decorators: []
+      decorators: []
     scripts/generate_mc_results.py:
       imports:
       - argparse
@@ -1686,6 +1707,8 @@ scan:
         decorators: []
       - name: bandwidth_adjusted_sort
         decorators: []
+      - name: _sort_key
+        decorators: []
       decorators: []
     tidewatch/triage.py:
       imports:
@@ -1773,6 +1796,7 @@ scan:
 graph:
   nodes:
   - scripts/constants.py
+  - scripts/generate_ablation_results.py
   - scripts/generate_mc_results.py
   - scripts/generate_paper_figures.py
   - tests/conftest.py
@@ -1805,6 +1829,8 @@ graph:
   - tidewatch/triage.py
   - tidewatch/types.py
   edges:
+  - - scripts/generate_ablation_results.py
+    - tidewatch/types.py
   - - scripts/generate_mc_results.py
     - tidewatch/types.py
   - - scripts/generate_paper_figures.py
@@ -2107,103 +2133,106 @@ graph:
     - tidewatch/constants.py
   in_degree:
     tidewatch/__init__.py: 77
-    tidewatch/types.py: 20
+    tidewatch/types.py: 21
     tidewatch/constants.py: 20
     tidewatch/pressure.py: 19
     tidewatch/components.py: 5
     tidewatch/planner.py: 3
-    tidewatch/triage.py: 2
     scripts/generate_mc_results.py: 2
+    tidewatch/triage.py: 2
     scripts/constants.py: 1
     scripts/generate_paper_figures.py: 1
-    tests/test_generate_mc_results.py: 0
-    tests/test_planner.py: 0
-    tests/test_init.py: 0
-    tests/test_binary_deadline.py: 0
-    tests/test_metrics.py: 0
-    tests/test_baselines.py: 0
-    tests/test_triage.py: 0
-    tests/test_types.py: 0
     tests/test_eisenhower.py: 0
-    tests/test_cognitive_bandwidth.py: 0
-    tests/test_benchmarks.py: 0
-    tests/conftest.py: 0
-    tests/test_linear_urgency.py: 0
-    tests/test_pressure.py: 0
-    tests/test_monte_carlo.py: 0
-    tests/test_generate_obligations.py: 0
-    tests/test_golden_pipeline.py: 0
-    tests/test_integration.py: 0
     tests/test_generate_paper_figures.py: 0
-    tests/test_constants.py: 0
-    tests/test_run.py: 0
+    tests/test_planner.py: 0
+    scripts/generate_ablation_results.py: 0
+    tests/conftest.py: 0
     tests/test_property_pressure.py: 0
+    tests/test_generate_obligations.py: 0
+    tests/test_monte_carlo.py: 0
+    tests/test_run.py: 0
+    tests/test_triage.py: 0
+    tests/test_cognitive_bandwidth.py: 0
+    tests/test_baselines.py: 0
+    tests/test_metrics.py: 0
+    tests/test_generate_mc_results.py: 0
+    tests/test_golden_pipeline.py: 0
+    tests/test_linear_urgency.py: 0
+    tests/test_init.py: 0
+    tests/test_benchmarks.py: 0
+    tests/test_constants.py: 0
+    tests/test_types.py: 0
+    tests/test_binary_deadline.py: 0
+    tests/test_integration.py: 0
+    tests/test_pressure.py: 0
   out_degree:
     tests/test_golden_pipeline.py: 79
     tests/test_pressure.py: 25
     tidewatch/pressure.py: 9
     tidewatch/__init__.py: 5
-    tests/test_generate_mc_results.py: 3
     tests/test_planner.py: 3
-    tidewatch/components.py: 3
     tests/test_property_pressure.py: 3
-    tests/test_triage.py: 2
-    tests/conftest.py: 2
-    tests/test_integration.py: 2
-    tidewatch/planner.py: 2
+    tidewatch/components.py: 3
+    tests/test_generate_mc_results.py: 3
     scripts/generate_paper_figures.py: 2
     tidewatch/types.py: 2
+    tests/conftest.py: 2
+    tests/test_triage.py: 2
+    tidewatch/planner.py: 2
+    tests/test_integration.py: 2
+    tests/test_generate_paper_figures.py: 1
+    scripts/generate_ablation_results.py: 1
+    tests/test_monte_carlo.py: 1
+    scripts/generate_mc_results.py: 1
+    tests/test_cognitive_bandwidth.py: 1
     tests/test_init.py: 1
     tidewatch/triage.py: 1
-    scripts/generate_mc_results.py: 1
-    tests/test_types.py: 1
-    tests/test_cognitive_bandwidth.py: 1
-    tests/test_monte_carlo.py: 1
-    tests/test_generate_paper_figures.py: 1
     tests/test_constants.py: 1
-    tests/test_binary_deadline.py: 0
-    scripts/constants.py: 0
-    tests/test_metrics.py: 0
-    tests/test_baselines.py: 0
-    tests/test_eisenhower.py: 0
-    tests/test_benchmarks.py: 0
-    tests/test_linear_urgency.py: 0
-    tests/test_generate_obligations.py: 0
+    tests/test_types.py: 1
     tidewatch/constants.py: 0
+    tests/test_eisenhower.py: 0
+    scripts/constants.py: 0
+    tests/test_generate_obligations.py: 0
     tests/test_run.py: 0
+    tests/test_baselines.py: 0
+    tests/test_metrics.py: 0
+    tests/test_linear_urgency.py: 0
+    tests/test_benchmarks.py: 0
+    tests/test_binary_deadline.py: 0
   betweenness_centrality:
     tidewatch/__init__.py: 21.872102580963343
-    tidewatch/types.py: 8.091269841269842
+    tidewatch/types.py: 9.091269841269842
     tidewatch/pressure.py: 4.977103768243009
     scripts/generate_paper_figures.py: 2.0
     tidewatch/components.py: 1.1388888888888888
     tidewatch/planner.py: 0.9206349206349207
-    tests/test_generate_mc_results.py: 0.0
-    tests/test_planner.py: 0.0
-    tests/test_init.py: 0.0
-    tests/test_binary_deadline.py: 0.0
-    tidewatch/triage.py: 0.0
-    scripts/constants.py: 0.0
-    tests/test_metrics.py: 0.0
-    scripts/generate_mc_results.py: 0.0
-    tests/test_baselines.py: 0.0
-    tests/test_triage.py: 0.0
-    tests/test_types.py: 0.0
-    tests/test_eisenhower.py: 0.0
-    tests/test_cognitive_bandwidth.py: 0.0
-    tests/test_benchmarks.py: 0.0
-    tests/conftest.py: 0.0
-    tests/test_linear_urgency.py: 0.0
-    tests/test_pressure.py: 0.0
-    tests/test_monte_carlo.py: 0.0
-    tests/test_generate_obligations.py: 0.0
-    tests/test_golden_pipeline.py: 0.0
-    tests/test_integration.py: 0.0
-    tests/test_generate_paper_figures.py: 0.0
-    tests/test_constants.py: 0.0
     tidewatch/constants.py: 0.0
-    tests/test_run.py: 0.0
+    tests/test_eisenhower.py: 0.0
+    scripts/constants.py: 0.0
+    tests/test_generate_paper_figures.py: 0.0
+    tests/test_planner.py: 0.0
+    scripts/generate_ablation_results.py: 0.0
+    tests/conftest.py: 0.0
     tests/test_property_pressure.py: 0.0
+    tests/test_generate_obligations.py: 0.0
+    tests/test_monte_carlo.py: 0.0
+    tests/test_run.py: 0.0
+    scripts/generate_mc_results.py: 0.0
+    tests/test_triage.py: 0.0
+    tests/test_cognitive_bandwidth.py: 0.0
+    tests/test_baselines.py: 0.0
+    tests/test_metrics.py: 0.0
+    tests/test_generate_mc_results.py: 0.0
+    tests/test_golden_pipeline.py: 0.0
+    tests/test_linear_urgency.py: 0.0
+    tests/test_init.py: 0.0
+    tidewatch/triage.py: 0.0
+    tests/test_benchmarks.py: 0.0
+    tests/test_constants.py: 0.0
+    tests/test_types.py: 0.0
+    tests/test_binary_deadline.py: 0.0
+    tests/test_integration.py: 0.0
+    tests/test_pressure.py: 0.0
   orphans:
   - tests/test_baselines.py
   - tests/test_benchmarks.py
@@ -2215,6 +2244,7 @@ graph:
   - tests/test_run.py
   clusters:
   - - scripts/constants.py
+    - scripts/generate_ablation_results.py
     - scripts/generate_mc_results.py
     - scripts/generate_paper_figures.py
     - tests/conftest.py
@@ -2238,15 +2268,19 @@ graph:
     - tidewatch/pressure.py
     - tidewatch/triage.py
     - tidewatch/types.py
-  - - tests/test_binary_deadline.py
-  - - tests/test_metrics.py
-  - - tests/test_baselines.py
   - - tests/test_eisenhower.py
-  - - tests/test_benchmarks.py
-  - - tests/test_linear_urgency.py
   - - tests/test_generate_obligations.py
   - - tests/test_run.py
+  - - tests/test_baselines.py
+  - - tests/test_metrics.py
+  - - tests/test_linear_urgency.py
+  - - tests/test_benchmarks.py
+  - - tests/test_binary_deadline.py
   critical_paths:
+    scripts/generate_ablation_results.py:
+    - scripts/generate_ablation_results.py
+    - tidewatch/types.py
+    - tidewatch/constants.py
     scripts/generate_mc_results.py:
     - scripts/generate_mc_results.py
     - tidewatch/types.py
@@ -2328,28 +2362,37 @@ graph:
     tidewatch/__init__.py: 103.87210258096334
     tests/test_golden_pipeline.py: 79.0
     tidewatch/pressure.py: 32.97710376824301
-    tidewatch/types.py: 30.091269841269842
+    tidewatch/types.py: 32.09126984126984
     tests/test_pressure.py: 25.0
     tidewatch/constants.py: 20.0
     tidewatch/components.py: 9.13888888888889
     tidewatch/planner.py: 5.920634920634921
     scripts/generate_paper_figures.py: 5.0
-    tests/test_generate_mc_results.py: 3.0
     tests/test_planner.py: 3.0
-    tidewatch/triage.py: 3.0
-    scripts/generate_mc_results.py: 3.0
     tests/test_property_pressure.py: 3.0
-    tests/test_triage.py: 2.0
+    scripts/generate_mc_results.py: 3.0
+    tests/test_generate_mc_results.py: 3.0
+    tidewatch/triage.py: 3.0
     tests/conftest.py: 2.0
+    tests/test_triage.py: 2.0
     tests/test_integration.py: 2.0
-    tests/test_init.py: 1.0
     scripts/constants.py: 1.0
-    tests/test_types.py: 1.0
-    tests/test_cognitive_bandwidth.py: 1.0
-    tests/test_monte_carlo.py: 1.0
     tests/test_generate_paper_figures.py: 1.0
+    scripts/generate_ablation_results.py: 1.0
+    tests/test_monte_carlo.py: 1.0
+    tests/test_cognitive_bandwidth.py: 1.0
+    tests/test_init.py: 1.0
     tests/test_constants.py: 1.0
+    tests/test_types.py: 1.0
   external_imports:
+    scripts/generate_ablation_results.py:
+    - json
+    - os
+    - sys
+    - datetime
+    - benchmarks.constants
+    - benchmarks.datasets.generate_obligations
+    - benchmarks.monte_carlo
     scripts/generate_mc_results.py:
     - argparse
     - json
@@ -2485,9 +2528,9 @@ graph:
     - enum
     - dataclasses
     - datetime
-  resolution_rate: 0.5859375
-  resolved_import_count: 150
-  external_import_count: 106
+  resolution_rate: 0.571969696969697
+  resolved_import_count: 151
+  external_import_count: 113
 purpose:
   archetype:
   - scoring-engine
@@ -2519,18 +2562,18 @@ purpose:
   architectural_notes:
   - 'Repo also scores highly as: analytics-harness, analysis-tool, agent-loop. This suggests a composite system spanning multiple
     architectural patterns.'
-  - Strong test presence (22/46 files).
+  - Strong test presence (22/47 files).
   - No CI/CD configuration detected.
   - '8 orphaned file(s) with no internal imports or dependents: tests/test_baselines.py, tests/test_benchmarks.py, tests/test_binary_deadline.py,
     tests/test_eisenhower.py, tests/test_generate_obligations.py....'
-  - 'Codebase has 9 disconnected subsystems (sizes: 24, 1, 1, 1, 1).'
+  - 'Codebase has 9 disconnected subsystems (sizes: 25, 1, 1, 1, 1).'
   - Critical hub file 'tidewatch/__init__.py' (score 103.9) has no corresponding test file.
   declared_capabilities:
   - analytics-harness
   - library
   - scoring-engine
 coherence:
-  coherence_score: 0.7826720314174531
+  coherence_score: 0.39234382465625667
   drift_indicators:
   - category: orphaned_code
     evidence: 8 file(s) have no internal imports or dependents
@@ -2545,20 +2588,28 @@ coherence:
     - tests/test_linear_urgency.py
     - tests/test_metrics.py
     - tests/test_run.py
-    severity: 0.25
-  orientation_summary: Moderate drift detected (1 indicator(s) across orphaned_code). The codebase serves its purpose but
-    structural issues are accumulating.
+    severity: 0.24242424242424243
+  - category: hub_test_gap
+    evidence: '1 structural hub(s) lack test coverage: scripts/generate_ablation_results.py (1.0)'
+    implication: High-centrality files are the backbone of the codebase. Without tests, they are single points of failure.
+    files:
+    - scripts/generate_ablation_results.py
+    severity: 0.0029239766081871343
+  orientation_summary: Moderate drift detected (2 indicator(s) across hub_test_gap, orphaned_code). The codebase serves its
+    purpose but structural issues are accumulating.
   purpose_validated: true
   component_scores:
     capability_alignment: 0.8333333333333334
-    structural_coherence: 0.8167918846359467
+    structural_coherence: 0.8225507929075474
     archetype_consistency: 0.6538461538461539
-  confidence: 1.0
+  confidence: 0.41379310344827586
   analysis_completeness: &id001
-    ast_executed: 3
-    ast_total: 3
-    llm_executed: 0
-    llm_total: 0
+    ast_executed: 7
+    ast_total: 7
+    llm_executed: 5
+    llm_total: 22
+  raw_coherence_score: 0.7846876493125133
+  degraded: true
 abstraction:
   findings: []
   summary:
@@ -2569,7 +2620,7 @@ abstraction:
       medium: 0
       low: 0
     hotspots: {}
-  files_analyzed: 9
+  files_analyzed: 10
 assumptions:
   findings: []
   summary:
@@ -2577,7 +2628,7 @@ assumptions:
     by_category: {}
     by_severity: {}
     hotspots: {}
-  files_analyzed: 9
+  files_analyzed: 10
 hubris:
   findings: []
   summary:
@@ -2585,7 +2636,7 @@ hubris:
     by_category: {}
     by_severity: {}
     hotspots: {}
-  files_analyzed: 9
+  files_analyzed: 10
 viewpoints:
   results:
     complexity_hotspots:
@@ -2593,49 +2644,78 @@ viewpoints:
       viewpoint_type: ast
       findings: []
       summary: No issues found from Complexity Hotspots perspective.
-    naming_consistency:
-      display_name: Naming Consistency
+    import_hygiene:
+      display_name: Import Hygiene
       viewpoint_type: ast
       findings: []
-      summary: No issues found from Naming Consistency perspective.
-    bus_factor:
-      display_name: Bus Factor
-      viewpoint_type: ast
+      summary: No issues found from Import Hygiene perspective.
+    coupling_analysis:
+      display_name: Coupling Analysis
+      viewpoint_type: hybrid
       findings: []
-      summary: No issues found from Bus Factor perspective.
-  viewpoints_loaded: 3
+      summary: No issues found from Coupling Analysis perspective.
+    dead_code:
+      display_name: Dead Code
+      viewpoint_type: hybrid
+      findings: []
+      summary: No issues found from Dead Code perspective.
+    observability_gaps:
+      display_name: Observability Gaps
+      viewpoint_type: hybrid
+      findings: []
+      summary: No issues found from Observability Gaps perspective.
+    sovereign_reviewer:
+      display_name: The Sovereign Reviewer
+      viewpoint_type: hybrid
+      findings:
+      - file: tidewatch/constants.py
+        line: 179
+        severity: low
+        category: vestigial
+        observation: 'Temporal marker: # Deprecated: demand-based detection in _get_effective_risk_tier replaced'
+        goal_relevance: Suggests a past decision that should have been revisited
+        recommendation: Resolve the TODO/migration or remove the comment if done
+        viewpoint: sovereign_reviewer
+        domain: self
+      summary: 'The Sovereign Reviewer: 1 finding(s) (0 high, 0 medium, 1 low).'
+    test_adequacy:
+      display_name: Test Adequacy
+      viewpoint_type: hybrid
+      findings: []
+      summary: No issues found from Test Adequacy perspective.
+  viewpoints_loaded: 24
   analysis_completeness: *id001
-  confidence: 1.0
+  confidence: 0.41379310344827586
 timing:
-  total_s: 77.5144
+  total_s: 78.2812
   steps:
   - step: scan
-    elapsed_s: 0.0648
+    elapsed_s: 0.1141
   - step: llm_decision
-    elapsed_s: 0.08
+    elapsed_s: 0.0838
   - step: sovereignty
-    elapsed_s: 0.0003
-  - step: graph
-    elapsed_s: 0.0009
-  - step: purpose
-    elapsed_s: 0.0581
-  - step: coherence
-    elapsed_s: 0.0003
-  - step: abstraction
-    elapsed_s: 0.0369
-  - step: assumptions
-    elapsed_s: 0.0398
-  - step: hubris
-    elapsed_s: 0.0487
-  - step: integration
-    elapsed_s: 0.0745
-  - step: viewpoints_load
-    elapsed_s: 0.0011
-  - step: viewpoints_ast
-    elapsed_s: 0.0732
-  - step: viewpoints_save
-    elapsed_s: 0.0
-  - step: remediation_context
     elapsed_s: 0.0005
+  - step: graph
+    elapsed_s: 0.0017
+  - step: purpose
+    elapsed_s: 0.0956
+  - step: coherence
+    elapsed_s: 0.0006
+  - step: abstraction
+    elapsed_s: 0.0425
+  - step: assumptions
+    elapsed_s: 0.0662
+  - step: hubris
+    elapsed_s: 0.0503
+  - step: integration
+    elapsed_s: 0.0974
+  - step: viewpoints_load
+    elapsed_s: 0.0033
+  - step: viewpoints_ast
+    elapsed_s: 0.1997
+  - step: viewpoints_save
+    elapsed_s: 0.0153
+  - step: remediation_context
+    elapsed_s: 0.0794
   - step: redteam
-    elapsed_s: 0.9189
+    elapsed_s: 1.0401
