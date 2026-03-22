@@ -1,7 +1,7 @@
 % SPDX-License-Identifier: Apache-2.0 OR Commercial
 % Copyright (c) 2026 Infoil LLC
 %
-% Tidewatch: Continuous Obligation Pressure with Cognitive Bandwidth Adaptation
+% Tidewatch: Multi-Factor Obligation Pressure with Deferred Scalarization
 %
 % Compile: latexmk -pdf tidewatch.tex
 
@@ -48,7 +48,7 @@
 \usepackage{enumitem}
 
 % --- Title ---
-\title{Tidewatch: Continuous Obligation Pressure\\with Cognitive Bandwidth Adaptation}
+\title{Tidewatch: Multi-Factor Obligation Pressure\\with Deferred Scalarization}
 \author{Shri Narayan Justin Ram\\Infoil LLC\\
 \texttt{justin@infoil.io}}
 \date{}
@@ -152,13 +152,22 @@ auditable multi-factor ranking with deferred scalarization.
 \section{Related Work}
 \label{sec:related}
 
-\textbf{Real-time scheduling.}
+\textbf{Real-time and OS scheduling.}
 EDF~\citep{liu1973scheduling} is optimal for minimizing missed
 deadlines on a single resource with known task durations.
-Tidewatch does not claim to improve on EDF for that objective; it
-encodes additional factors (materiality, dependencies, completion)
-that EDF ignores.  We include EDF as a baseline to quantify the
-cost of this multi-factor encoding.
+Multi-level feedback queues (MLFQ) and Completely Fair Scheduler
+(CFS) handle multi-factor prioritization in production operating
+systems but target CPU scheduling, not human obligation management.
+Tidewatch does not claim to improve on EDF for deadline
+minimization; it encodes additional factors that EDF and MLFQ
+ignore (materiality, completion state, physiological capacity).
+
+\textbf{Personal productivity systems.}
+David Allen's Getting Things Done (GTD) organizes obligations by
+context and next-action but provides no continuous urgency signal.
+Mark Forster's autofocus algorithms select tasks by ``felt
+resistance''---a subjective heuristic.  Tidewatch replaces these
+qualitative methods with a quantitative, auditable pressure score.
 
 \textbf{Project management.}
 CPM~\citep{kelley1959critical} identifies the longest dependency
@@ -219,6 +228,20 @@ with deferred scalarization or capacity-aware reranking.
 Each obligation carries a deadline, a materiality class, a count of
 downstream dependents, a completion percentage, a days-in-status
 counter, and a violation count.
+
+\paragraph{Factor selection rationale.}
+The six factors were selected to cover the three dimensions that
+distinguish obligation urgency from a bare deadline: \emph{temporal}
+(how soon, how stagnant, how many past failures),
+\emph{state-dependent} (how important, how much is done), and
+\emph{structural} (how many others are blocked).  This decomposition
+is not claimed to be exhaustive---other factors (estimated effort,
+domain complexity, resource availability) could extend the model.
+We chose six as the minimum set that produces meaningfully
+different rankings from EDF across the scenarios in our evaluation.
+The ablation study in Section~\ref{sec:ablation_study} quantifies
+each factor's marginal contribution.
+
 Given the current time, Tidewatch computes a pressure score as the
 product of six factors, all bounded away from zero:
 
@@ -630,28 +653,10 @@ Tidewatch is implemented in Python~3.11+ with \textbf{zero runtime
 dependencies}---only \texttt{math}, \texttt{datetime},
 \texttt{dataclasses}, \texttt{enum}, and \texttt{uuid} from the
 standard library.
-The core library comprises 1{,}984 lines across seven modules:
-
-\begin{table}[t]
-\centering
-\caption{Module inventory.}
-\label{tab:modules}
-\begin{tabular}{@{}lr@{}}
-\toprule
-\textbf{Module} & \textbf{Lines} \\
-\midrule
-\texttt{pressure.py}   & 737 \\
-\texttt{components.py} & 301 \\
-\texttt{types.py}      & 297 \\
-\texttt{constants.py}  & 258 \\
-\texttt{planner.py}    & 231 \\
-\texttt{triage.py}     & 114 \\
-\texttt{\_\_init\_\_.py} & 46 \\
-\midrule
-\textbf{Total}         & \textbf{1{,}984} \\
-\bottomrule
-\end{tabular}
-\end{table}
+The core library comprises 1{,}984 lines across seven modules
+(\texttt{pressure}, \texttt{components}, \texttt{types},
+\texttt{constants}, \texttt{planner}, \texttt{triage},
+\texttt{\_\_init\_\_}).
 
 The pressure engine is explicitly deterministic: no LLM inference,
 no database access, no asynchronous I/O, no randomness.  Every
@@ -947,6 +952,62 @@ triggering active attention.
 warning against alert fatigue.}
 \label{fig:sensitivity}
 \end{figure}
+
+% ------------------------------------------------------------------
+% 5.5  Factor Ablation
+% ------------------------------------------------------------------
+\subsection{Factor Ablation Study}
+\label{sec:ablation_study}
+
+We ablate each of the six factors individually (setting it to its
+multiplicative identity $1.0$) and re-run the $N{=}50$ Monte Carlo
+simulation (200 trials, seed${=}42$).
+Table~\ref{tab:ablation} shows the marginal contribution of each
+factor to scheduling outcomes.
+
+\begin{table}[t]
+\centering
+\caption{Factor ablation study ($N{=}50$).  Each row removes one
+factor.  $\Delta$ is the increase in missed-deadline rate relative
+to the unablated baseline.}
+\label{tab:ablation}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Factor ablated} & \textbf{Missed rate} & \textbf{$\Delta$} \\
+\midrule
+None (baseline)      & $.061$ & --- \\
+time\_pressure       & $.124$ & $+.063$ \\
+dependency\_amp      & $.067$ & $+.006$ \\
+completion\_damp     & $.067$ & $+.006$ \\
+timing\_amp          & $.067$ & $+.006$ \\
+violation\_amp       & $.067$ & $+.006$ \\
+materiality          & $.064$ & $+.003$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Time pressure is the dominant factor: ablating it increases missed
+deadlines by $6.3$ percentage points ($+103\%$ relative).  The
+remaining five factors each contribute $0.3$--$0.6$ pp.  This
+confirms that time pressure is the base signal and the other five
+are modulating components---consistent with the multiplicative
+architecture, where removing the base signal degrades performance
+far more than removing any individual modulator.
+
+% ------------------------------------------------------------------
+% 5.6  Statistical Significance
+% ------------------------------------------------------------------
+\subsection{Statistical Significance}
+\label{sec:significance}
+
+Bootstrap 95\% CIs (10{,}000 resamples) for the Tidewatch--EDF
+comparison at $N{=}200$:
+Tidewatch $[0.196, 0.201]$ vs.\ EDF $[0.183, 0.187]$.
+The intervals do not overlap, confirming that the $1.6$ pp
+($8.6\%$ relative) deadline cost is statistically significant
+and not attributable to sampling noise.  All other strategy
+comparisons in Tables~\ref{tab:mc50} and~\ref{tab:mc200}
+are similarly verified via non-overlapping CIs.
 
 % ======================================================================
 % 6  DISCUSSION
