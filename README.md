@@ -131,10 +131,10 @@ Tidewatch is dual-licensed: **Apache-2.0** for open use, **Commercial** for embe
 
 Tidewatch is the prioritization substrate in a family of tools for agent orchestration:
 
-- **[Sentinel](https://github.com/ninjra/Sentinel)** — orchestration kernel, session management, obligation tracking
-- **[Gravitas](https://github.com/ninjra/gravitas)** — physics-inspired memory retrieval and context assembly
-- **[Minds-Eye](https://github.com/ninjra/minds-eye)** — repo introspection, coherence analysis, red-team scanning
-- **[Forge](https://github.com/ninjra/forge)** — prompt evolution engine
+- **Sentinel** — orchestration kernel, session management, obligation tracking
+- **Gravitas** — physics-inspired memory retrieval and context assembly
+- **Minds-Eye** — repo introspection, coherence analysis, red-team scanning
+- **Forge** — prompt evolution engine
 
 ## Paper
 
