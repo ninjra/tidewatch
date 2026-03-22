@@ -36,3 +36,15 @@ analyses/
 paper/analysis_*.md
 gates/registry.yaml
 scripts/golden_pipeline.sh
+
+# Process artifacts — never publish
+GENERIC_FIRST_REMEDIATION.md
+IMPLEMENTATION.md
+NEXT_SESSION.md
+REDTEAM.md
+TIDEWATCH-BOOTSTRAP.md
+repomix-output.xml
+repomix.config.json
+.repomix-instruction.md
+.repomixignore
+paper/abstract_optimal_*.md
