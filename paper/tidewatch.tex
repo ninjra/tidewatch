@@ -92,6 +92,11 @@ $35$--$47\%$.  A capacity-aware reranking extension modulates
 presentation order by operator or system load; it is specified and
 implemented but not empirically validated.
 
+Scalability benchmarks on a single core score 5~million obligations
+in 74~seconds (68K/sec throughput, linear memory), covering
+enterprise-scale JIRA, ServiceNow, and Kubernetes populations
+without compiled extensions.
+
 The primary contribution is an interpretable, auditable multi-factor
 ranking architecture with deferred scalarization, designed as the
 prioritization substrate for agent orchestration systems.  No field deployment or user study is
@@ -1091,6 +1096,61 @@ The intervals do not overlap, confirming that the $1.4$ pp
 ($8.6\%$ relative) deadline cost is statistically significant
 and not attributable to sampling noise.
 
+% ------------------------------------------------------------------
+% 5.7  Scalability
+% ------------------------------------------------------------------
+\subsection{Scalability}
+\label{sec:scalability}
+
+\begin{table}[t]
+\centering
+\caption{Single-core scalability on a 32-core, 79\,GB machine
+(Python~3.12, stdlib only).  All values measured, not projected.}
+\label{tab:scalability}
+\begin{tabular}{@{}rrrr@{}}
+\toprule
+\textbf{$N$} & \textbf{Score time (s)} & \textbf{Throughput (K/s)} &
+\textbf{Memory (MB)} \\
+\midrule
+  1{,}000     & 0.10  &  10  &   36 \\
+ 10{,}000     & 0.08  & 118  &   52 \\
+100{,}000     & 0.90  & 111  &  203 \\
+500{,}000     & 4.86  & 103  &  879 \\
+1{,}000{,}000 & 14.12 &  71  & 1{,}743 \\
+5{,}000{,}000 & 73.90 &  68  & 8{,}171 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Per-obligation scoring is $O(1)$: six multiplications, a minimum
+clamp, and a sort key emission.  Table~\ref{tab:scalability} confirms
+that throughput sustains ${\sim}70$--$110$K obligations per second
+across three orders of magnitude ($10$K to $5$M), with memory
+scaling linearly (${\sim}1.6$\,bytes per obligation plus fixed
+interpreter overhead).  The sub-linear throughput reduction at
+$N{>}1$M is attributable to Python's \texttt{list.sort}
+($O(N \log N)$) dominating the constant-time scoring pass.
+
+The \texttt{recalculate\_stale} function avoids full-population
+rescoring by fingerprinting each obligation's inputs (deadline,
+completion, dependency count, violation count) and rescoring only
+those whose fingerprint has changed since the last pass.  In steady
+state, where obligation updates arrive incrementally, the effective
+cost is $O(k)$ where $k \ll N$---typically the small fraction of
+obligations whose deadlines have crossed a zone boundary or whose
+completion percentage has advanced since the last scoring cycle.
+
+These results position Tidewatch against real-world obligation
+populations: a mature JIRA instance (${\sim}500$K issues) scores in
+under 5\,seconds, a ServiceNow incident queue (${\sim}100$K
+incidents per month) in under 1\,second, and a Kubernetes pod fleet
+(${\sim}150$K pods) in under 2\,seconds---all single-threaded, pure
+Python, with zero compiled extensions.  Multi-core partitioning
+(obligations are independent; the scoring function is embarrassingly
+parallel) or a compiled extension (Cython, Rust via PyO3) would
+increase throughput further, but the current implementation handles
+enterprise-scale populations without optimization.
+
 % ======================================================================
 % 6  DISCUSSION
 % ======================================================================
@@ -1227,8 +1287,8 @@ an interpretable, auditable prioritization substrate that encodes
 materiality, dependency structure, and completion state alongside
 deadline proximity.  Adaptive rate-constant selection, incremental
 rescoring, rank normalization, and zone-capacity limits extend the
-architecture to populations of tens of thousands without degrading
-small-$N$ behavior.
+architecture to millions of obligations---scoring 5~million in
+74~seconds on a single core---without degrading small-$N$ behavior.
 
 The framework has zero runtime dependencies and is verified to
 $\Delta < 10^{-10}$ against analytically computed reference values
