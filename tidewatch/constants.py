@@ -265,6 +265,22 @@ PLANNER_DESC_MAX_LEN = 500
 PLANNER_DOMAIN_MAX_LEN = 50
 PLANNER_ASCII_PRINTABLE_MIN = 32
 
+# --- Wearable normalization (#1619) ---
+# These are the domain-specific constants for wearable-to-CognitiveContext mapping.
+# Extracted from wearable_spec.py for parameterization and reuse.
+HRV_BASELINE_DEFAULT_MS = 50.0     # Population median RMSSD baseline (ms)
+HRV_BASELINE_RATIO = 0.5           # Return value when baseline is non-positive (midpoint)
+HRV_SCALE_FACTOR = 2.0             # Divisor: baseline → 0.5, 2x baseline → 1.0
+SLEEP_SCORE_SCALE_MAX = 100.0      # Maximum sleep score (Whoop/Oura: 0-100)
+SLEEP_HOURS_WELL_RESTED = 8.0      # >= this → sleep_quality = 1.0
+SLEEP_HOURS_DEPRIVED = 4.0         # <= this → sleep_quality = 0.0
+PAIN_NRS_SCALE_MAX = 10.0          # Standard NRS pain scale maximum
+WHOOP_STRAIN_MAX = 21.0            # Whoop daily strain scale maximum
+HOURS_PER_DAY = 24.0               # Hours in a day (for hours-since-sleep derivation)
+
+# --- Rank normalization (#1619) ---
+SINGLE_ITEM_RANK = 0.5  # Default percentile rank when only one item exists (midpoint)
+
 # --- Provenance thresholds (#1182) ---
 # 0.8: obligations reported 80%+ complete without source are high-risk for completion inflation.
 PROVENANCE_HIGH_COMPLETION = 0.8

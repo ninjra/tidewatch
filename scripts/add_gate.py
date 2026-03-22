@@ -30,13 +30,13 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 # Supported gate assertion types — must match gates/runner.py
-GATE_TYPES = [
+GATE_TYPES = (
     "regex_present", "regex_absent", "regex_consistent",
     "count_drift", "toml_equals", "toml_empty", "command_passes",
-]
+)
 
 # Valid scope labels for paper-file gates
-SCOPE_CHOICES = ["full", "abstract", "intro", "discussion", "conclusion"]
+SCOPE_CHOICES = ("full", "abstract", "intro", "discussion", "conclusion")
 
 
 def main() -> None:

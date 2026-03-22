@@ -20,7 +20,18 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from tidewatch.constants import clamp_unit
+from tidewatch.constants import (
+    HOURS_PER_DAY,
+    HRV_BASELINE_DEFAULT_MS,
+    HRV_BASELINE_RATIO,
+    HRV_SCALE_FACTOR,
+    PAIN_NRS_SCALE_MAX,
+    SLEEP_HOURS_DEPRIVED,
+    SLEEP_HOURS_WELL_RESTED,
+    SLEEP_SCORE_SCALE_MAX,
+    WHOOP_STRAIN_MAX,
+    clamp_unit,
+)
 
 # ── Signal normalization functions ───────────────────────────────────────────
 
@@ -28,7 +39,7 @@ from tidewatch.constants import clamp_unit
 # to normalize raw sensor values into CognitiveContext [0, 1] fields.
 
 
-def normalize_hrv(rmssd_ms: float, baseline_ms: float = 50.0) -> float:
+def normalize_hrv(rmssd_ms: float, baseline_ms: float = HRV_BASELINE_DEFAULT_MS) -> float:
     """Normalize HRV (RMSSD in milliseconds) to hrv_trend [0, 1].
 
     Args:
@@ -44,12 +55,12 @@ def normalize_hrv(rmssd_ms: float, baseline_ms: float = 50.0) -> float:
     Normalization: ratio to baseline, clamped to [0, 1].
     """
     if baseline_ms <= 0:
-        return 0.5
+        return HRV_BASELINE_RATIO
     ratio = rmssd_ms / baseline_ms
-    return clamp_unit(ratio / 2.0)  # baseline → 0.5, 2x baseline → 1.0
+    return clamp_unit(ratio / HRV_SCALE_FACTOR)  # baseline → 0.5, 2x baseline → 1.0
 
 
-def normalize_sleep_score(score: float, scale_max: float = 100.0) -> float:
+def normalize_sleep_score(score: float, scale_max: float = SLEEP_SCORE_SCALE_MAX) -> float:
     """Normalize sleep quality score to sleep_quality [0, 1].
 
     Args:
@@ -79,14 +90,15 @@ def normalize_sleep_hours(hours: float) -> float:
 
     Linear interpolation between 4h (0.0) and 8h (1.0).
     """
-    if hours >= 8.0:
+    if hours >= SLEEP_HOURS_WELL_RESTED:
         return 1.0
-    if hours <= 4.0:
+    if hours <= SLEEP_HOURS_DEPRIVED:
         return 0.0
-    return (hours - 4.0) / 4.0
+    span = SLEEP_HOURS_WELL_RESTED - SLEEP_HOURS_DEPRIVED
+    return (hours - SLEEP_HOURS_DEPRIVED) / span
 
 
-def normalize_pain(pain_scale: float, scale_max: float = 10.0) -> float:
+def normalize_pain(pain_scale: float, scale_max: float = PAIN_NRS_SCALE_MAX) -> float:
     """Normalize pain level to pain_level [0, 1].
 
     Args:
@@ -103,7 +115,7 @@ def normalize_pain(pain_scale: float, scale_max: float = 10.0) -> float:
     return clamp_unit(1.0 - (pain_scale / scale_max))
 
 
-def normalize_strain(strain: float, max_strain: float = 21.0) -> float:
+def normalize_strain(strain: float, max_strain: float = WHOOP_STRAIN_MAX) -> float:
     """Normalize activity strain to session_load [0, 1].
 
     Args:
@@ -151,7 +163,7 @@ def reading_to_context(reading: WearableReading) -> dict[str, float | None]:
     fields: dict[str, float | None] = {}
 
     if reading.hrv_rmssd_ms is not None:
-        baseline = reading.hrv_baseline_ms or 50.0
+        baseline = reading.hrv_baseline_ms or HRV_BASELINE_DEFAULT_MS
         fields["hrv_trend"] = normalize_hrv(reading.hrv_rmssd_ms, baseline)
 
     if reading.sleep_score is not None:
@@ -166,7 +178,7 @@ def reading_to_context(reading: WearableReading) -> dict[str, float | None]:
         fields["session_load"] = normalize_strain(reading.strain)
 
     if reading.sleep_hours is not None:
-        fields["hours_since_sleep"] = max(0.0, 24.0 - reading.sleep_hours)
+        fields["hours_since_sleep"] = max(0.0, HOURS_PER_DAY - reading.sleep_hours)
 
     return fields
 

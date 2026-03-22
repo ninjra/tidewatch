@@ -48,9 +48,9 @@ from tidewatch.constants import (
     DEPENDENCY_CAP_LOG_SCALE_FACTOR,
     DEPENDENCY_COUNT_CAP,
     DIVISION_GUARD,
+    EVOLUTION_PAUSE_THRESHOLD,
     FANOUT_TEMPORAL_K,
     FIT_SCORE_MISMATCH_COMPONENTS,
-    EVOLUTION_PAUSE_THRESHOLD,
     GRAVITY_TIEBREAK_WEIGHT,
     HALFLIFE_BASE,
     HARD_FLOOR_DAYS_THRESHOLD,
@@ -60,6 +60,7 @@ from tidewatch.constants import (
     PROVENANCE_HIGH_COMPLETION,
     RATE_CONSTANT,
     SECONDS_PER_DAY,
+    SINGLE_ITEM_RANK,
     TIMING_LOGISTIC_K,
     TIMING_MAX_MULTIPLIER,
     TIMING_MID_DAYS,
@@ -743,7 +744,7 @@ def _rank_normalize_results(results: list[PressureResult]) -> list[PressureResul
         values_with_idx = [(raw_components[i].get(key, 0.0), i) for i in range(n)]
         values_with_idx.sort(key=lambda x: x[0])
         for rank, (_, idx) in enumerate(values_with_idx):
-            ranked_components[idx][key] = rank / (n - 1) if n > 1 else 0.5
+            ranked_components[idx][key] = rank / (n - 1) if n > 1 else SINGLE_ITEM_RANK
 
     # Rebuild results with ranked components
     for i, r in enumerate(results):
