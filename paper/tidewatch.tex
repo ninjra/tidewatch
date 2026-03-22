@@ -61,43 +61,41 @@
 % ABSTRACT
 % ======================================================================
 \begin{abstract}
-Conventional task managers collapse deadlines into binary
-states---overdue or not---discarding the continuous accumulation of
-lateness risk.  We present Tidewatch, a multi-objective
-task-prioritization framework that decomposes urgency into six
-multiplicative factors (all bounded away from zero): three temporal
-signals (exponential time-decay, timing-sensitivity amplification,
-deadline-violation amplification with exponential decay), two
-state-dependent modifiers (materiality weighting, logistic completion
-dampening), and a structural dependency factor (temporally gated
-fanout).  These factors are retained in a six-dimensional component
-space with deferred scalarization, preserving per-factor
-interpretability until ranking time.  A capacity-aware reranking
-extension is specified but empirically unvalidated.
+Autonomous agent systems that manage hundreds to tens of thousands of
+concurrent obligations need a prioritization signal richer than a bare
+deadline.  Tidewatch is a scoring engine that decomposes obligation
+urgency into six multiplicative factors (all bounded away from zero):
+exponential time-decay, timing-sensitivity amplification,
+deadline-violation amplification with exponential decay, materiality
+weighting, logistic completion dampening, and temporally gated
+dependency fanout.  These factors are retained in a six-dimensional
+component space with deferred scalarization, preserving per-factor
+interpretability and Pareto-dominance comparison until a consumer
+requests a scalar ranking.  An adaptive rate constant spreads the
+pressure curve across the full $[0, 1]$ range at any population size;
+incremental rescoring, rank normalization, and zone-capacity limits
+maintain discrimination at $N{>}10{,}000$ without degrading
+small-$N$ behavior.
 
-We evaluate the core scoring engine with 651 deterministic and
-property-based tests verifying implementation correctness and
-algebraic monotonicity (golden values from closed-form solutions),
-and Monte Carlo scheduling simulations (200 trials, seed${=}42$,
-LogNormal task durations; distributional sensitivity and full
-parameterization in Section~5).  Reported results use product-collapse
-scalarization (product of all six components).  EDF is theoretically optimal for deadline
-minimization; Tidewatch does not compete on that metric.
-At $N{=}50$, it matches EDF ($6.7\%$ missed deadlines); at
-$N{=}200$, EDF achieves $18.5\%$ vs.\ Tidewatch's $20.1\%$---an
-$8.6\%$ relative cost of encoding materiality, dependency fanout,
-and completion state alongside deadline proximity.  Against FIFO and
-random baselines, Tidewatch reduces missed deadlines by $35$--$47\%$.
+We evaluate the core engine with 651 deterministic and property-based
+tests ($\Delta < 10^{-10}$ against closed-form reference values) and
+Monte Carlo scheduling simulations (200 trials, seed${=}42$,
+LogNormal durations).  EDF is theoretically optimal for deadline
+minimization; Tidewatch does not compete on that metric.  At
+$N{=}50$ it matches EDF ($6.7\%$ missed deadlines); at $N{=}200$,
+EDF achieves $18.5\%$ vs.\ Tidewatch's $20.1\%$---an $8.6\%$
+relative cost of encoding materiality, dependency fanout, and
+completion state alongside deadline proximity.  Against FIFO and
+random baselines, Tidewatch reduces missed deadlines by
+$35$--$47\%$.  A capacity-aware reranking extension modulates
+presentation order by operator or system load; it is specified and
+implemented but not empirically validated.
 
-However, no field deployment, user study, or real physiological
-dataset is presented; external validity remains an open question.  The
-primary
-contribution is an interpretable, auditable multi-factor ranking
-architecture with deferred scalarization.  All scoring functions are
-verified to $\Delta < 10^{-10}$ against analytically computed
-reference values under pinned Python~3.11+ with zero runtime
-dependencies, establishing deterministic reproducibility within a
-controlled execution environment.
+The primary contribution is an interpretable, auditable multi-factor
+ranking architecture with deferred scalarization and zero runtime
+dependencies, designed as the prioritization substrate for agent
+orchestration systems.  No field deployment or user study is
+presented; external validity remains an open question.
 \end{abstract}
 
 % ======================================================================
