@@ -77,8 +77,3 @@ print('PASS: pressure engine healthy')
 
 ### Contract: zero runtime dependencies
 The core library (`tidewatch/`) uses stdlib only.
-
-## Sentinel Integration
-
-This repo is part of the Sentinel ecosystem. Use `sentinel_query.py` for all cross-repo
-coordination. The tool lives at `~/projects/Sentinel/scripts/sentinel_query.py`.
