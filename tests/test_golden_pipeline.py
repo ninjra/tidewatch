@@ -62,6 +62,7 @@ _EXPECTED_EXPORTS = [
     "recalculate_stale",
     "top_k_obligations",
     "apply_zone_capacity",
+    "dampen_rank_changes",
     "compute_adaptive_k",
     "compute_dependency_cap",
     "bandwidth_adjusted_sort",

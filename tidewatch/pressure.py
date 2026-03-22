@@ -961,6 +961,97 @@ def apply_zone_capacity(
     return sorted_results
 
 
+def dampen_rank_changes(
+    current: list[PressureResult],
+    previous: list[PressureResult] | None = None,
+    *,
+    max_displacement: int | None = None,
+    min_stability_seconds: float = 0.0,
+) -> list[PressureResult]:
+    """Smooth ranking output to prevent priority thrashing.
+
+    When obligations rapidly swap ranks between recalculations (e.g., #1 and
+    #2 swap every cycle), this causes cognitive whiplash for human operators
+    or context-switching overhead for agent systems. This function limits
+    how far any obligation can move in a single recalculation.
+
+    Inspired by derivative dampening in PID controllers: if a task's rank
+    is accelerating too rapidly relative to peers, displacement is capped.
+
+    Args:
+        current: Latest scored results, sorted by pressure descending.
+        previous: Prior scored results from the last recalculation.
+            If None, no dampening is applied (backward compatible).
+        max_displacement: Maximum positions any item can move per
+            recalculation. None means no limit (backward compatible).
+        min_stability_seconds: Minimum time an item must hold its rank
+            before it can be displaced. Uses scored_at timestamps.
+            Default 0.0 (no stability requirement).
+
+    Returns:
+        Results re-sorted with displacement limits applied. Pressure
+        values are unchanged — only sort order is affected.
+    """
+    if previous is None or max_displacement is None:
+        return current
+
+    if not previous or not current:
+        return current
+
+    # Build previous rank map: obligation_id -> rank (0-indexed)
+    prev_rank: dict[int | str, int] = {
+        r.obligation_id: i for i, r in enumerate(previous)
+    }
+
+    # Build current rank map
+    curr_rank: dict[int | str, int] = {
+        r.obligation_id: i for i, r in enumerate(current)
+    }
+
+    # For items that existed in both, limit displacement
+    dampened = list(current)
+    needs_reorder = False
+
+    for result in dampened:
+        ob_id = result.obligation_id
+        if ob_id not in prev_rank:
+            continue  # New item — no dampening
+
+        old_pos = prev_rank[ob_id]
+        new_pos = curr_rank[ob_id]
+        displacement = new_pos - old_pos
+
+        # Check time stability
+        if min_stability_seconds > 0 and result.scored_at is not None:
+            for prev_r in previous:
+                if prev_r.obligation_id == ob_id and prev_r.scored_at is not None:
+                    elapsed = (result.scored_at - prev_r.scored_at).total_seconds()
+                    if elapsed < min_stability_seconds:
+                        # Not enough time elapsed — freeze at old position
+                        curr_rank[ob_id] = old_pos
+                        needs_reorder = True
+                    break
+
+        # Cap displacement
+        if abs(displacement) > max_displacement:
+            capped_pos = old_pos + (max_displacement if displacement > 0 else -max_displacement)
+            capped_pos = max(0, min(capped_pos, len(dampened) - 1))
+            curr_rank[ob_id] = capped_pos
+            needs_reorder = True
+
+    if not needs_reorder:
+        return current
+
+    # Rebuild order: place each item at its dampened position.
+    # Resolve collisions by pressure (higher pressure wins the position).
+    indexed: list[tuple[float, float, PressureResult]] = []
+    for r in dampened:
+        target = curr_rank.get(r.obligation_id, 0)
+        indexed.append((target, -r.pressure, r))
+    indexed.sort()
+    return [r for _, _, r in indexed]
+
+
 def _get_effective_risk_tier(ob: Obligation, now: datetime | None = None) -> int:
     """Resolve the effective risk tier for bandwidth modulation.
 

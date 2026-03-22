@@ -19,6 +19,7 @@ from tidewatch.pressure import (
     calculate_pressure,
     compute_adaptive_k,
     compute_dependency_cap,
+    dampen_rank_changes,
     export_pressure_summary,
     pressure_zone,
     recalculate_batch,
@@ -43,7 +44,7 @@ from tidewatch.types import (
 __version__ = "0.4.4"
 __all__ = [
     "calculate_pressure", "pressure_zone", "recalculate_batch",
-    "recalculate_stale", "top_k_obligations", "apply_zone_capacity",
+    "recalculate_stale", "top_k_obligations", "apply_zone_capacity", "dampen_rank_changes",
     "compute_adaptive_k", "compute_dependency_cap",
     "bandwidth_adjusted_sort", "export_pressure_summary",
     "PlanStubGenerator", "SpeculativePlanner", "TriageQueue",
