@@ -796,6 +796,10 @@ order determined by the scheduling strategy.
   \item \textbf{Weighted-sum:} MCDM baseline---normalized
         weighted-sum collapse with equal weights, each component
         scaled to $[0, 1]$ by its algebraic bounds.
+  \item \textbf{TOPSIS:} MCDM baseline with domain-weighted
+        profiles (time${}=0.3$, materiality${}=0.2$,
+        dependency${}=0.2$, completion${}=0.15$,
+        timing${}=0.1$, violation${}=0.05$).
   \item \textbf{Weighted-EDF:} hybrid---zone-tier urgency
         (red$>$orange$>$yellow$>$green) with EDF within each tier.
   \item \textbf{LLF:} least laxity first (deadline minus estimated
@@ -937,6 +941,24 @@ interchangeable, allowing a high score on one dimension (e.g.,
 materiality) to compensate for low urgency---a property that
 product collapse avoids by design.
 
+TOPSIS with domain-weighted profiles performs \emph{worse} than
+naïve weighted-sum at $N{=}200$ ($0.328$ vs.\ $0.320$).  This
+occurs because TOPSIS's distance-from-ideal calculation amplifies
+the dominance of time pressure (weight $0.3$, highest single
+factor), causing obligations with moderate urgency across
+multiple dimensions to rank above deadline-critical items.
+The result confirms that product collapse---where time pressure
+is a multiplicative base signal, not an additive
+dimension---better preserves deadline-relevant ordering.
+
+LLF and Slack baselines converge with EDF at both scales
+(${\sim}18.6\%$ at $N{=}200$).  Under single-resource sequential
+processing, laxity and remaining-slack ordering are near-equivalent
+to deadline ordering because the operator processes one obligation
+at a time---the duration estimate matters only when it determines
+whether slack is sufficient, not when it affects parallel
+scheduling decisions.
+
 % ------------------------------------------------------------------
 % 5.4  Sensitivity Analysis
 % ------------------------------------------------------------------
@@ -1013,7 +1035,21 @@ that these factors impose a measurable cost in exchange for richer
 ranking semantics.  This cost is the fundamental trade-off of
 multi-factor ranking: encoding materiality and completion
 alongside deadline proximity occasionally displaces a
-deadline-urgent item.
+deadline-urgent item.  The current evaluation does not include a
+benefit metric (e.g., reduction in wasted effort on low-materiality
+tasks or improvement in the value-weighted completion rate);
+characterizing the upside of the multi-factor trade-off remains
+future work.
+
+\paragraph{Ablation as interpretability evidence.}
+The ablation study also serves as a computational proxy for the
+``interpretable, auditable'' contribution claim: because each
+factor has an independently measurable effect on scheduling
+outcomes, a consumer can diagnose any ranking decision by
+comparing ablated and unablated scores.  Factor-level attribution
+---``this task ranks higher because its dependency fanout increased
+its pressure by $X\%$''---is a direct consequence of the
+multiplicative architecture with named, inspectable components.
 
 % ------------------------------------------------------------------
 % 5.6  Statistical Significance
