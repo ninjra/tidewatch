@@ -255,6 +255,39 @@ class MonteCarloResult:
         return result
 
 
+def ci_overlap_test(
+    result_a: MonteCarloResult,
+    result_b: MonteCarloResult,
+    metric: str = "missed_deadline_rate",
+) -> dict:
+    """Check whether bootstrap CIs of two MonteCarloResults overlap (#1312).
+
+    Non-overlapping CIs indicate a statistically significant difference
+    at the configured confidence level (default 95%). This is a conservative
+    test — overlapping CIs do not prove equivalence.
+
+    Args:
+        result_a: first MonteCarloResult
+        result_b: second MonteCarloResult
+        metric: one of "missed_deadline_rate", "queue_inversion_rate",
+                "attention_efficiency"
+
+    Returns:
+        dict with keys: significant (bool), ci_a (tuple), ci_b (tuple), overlap (bool)
+    """
+    ci_field = f"{metric}_ci"
+    ci_a: tuple[float, float] = getattr(result_a, ci_field)
+    ci_b: tuple[float, float] = getattr(result_b, ci_field)
+    # CIs overlap iff max(lower bounds) <= min(upper bounds)
+    overlap = max(ci_a[0], ci_b[0]) <= min(ci_a[1], ci_b[1])
+    return {
+        "significant": not overlap,
+        "ci_a": ci_a,
+        "ci_b": ci_b,
+        "overlap": overlap,
+    }
+
+
 # ── Scheduling strategies ────────────────────────────────────────────────────
 
 def _tidewatch_order(obligations: list[Obligation], now: datetime) -> list[int]:
@@ -315,6 +348,53 @@ def _tidewatch_bandwidth_variable_order(
     """
     bandwidth = float(rng.beta(2.0, 3.0))
     return _tidewatch_bandwidth_order(obligations, now, bandwidth)
+
+
+def _llf_order(obligations: list[Obligation], now: datetime) -> list[int]:
+    """Least Laxity First — sort by (deadline - now - estimated_remaining_duration).
+
+    Laxity (slack minus work) measures how much idle time remains before
+    the obligation must start to meet its deadline. Lower laxity = more urgent.
+    Uses domain duration median (exp(mu)) as the duration estimate.
+    """
+    scored: list[tuple[int, float]] = []
+    for i, ob in enumerate(obligations):
+        if ob.due_date is None:
+            scored.append((i, float("inf")))
+            continue
+        due = ob.due_date if ob.due_date.tzinfo else ob.due_date.replace(tzinfo=UTC)
+        slack_hours = (due - now).total_seconds() / SECONDS_PER_HOUR
+        domain = (ob.domain or "").lower()
+        mu, _sigma = _DOMAIN_DURATIONS.get(domain, _FALLBACK_DURATION)
+        est_duration = math.exp(mu)  # median duration in hours
+        laxity = slack_hours - est_duration
+        scored.append((i, laxity))
+    scored.sort(key=lambda x: x[1])
+    return [idx for idx, _ in scored]
+
+
+def _slack_order(obligations: list[Obligation], now: datetime) -> list[int]:
+    """Remaining-slack order: sort by (deadline - now - completion_pct * estimated_duration).
+
+    Accounts for partial completion — an obligation at 80% complete has less
+    remaining work than one at 0%. Lower remaining slack = more urgent.
+    Uses domain duration median (exp(mu)) as the total duration estimate.
+    """
+    scored: list[tuple[int, float]] = []
+    for i, ob in enumerate(obligations):
+        if ob.due_date is None:
+            scored.append((i, float("inf")))
+            continue
+        due = ob.due_date if ob.due_date.tzinfo else ob.due_date.replace(tzinfo=UTC)
+        slack_hours = (due - now).total_seconds() / SECONDS_PER_HOUR
+        domain = (ob.domain or "").lower()
+        mu, _sigma = _DOMAIN_DURATIONS.get(domain, _FALLBACK_DURATION)
+        est_duration = math.exp(mu)  # median duration in hours
+        remaining_work = (1.0 - ob.completion_pct) * est_duration
+        remaining_slack = slack_hours - remaining_work
+        scored.append((i, remaining_slack))
+    scored.sort(key=lambda x: x[1])
+    return [idx for idx, _ in scored]
 
 
 def _weighted_edf_order(obligations: list[Obligation], now: datetime) -> list[int]:
@@ -407,6 +487,8 @@ def _build_strategy_registry() -> tuple[dict[str, str], dict[str, callable]]:
         "tidewatch_bw_variable": "Tidewatch + variable bandwidth (Beta(2,3) per trial, #1188)",
         "weighted_sum": "Weighted-sum MCDM (equal weights, normalized)",
         "weighted_edf": "Weighted-EDF: zone-tier + earliest-deadline (#1211)",
+        "llf": "Least Laxity First (#1313)",
+        "slack": "Remaining-slack order (#1313)",
         "edf": "Earliest deadline first",
         "fifo": "First-in first-out",
         "random": "Random order (null hypothesis)",
@@ -420,6 +502,8 @@ def _build_strategy_registry() -> tuple[dict[str, str], dict[str, callable]]:
         "tidewatch_bw_variable": lambda obs, now, rng: _tidewatch_bandwidth_variable_order(obs, now, rng),
         "weighted_sum": lambda obs, now, rng: _weighted_sum_order(obs, now),
         "weighted_edf": lambda obs, now, rng: _weighted_edf_order(obs, now),
+        "llf": lambda obs, now, rng: _llf_order(obs, now),
+        "slack": lambda obs, now, rng: _slack_order(obs, now),
         "edf": lambda obs, now, rng: _deadline_order(obs, now),
         "fifo": lambda obs, now, rng: _fifo_order(obs, now),
         "random": lambda obs, now, rng: _random_order(obs, now, rng),
@@ -1015,3 +1099,79 @@ def run_des_simulation(
         mean_total_duration_hours=float(np.mean(durations)),
         trial_results=trials,
     )
+
+
+# ── Adversarial scenario generation (#1314) ──────────────────────────────────
+
+_ADVERSARIAL_SCENARIOS = ("burst", "diamond", "gaming")
+
+
+def generate_adversarial_obligations(
+    n: int,
+    scenario: str,
+    seed: int = DEFAULT_SEED,
+) -> list[Obligation]:
+    """Generate adversarial obligation sets for stress-testing (#1314).
+
+    Three scenarios:
+      "burst":   all N obligations due within 24 hours — stress-tests saturation.
+      "diamond": deep dependency chains (A->B->C->D, each blocking next).
+      "gaming":  all obligations at materiality=material, completion=0%, max deps.
+
+    Args:
+        n: number of obligations to generate
+        scenario: one of "burst", "diamond", "gaming"
+        seed: RNG seed for reproducibility
+
+    Returns:
+        list of Obligation instances
+    """
+    if scenario not in _ADVERSARIAL_SCENARIOS:
+        raise ValueError(f"Unknown scenario {scenario!r}, expected one of {_ADVERSARIAL_SCENARIOS}")
+
+    rng = np.random.default_rng(seed)
+    now = datetime.now(UTC)
+
+    if scenario == "burst":
+        return [
+            Obligation(
+                id=i + 1,
+                title=f"burst_{i}",
+                due_date=now + timedelta(hours=float(rng.uniform(1, 24))),
+                materiality="material" if rng.random() > 0.5 else "routine",
+                domain=rng.choice(list(_DOMAIN_DURATIONS.keys())),
+                dependency_count=int(rng.integers(0, 3)),
+            )
+            for i in range(n)
+        ]
+
+    if scenario == "diamond":
+        obs: list[Obligation] = []
+        for i in range(n):
+            obs.append(Obligation(
+                id=i + 1,
+                title=f"diamond_{i}",
+                due_date=now + timedelta(days=float(rng.uniform(2, 14))),
+                materiality="material",
+                domain="engineering",
+                dependency_count=min(i, 1),  # each depends on previous (chain)
+                earliest_dependent_deadline=(
+                    now + timedelta(days=1) if i < n - 1 else None
+                ),
+            ))
+        return obs
+
+    # scenario == "gaming"
+    from tidewatch.constants import DEPENDENCY_COUNT_CAP
+    return [
+        Obligation(
+            id=i + 1,
+            title=f"gaming_{i}",
+            due_date=now + timedelta(days=float(rng.uniform(1, 7))),
+            materiality="material",
+            domain=rng.choice(list(_DOMAIN_DURATIONS.keys())),
+            dependency_count=DEPENDENCY_COUNT_CAP,
+            completion_pct=0.0,
+        )
+        for i in range(n)
+    ]

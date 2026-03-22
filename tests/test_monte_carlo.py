@@ -274,7 +274,9 @@ class TestStrategyComparison:
             "tidewatch", "tidewatch_unclamped",
             "tidewatch_bw_full", "tidewatch_bw_mid",
             "tidewatch_bw_low", "tidewatch_bw_variable",
-            "weighted_sum", "weighted_edf", "edf", "fifo", "random",
+            "weighted_sum", "weighted_edf",
+            "llf", "slack",
+            "edf", "fifo", "random",
         }
 
     def test_compare_all_have_results(self):

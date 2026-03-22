@@ -584,7 +584,10 @@ def recalculate_batch(
     if pareto:
         results = _pareto_layered_sort(results)
     else:
-        results.sort(key=lambda r: r.pressure, reverse=True)
+        def _sort_key(r: PressureResult) -> tuple[float, float]:
+            raw = r.component_space.space.collapsed if r.component_space else r.pressure
+            return (r.pressure, raw)
+        results.sort(key=_sort_key, reverse=True)
 
     _latency_ms = (_time.monotonic() - _t0) * MS_PER_SECOND
     _emit_batch_telemetry(obligations, results, pareto, _latency_ms)
