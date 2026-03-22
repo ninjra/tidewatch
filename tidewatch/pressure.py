@@ -709,7 +709,12 @@ def _rank_normalize_results(results: list[PressureResult]) -> list[PressureResul
     The product collapse is recomputed from ranked values, and the pressure
     and zone fields are updated accordingly.
     """
-    from tidewatch.components import _COMPONENT_KEYS, _DEFAULT_BOUNDS, _SOURCE_EQUATION, _make_component_space, PressureComponents
+    from tidewatch.components import (
+        _COMPONENT_KEYS,
+        _SOURCE_EQUATION,
+        PressureComponents,
+        _make_component_space,
+    )
     from tidewatch.constants import saturate
 
     n = len(results)

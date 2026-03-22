@@ -17,12 +17,11 @@ from tidewatch.pressure import (
     calculate_pressure,
     compute_adaptive_k,
     compute_dependency_cap,
-    pressure_zone,
     recalculate_batch,
     recalculate_stale,
     top_k_obligations,
 )
-from tidewatch.types import DeadlineDistribution, Obligation, PressureResult
+from tidewatch.types import DeadlineDistribution, Obligation
 
 NOW = datetime(2026, 6, 1, 12, 0, 0, tzinfo=UTC)
 
@@ -556,8 +555,6 @@ class TestBackwardCompatibility:
         assert result.scored_at is not None
         assert result.input_hash is not None
         # Pressure value unchanged from v0.4.4 equation
-        import math
-        from tidewatch.pressure import _completion_dampening, _timing_amplifier, _violation_amplifier
         expected_time_p = 1.0 - math.exp(-3.0 / 7.0)
         assert result.time_pressure == pytest.approx(expected_time_p, abs=1e-10)
 
