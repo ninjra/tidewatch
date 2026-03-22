@@ -49,3 +49,4 @@ repomix.config.json
 .repomixignore
 paper/abstract_optimal_*.md
 uv.lock
+dist/
