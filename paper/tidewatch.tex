@@ -650,10 +650,10 @@ persistence, keeping Tidewatch free of database dependencies.
 \section{Implementation}
 \label{sec:implementation}
 
-Tidewatch is implemented in Python~3.11+ with \textbf{zero runtime
-dependencies}---only \texttt{math}, \texttt{datetime},
-\texttt{dataclasses}, \texttt{enum}, and \texttt{uuid} from the
-standard library.
+Tidewatch is implemented in Python~3.11+ using only standard-library
+modules (\texttt{math}, \texttt{datetime}, \texttt{dataclasses},
+\texttt{enum}, \texttt{uuid})---no third-party packages are
+required at runtime.
 The core library comprises 1{,}984 lines across seven modules
 (\texttt{pressure}, \texttt{components}, \texttt{types},
 \texttt{constants}, \texttt{planner}, \texttt{triage},
@@ -910,7 +910,7 @@ by $3$--$4\%$.
 The $\min(1, \cdot)$ bound means multiple obligations can saturate at
 $P = 1.0$ simultaneously.  When ties occur, obligations are ordered by
 their position in the input list (stable sort).  This is a known
-information-loss boundary: the Late Collapse component space
+information-loss boundary: the deferred-scalarization component space
 preserves the raw (unclamped) product for consumers that need
 discrimination above the ceiling, but the default product collapse
 does not.  When this occurs, the implementation uses the raw
