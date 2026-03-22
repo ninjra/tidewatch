@@ -1,27 +1,32 @@
-## Verdict: DO NOT SHIP
+THREAD: tidewatch-abstract-redteam
 
-### Claim 1 — Headline performance claim too strong
-At N=200, Tidewatch: 0.201 missed vs EDF: 0.185 (+8.65% worse). Weighted-EDF: 0.186, also better. "Comparable" too aggressive at N=200. No equivalence margin, no hypothesis test.
+## Claim Classification
+- "Binary signals" → INFERENCE (not universally true)
+- "Six factors" → QUOTE (descriptive)
+- "Late Collapse" → INFERENCE (novel, requires formal definition)
+- "Capacity-aware reranking" → INFERENCE (needs validation dataset)
+- "563 tests" → MEASURED (internal, needs reproducibility artifacts)
+- Performance numbers → MEASURED (internal, needs CIs and distribution spec)
+- "35-47% vs naive" → MEASURED (high sensitivity to baseline definition)
+- "Delta < 10^-10" → MEASURED (needs environment spec)
 
-### Claim 2 — Internal reporting failures
-Table 5 lists 7 categories, text says "six." Strategy list names 8, tables show 7 rows (omit variable BW). Table 7 caption says "CIs in brackets" but no brackets rendered. Not cosmetic — erodes trust.
+## Critical Risks
+A. Baseline framing bias — underperforms EDF at scale, risks "inferior to optimal" reading.
+B. Missing experimental determinism details — no float model, seed handling, environment.
+C. Simulation validity gap — no task/deadline/dependency distributions disclosed.
+D. Capacity signal integration weak evidence — no dataset, no validation metric.
+E. "Late Collapse" ambiguity — not formally defined (vector space? complexity class?).
+F. Overprecision without uncertainty — exact % without CIs.
 
-### Claim 3 — Evaluation confounded
-Domain demand fixed by coarse profiles. Simulation durations domain-specific. Bandwidth benefit may be shorter/easier-task preference artifact. Weighted-EDF appears only at N=200, beats Tidewatch. Missing variable BW row means paper doesn't show full claimed strategy set.
+## Required Fixes
+1. Reframe: multi-objective prioritization under human constraints, not better scheduler.
+2. Add experimental specification (distributions, trials, seeds).
+3. Qualify capacity claims (synthetic vs real signals).
+4. Replace point estimates with intervals.
+5. Formalize Late Collapse (6D vector, Pareto dominance, deferred scalarization).
+6. Temper determinism claim (specify environment or weaken).
 
-### Claim 4 — Mathematical semantics underspecified
-Paper criticizes additive MCDM, but weighted_collapse is explicitly a weighted sum. Saturation rate 9.0% identical across all strategies — not a discriminator. Ablation identity is algebraically true but semantically awkward.
+## Proposed Tightened Abstract
+Provided a rewritten version with: explicit Late Collapse definition as "six-dimensional component space," Monte Carlo qualified with "controlled task and dependency distributions," EDF tradeoff framed as "reflecting the tradeoff between multi-factor prioritization and deadline-optimal scheduling," determinism qualified with "under fixed execution conditions."
 
-### Claim 5 — Gameable formulas tied to wrong clock
-Timing and violation decay use days-in-status, not days-since-event. Status change resets decay. Figure 2 crossover at b≈0.704 per Eq. 10, not ≈0.5 as plotted — figure mixes soft scoring with hard override.
-
-### Claim 6 — Scope outruns validation
-Paper includes Late Collapse, Pareto, bandwidth, planning, triage — evaluation covers only scalar pressure + MC ordering. Gravity term zeroed. Fallback backend is product-only. Should scope down to research note on heuristic pressure score.
-
-### Recommendations
-R1: Rewrite claims to match evidence
-R2: Fix manuscript QA (counts, missing rows, CIs)
-R3: Fairer baselines + real evidence
-R4: Re-spec decay to event age, not status age
-R5: Separate soft bandwidth from hard override in figures
-R6: Add real task data or downgrade scope
+Bottom line: technically strong, positioning invites rejection. Fix framing and disclosure.
