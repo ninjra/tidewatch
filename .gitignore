@@ -29,3 +29,10 @@ paper/*.pdf
 .coverage
 htmlcov/
 .hypothesis/
+
+# Internal — not for public release
+ingest/
+analyses/
+paper/analysis_*.md
+gates/registry.yaml
+scripts/golden_pipeline.sh

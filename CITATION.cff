@@ -25,5 +25,5 @@ preferred-citation:
       given-names: Shri Narayan Justin
       affiliation: Infoil LLC
   year: 2026
-  doi: "10.XXXX/tidewatch"
+  # doi: pending SSRN submission
   url: "https://github.com/ninjra/tidewatch"

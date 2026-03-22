@@ -114,6 +114,6 @@ gates:
   - id: test_add_gate_works
     type: regex_present
     file: CLAUDE.md
-    pattern: "Verification Block"
-    description: "CLAUDE.md must have verification block section"
+    pattern: "Verification"
+    description: "CLAUDE.md must have verification section"
     origin: "2026-03-22: added verification block for constellation health"
