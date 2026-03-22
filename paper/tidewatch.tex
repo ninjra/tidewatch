@@ -75,7 +75,7 @@ space with deferred scalarization, preserving per-factor
 interpretability until ranking time.  A capacity-aware reranking
 extension is specified but empirically unvalidated.
 
-We evaluate the core scoring engine with 563 deterministic and
+We evaluate the core scoring engine with 651 deterministic and
 property-based tests verifying implementation correctness and
 algebraic monotonicity (golden values from closed-form solutions),
 and Monte Carlo scheduling simulations (200 trials, seed${=}42$,
@@ -654,7 +654,7 @@ Tidewatch is implemented in Python~3.11+ using only standard-library
 modules (\texttt{math}, \texttt{datetime}, \texttt{dataclasses},
 \texttt{enum}, \texttt{uuid})---no third-party packages are
 required at runtime.
-The core library comprises 1{,}984 lines across seven modules
+The core library comprises 2{,}378 lines across seven modules
 (\texttt{pressure}, \texttt{components}, \texttt{types},
 \texttt{constants}, \texttt{planner}, \texttt{triage},
 \texttt{\_\_init\_\_}).
@@ -726,7 +726,7 @@ T_{\text{amp}} \times V_{\text{amp}})$ holds to $10^{-15}$ tolerance,
 confirming no hidden rounding between factor computation and final
 aggregation.
 
-The full test suite comprises 563 tests organized into 21
+The full test suite comprises 651 tests organized into 21
 deterministic gates covering the API surface, type construction,
 constant values, pressure computation, edge cases, input validation,
 zone classification, batch operations, planning, triage, and
@@ -1197,7 +1197,7 @@ materiality, dependency structure, and completion state alongside
 deadline proximity.
 
 The framework is verified to $\Delta < 10^{-10}$ against
-analytically computed reference values across 563 deterministic
+analytically computed reference values across 651 deterministic
 tests under pinned Python~3.11+ with zero runtime dependencies.
 No field deployment or user study is presented; external validity
 remains an open question for future work.
