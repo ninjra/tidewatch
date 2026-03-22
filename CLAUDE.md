@@ -35,18 +35,63 @@ python -m benchmarks.run --suite all
 
 ## Key Equations
 
-P = min(1.0, P_time * M * A * D)
+P = min(1.0, P_time * M * A * D * T_amp * V_amp)
 
-- P_time(t) = 1 - exp(-3 / max(t, 0.01)) for t > 0; 1.0 for t <= 0
+- P_time(t) = 1 - exp(-k / max(t, 0.01)) for t > 0; 1.0 for t <= 0 (k=3.0)
 - M = 1.5 (material) or 1.0 (routine)
-- A = 1.0 + (dependency_count * 0.1)
-- D = 1.0 - (completion_pct * 0.6)
+- A = 1.0 + (dep_count * 0.1 * temporal_gate(t))
+- D = 1.0 - (0.6 * sigmoid(8 * (completion_pct - 0.5)))
+- T_amp = 1.0 + 0.2 / (1 + exp(-0.5 * (days_in_status - 7)))
+- V_amp = 1.0 + min(log(1 + violations * decay) * 0.05, 0.5)
 
 Zones: green < 0.30, yellow < 0.60, orange < 0.80, red >= 0.80
 
 ## Testing
 
 Run before every commit: `python -m pytest tests/ -v`
+
+## Verification Block
+
+Quick verification that tidewatch is healthy within the constellation:
+
+```bash
+python -m pytest tests/ -q                    # 651 tests, all must pass
+python -m ruff check tidewatch/ tests/        # lint clean
+python -c "import tidewatch; print(tidewatch.__version__)"  # 0.4.4
+python -c "
+from datetime import UTC, datetime, timedelta
+from tidewatch import calculate_pressure, Obligation
+now = datetime(2026, 6, 1, 12, 0, 0, tzinfo=UTC)
+ob = Obligation(id=1, title='Smoke', due_date=now + timedelta(days=7))
+r = calculate_pressure(ob, now=now)
+assert 0.30 <= r.pressure <= 0.40, f'Expected yellow, got {r.pressure}'
+assert r.zone == 'yellow'
+print('PASS: pressure engine healthy')
+"
+```
+
+## Interface Seams
+
+Tidewatch connects to the constellation at these boundaries:
+
+### Provides to constellation
+| Consumer | Interface | Purpose |
+|----------|-----------|---------|
+| **forge** | `export_pressure_summary()` | System pressure signal; forge pauses evolution when `should_pause_evolution=True` |
+| **Sentinel/autobot** | `calculate_pressure()`, `recalculate_batch()` | Scores obligations for queue ordering |
+| **gravitas** | `PressureResult.pressure`, zone labels | `obligation_ranker.py` complements tidewatch urgency with domain relevance |
+
+### Consumes from constellation
+| Provider | Interface | Required? |
+|----------|-----------|-----------|
+| **gravitas** | `gravitas.types.ComponentSpace` | Optional — fallback `_FallbackComponentSpace` used when unavailable |
+| **Sentinel** | `sentinel_sdk.metrics.get_buffer()` | Optional — telemetry degrades gracefully |
+| **Sentinel** | `sentinel_query.py` | Workflow only — not a runtime dependency |
+
+### Contract: zero runtime dependencies
+Tidewatch's core library (`tidewatch/`) uses stdlib only. All constellation
+integrations are optional extras that degrade gracefully via try/except import
+guards. The package installs and runs with `dependencies = []`.
 
 ## Sentinel Integration
 
