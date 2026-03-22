@@ -134,12 +134,12 @@ Tidewatch is dual-licensed: **Apache-2.0** for open use, **Commercial** for embe
 ## Paper
 
 > **Tidewatch: Multi-Factor Obligation Pressure with Deferred Scalarization**
-> Shri Narayan Justin Ram, Infoil LLC (2026)
+> S.N. Justin Ram, Infoil LLC (2026)
 
 ```bibtex
 @article{ram2026tidewatch,
   title={Tidewatch: Multi-Factor Obligation Pressure with Deferred Scalarization},
-  author={Ram, Shri Narayan Justin},
+  author={Ram, S.N. Justin},
   year={2026},
   url={https://github.com/ninjra/tidewatch}
 }

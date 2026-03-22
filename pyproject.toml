@@ -10,7 +10,7 @@ readme = "README.md"
 license = "Apache-2.0 OR LicenseRef-Commercial"
 requires-python = ">=3.11"
 authors = [
-    {name = "Shri Narayan Justin Ram", email = "justin@infoil.io"},
+    {name = "S.N. Justin Ram", email = "justin@infoil.io"},
 ]
 keywords = [
     "task prioritization", "deadline", "urgency", "pressure",

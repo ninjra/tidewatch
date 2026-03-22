@@ -48,5 +48,5 @@ Contact justin@infoil.io for:
 ## Contact
 
 **Infoil LLC**
-Justin Ram — justin@infoil.io
+S.N. Justin Ram — justin@infoil.io
 https://github.com/ninjra/tidewatch
