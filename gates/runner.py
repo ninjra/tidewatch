@@ -85,7 +85,8 @@ def load_gates(
         data = yaml.safe_load(text)
         return data.get("gates", []) if data else []
     except ImportError:
-        pass
+        # Expected in stdlib-only environments; fall through to minimal parser
+        print("gates/runner: PyYAML not available, using minimal parser", file=sys.stderr)
 
     # Minimal fallback: parse the YAML subset we use
     return _parse_gates_minimal(text)
@@ -144,7 +145,7 @@ def _parse_gates_minimal(text: str) -> list[dict[str, Any]]:
                     if val == int(val):
                         val = int(val)
                 except ValueError:
-                    pass
+                    val = val  # keep as string — not a numeric value
 
             current[key] = val
 
