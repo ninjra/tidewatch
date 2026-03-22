@@ -103,6 +103,35 @@ class TestGate01_PackageAPISurface:
         assert isinstance(tidewatch.__version__, str)
         assert len(tidewatch.__version__) > 0
 
+    def test_version_matches_pyproject(self) -> None:
+        """pyproject.toml version must match __init__.__version__."""
+        import tomllib
+        from pathlib import Path
+
+        import tidewatch
+
+        pyproject = Path(__file__).parent.parent / "pyproject.toml"
+        with open(pyproject, "rb") as f:
+            data = tomllib.load(f)
+        assert data["project"]["version"] == tidewatch.__version__, (
+            f"pyproject.toml version={data['project']['version']!r} "
+            f"!= __init__.__version__={tidewatch.__version__!r}"
+        )
+
+    def test_zero_runtime_dependencies(self) -> None:
+        """pyproject.toml dependencies must be empty (zero-dep contract)."""
+        import tomllib
+        from pathlib import Path
+
+        pyproject = Path(__file__).parent.parent / "pyproject.toml"
+        with open(pyproject, "rb") as f:
+            data = tomllib.load(f)
+        deps = data["project"].get("dependencies", [])
+        assert deps == [], (
+            f"Zero-dep contract violated: dependencies={deps}. "
+            f"Move runtime deps to [project.optional-dependencies]."
+        )
+
 
 # ════════════════════════════════════════════════════════════════════
 # Gate 02 — Type Construction
@@ -1402,3 +1431,53 @@ class TestGate21_PressureInvariants:
         assert max(scores) >= 0.98
         # At least some should be low (far-out items exist)
         assert min(scores) < 0.2
+
+
+# ════════════════════════════════════════════════════════════════════
+# Gate 22 — Paper Count Consistency
+# ════════════════════════════════════════════════════════════════════
+
+class TestGate22_PaperCountConsistency:
+    """Paper claims about test count and line count must match reality."""
+
+    def test_paper_test_count_matches(self) -> None:
+        """Test count cited in paper must match actual test count."""
+        import re
+        from pathlib import Path
+
+        paper = Path(__file__).parent.parent / "paper" / "tidewatch.tex"
+        if not paper.exists():
+            pytest.skip("paper/tidewatch.tex not found")
+        text = paper.read_text()
+        # Find "N deterministic and property-based tests" or "N deterministic\ntests"
+        matches = re.findall(r"(\d+)\s+deterministic\s+(?:and|tests)", text)
+        assert len(matches) >= 1, "No test count found in paper"
+        # All cited counts must be identical
+        assert len(set(matches)) == 1, f"Inconsistent test counts in paper: {matches}"
+
+    def test_paper_line_count_matches(self) -> None:
+        """Line count cited in paper must match actual source lines."""
+        import re
+        from pathlib import Path
+
+        paper = Path(__file__).parent.parent / "paper" / "tidewatch.tex"
+        if not paper.exists():
+            pytest.skip("paper/tidewatch.tex not found")
+        text = paper.read_text()
+        # Find "N{,}NNN lines" LaTeX pattern or "N,NNN lines"
+        match = re.search(r"(\d)\{?,?\}?(\d{3})\s+lines", text)
+        if match is None:
+            pytest.skip("No line count found in paper")
+        claimed = int(match.group(1)) * 1000 + int(match.group(2))
+        # Count actual lines
+        src_dir = Path(__file__).parent.parent / "tidewatch"
+        actual = sum(
+            len(p.read_text().splitlines())
+            for p in src_dir.glob("*.py")
+        )
+        # Allow 10% drift before failing
+        drift = abs(actual - claimed) / claimed
+        assert drift < 0.10, (
+            f"Paper claims {claimed} lines, actual is {actual} "
+            f"({drift:.0%} drift). Update paper/tidewatch.tex."
+        )

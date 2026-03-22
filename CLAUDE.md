@@ -18,6 +18,37 @@ bandwidth adaptation and a benchmark analytics harness. Core capabilities:
 
 An accompanying SSRN paper formalizes the exponential decay pressure model.
 
+## Paper Quality Gate
+
+Before any abstract or paper modification, run this checklist. These are
+the problem classes encountered in the 2026-03-22 pipeline and must never
+recur:
+
+1. **Deployment framing**: Abstract and intro must lead with agent
+   orchestration (the actual deployment model), not human task management.
+   Tidewatch is a prioritization substrate for agent systems, not a
+   scheduler competing with EDF.
+2. **Contribution framing**: The EDF gap is the *cost* of multi-factor
+   ranking, not a deficiency. Lead with what tidewatch can do that EDF
+   cannot (materiality, dependencies, completion discrimination), not
+   with the deadline comparison tidewatch loses.
+3. **Count consistency**: Test count and line count in the paper must
+   match reality. `pytest tests/ -q` gives the test count;
+   `wc -l tidewatch/*.py` gives line count. Gate 22 in the golden
+   pipeline enforces this automatically.
+4. **Version/dep contract**: `pyproject.toml` version must match
+   `__init__.__version__`. Dependencies list must be empty (zero-dep
+   contract). Gate 01 enforces this automatically.
+5. **Obligation verification**: Never report `pending_review` obligations
+   as unresolved without checking the paper/code for the actual
+   deliverable. pending_review means awaiting approval, not awaiting work.
+6. **Large-N claims**: If the abstract or body mentions large-N scaling
+   features (adaptive k, rank normalization, zone capacity, log-scaled
+   dep cap), verify they are tested and the acceptance criteria pass.
+7. **Bandwidth framing**: Bandwidth modulation applies to operator *or*
+   system load. Do not frame exclusively as physiological/cognitive.
+   The module is specified but empirically unvalidated — state this.
+
 ## Build Commands
 
 ```bash
