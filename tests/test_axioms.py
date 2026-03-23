@@ -20,6 +20,11 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
+from tidewatch.components import (
+    _clamp_normalize,
+    _FallbackComponentSpace,
+    build_pressure_space,
+)
 from tidewatch.constants import (
     ADAPTIVE_K_MAX,
     ADAPTIVE_K_MIN,
@@ -28,42 +33,26 @@ from tidewatch.constants import (
     COMPLETION_DAMPENING,
     COMPLETION_LOGISTIC_K,
     COMPLETION_LOGISTIC_MID,
-    DEPENDENCY_AMPLIFICATION,
     DEPENDENCY_CAP_LOG_MIN,
     DEPENDENCY_COUNT_CAP,
-    DIVISION_GUARD,
     EVOLUTION_PAUSE_THRESHOLD,
-    FANOUT_TEMPORAL_K,
-    HALFLIFE_BASE,
     MATERIALITY_WEIGHTS,
     OVERDUE_PRESSURE,
     RATE_CONSTANT,
-    TIMING_MAX_MULTIPLIER,
-    TIMING_MID_DAYS,
-    VIOLATION_AMPLIFICATION,
-    VIOLATION_MAX_AMPLIFICATION,
-    ZONE_ORANGE,
-    ZONE_RED,
     ZONE_YELLOW,
     clamp_unit,
     normalize_hours,
     saturate,
 )
-from tidewatch.components import (
-    PressureComponents,
-    _FallbackComponentSpace,
-    _clamp_normalize,
-    build_pressure_space,
-)
 from tidewatch.pressure import (
-    compute_adaptive_k,
-    compute_dependency_cap,
-    pressure_zone,
-    export_pressure_summary,
-    top_k_obligations,
     apply_zone_capacity,
     bandwidth_adjusted_sort,
     calculate_pressure,
+    compute_adaptive_k,
+    compute_dependency_cap,
+    export_pressure_summary,
+    pressure_zone,
+    top_k_obligations,
 )
 from tidewatch.types import (
     CognitiveContext,
@@ -71,7 +60,6 @@ from tidewatch.types import (
     Obligation,
     PressureResult,
     RiskTier,
-    TaskDemand,
     Zone,
     estimate_task_demand,
 )
@@ -84,7 +72,6 @@ from tidewatch.wearable_spec import (
     normalize_strain,
     reading_to_context,
 )
-
 
 # ── saturate axioms ──────────────────────────────────────────────────────────
 
