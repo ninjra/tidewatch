@@ -991,6 +991,20 @@ def _check_stability_freeze(
     return None
 
 
+def _clamp_index(pos: int, list_len: int) -> int:
+    """Clamp a position to valid list indices [0, list_len - 1].
+
+    Domain: list indices are bounded by [0, N-1]. This is inherent to
+    the data structure, not an editorial clamp.
+    """
+    if pos < 0:
+        return 0
+    last = list_len - 1
+    if pos > last:
+        return last
+    return pos
+
+
 def _cap_displacement(
     old_pos: int,
     new_pos: int,
@@ -1006,7 +1020,7 @@ def _cap_displacement(
     if abs(displacement) <= max_displacement:
         return None
     capped = old_pos + (max_displacement if displacement > 0 else -max_displacement)
-    return max(0, min(capped, list_len - 1))
+    return _clamp_index(capped, list_len)
 
 
 def dampen_rank_changes(

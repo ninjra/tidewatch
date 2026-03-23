@@ -21,7 +21,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from tidewatch.constants import (
-    HOURS_PER_DAY,
     HRV_BASELINE_DEFAULT_MS,
     HRV_BASELINE_RATIO,
     HRV_SCALE_FACTOR,
@@ -31,6 +30,7 @@ from tidewatch.constants import (
     SLEEP_SCORE_SCALE_MAX,
     WHOOP_STRAIN_MAX,
     clamp_unit,
+    complement_hours,
 )
 
 # ── Signal normalization functions ───────────────────────────────────────────
@@ -178,7 +178,7 @@ def reading_to_context(reading: WearableReading) -> dict[str, float | None]:
         fields["session_load"] = normalize_strain(reading.strain)
 
     if reading.sleep_hours is not None:
-        fields["hours_since_sleep"] = max(0.0, HOURS_PER_DAY - reading.sleep_hours)
+        fields["hours_since_sleep"] = complement_hours(reading.sleep_hours)
 
     return fields
 

@@ -15,15 +15,18 @@ from datetime import UTC, datetime, timedelta
 
 from tidewatch import Obligation, recalculate_batch
 
+TYPING_DELAY_SECONDS = 0.03  # Simulated per-character typing speed for demo
+PAUSE_DEFAULT_SECONDS = 0.5  # Default pause between demo lines
+
 
 # Simulate typing delay for demo
-def show(text, delay=0.03):
+def show(text, delay=TYPING_DELAY_SECONDS):
     for char in text:
         print(char, end="", flush=True)
         time.sleep(delay)
     print()
 
-def pause(seconds=0.5):
+def pause(seconds=PAUSE_DEFAULT_SECONDS):
     time.sleep(seconds)
 
 # Header

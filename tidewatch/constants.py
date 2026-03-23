@@ -278,6 +278,15 @@ PAIN_NRS_SCALE_MAX = 10.0          # Standard NRS pain scale maximum
 WHOOP_STRAIN_MAX = 21.0            # Whoop daily strain scale maximum
 HOURS_PER_DAY = 24.0               # Hours in a day (for hours-since-sleep derivation)
 
+
+def complement_hours(hours: float, reference: float = HOURS_PER_DAY) -> float:
+    """Compute remaining hours from a reference period, clamped to non-negative.
+
+    Domain: hours-since-sleep cannot be negative. This provides a composable
+    offset calculation that accepts any reference value (e.g., 24h day, 12h shift).
+    """
+    return max(_SATURATE_FLOOR, reference - hours)
+
 # --- Rank normalization (#1619) ---
 SINGLE_ITEM_RANK = 0.5  # Default percentile rank when only one item exists (midpoint)
 
