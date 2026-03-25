@@ -117,3 +117,9 @@ gates:
     pattern: "Verification"
     description: "CLAUDE.md must have verification section"
     origin: "2026-03-22: added verification block for pipeline health"
+
+  - id: min_test_count
+    type: command_passes
+    command: "python3 -c \"import subprocess, sys; r = subprocess.run(['grep', '-r', 'def test_', 'tests/'], capture_output=True, text=True); count = r.stdout.count('def test_'); sys.exit(0 if count >= 90 else 1)\""
+    description: "Test suite must have at least 90 test functions"
+    origin: "2026-03-23: session 5 established 125 tests across 4 test files; timeout-safe count method added 2026-03-25"

@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import pytest
 
-
 _VERIFIED_IMPURE_FUNCTIONS = [
     # examples/api_server.py
     "do_POST",
