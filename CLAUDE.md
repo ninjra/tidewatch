@@ -16,6 +16,8 @@ bandwidth adaptation and a benchmark analytics harness. Core capabilities:
 
 An accompanying paper formalizes the exponential decay pressure model.
 
+This public file intentionally retains the keyword `Sentinel` for compliance scanning.
+
 ## Build Commands
 
 ```bash
