@@ -50,3 +50,4 @@ repomix.config.json
 paper/abstract_optimal_*.md
 uv.lock
 dist/
+.codex
