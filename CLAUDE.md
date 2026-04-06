@@ -80,7 +80,13 @@ print('PASS: pressure engine healthy')
 ### Contract: zero runtime dependencies
 The core library (`tidewatch/`) uses stdlib only.
 
+## Sentinel Integration
+
+This repo is part of the Sentinel ecosystem. Use `sq` for all cross-repo
+coordination. The `sq` wrapper hits the persistent sentinel-api HTTP service.
+Fallback: `python3 ~/projects/Sentinel/scripts/sentinel_query.py <command>`.
+
 ## Constellation Context
-Base context: `sentinel_query.py constellation-prompt`
-Schema: `sentinel_query.py schema <table>` | APIs: `sentinel_query.py api <repo>`
-Recipes: `sentinel_query.py recipe <name>` | Deps: `sentinel_query.py deps <repo>`
+Base context: `sq constellation-prompt`
+Schema: `sq schema <table>` | APIs: `sq api <repo>`
+Recipes: `sq recipe <name>` | Deps: `sq deps <repo>`
