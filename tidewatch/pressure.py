@@ -1182,7 +1182,7 @@ def _fit_score(
 
     if tier == RiskTier.DEMOTABLE_WITH_FLOOR:
         floor = result.pressure * DEMOTABLE_FLOOR_FRACTION
-        adjusted = max(adjusted, floor)  # Floor: never reduce below DEMOTABLE_FLOOR_FRACTION (#1131)
+        adjusted = max(adjusted, floor)  # noqa:math_clamp — floor: never reduce below DEMOTABLE_FLOOR_FRACTION (#1131)
 
     return (_SORT_TIER_NORMAL, adjusted + gravity_bonus)
 

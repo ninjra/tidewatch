@@ -15,8 +15,8 @@ from datetime import UTC, datetime, timedelta
 
 from tidewatch import Obligation, recalculate_batch
 
-TYPING_DELAY_SECONDS = 0.03  # Simulated per-character typing speed for demo
-PAUSE_DEFAULT_SECONDS = 0.5  # Default pause between demo lines
+TYPING_DELAY_SECONDS = 0.03  # noqa:tunable_threshold — simulated per-character typing speed for demo
+PAUSE_DEFAULT_SECONDS = 0.5  # noqa:tunable_threshold — default pause between demo lines
 
 
 # Simulate typing delay for demo
