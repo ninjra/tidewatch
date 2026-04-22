@@ -1,0 +1,10 @@
+{
+  "violations": [],
+  "summary": {
+    "total": 0,
+    "files_scanned": 12,
+    "checks_passed": 12,
+    "checks_failed": 0,
+    "by_category": {}
+  }
+}
