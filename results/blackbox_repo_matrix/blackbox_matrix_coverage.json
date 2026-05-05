@@ -1,0 +1,13 @@
+{
+  "active_blackbox_file_count": 1,
+  "blockers": [],
+  "claim_boundary": "Coverage artifact only; it states which active blackbox files are represented and does not resolve independent proof blockers.",
+  "covered_files": [
+    "ingest/TIDEWATCH_PUBLISH_PREP.md"
+  ],
+  "created_at": "2026-05-05T17:23:13.919338Z",
+  "proof_passed": true,
+  "repo": "tidewatch",
+  "repo_path": "tidewatch",
+  "schema_version": "gravitas-cross-repo-blackbox-coverage-v1"
+}
